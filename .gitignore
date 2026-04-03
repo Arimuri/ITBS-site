@@ -26,3 +26,6 @@ png/
 
 # jetbrains setting folder
 .idea/
+
+# OGP metadata cache (auto-embed plugin)
+.ogp-cache/

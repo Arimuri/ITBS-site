@@ -38,13 +38,23 @@
 	font-style: normal;
 	font-display: swap;
 }
+@font-face {
+	font-family: "NIS_SMS";
+	src: url("/fonts/NIS_SMS3.otf") format("opentype");
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
 
 * {
 	box-sizing: border-box;
 }
 
 body {
-	font-family: "Atkinson", "Shippori Mincho", serif;
+	font-family: "NIS_SMS", "Atkinson", serif;
+	font-variant-ligatures: none;
+	-webkit-font-variant-ligatures: none;
+	font-feature-settings: "liga" 0, "clig" 0;
 	margin: 0;
 	padding: 0;
 	background: var(--bg);
@@ -196,4 +206,116 @@ hr {
 	clip: rect(1px, 1px, 1px, 1px);
 	clip-path: inset(50%);
 	white-space: nowrap;
+}
+
+/* --------------------------------------------------------
+   Auto-embed: YouTube responsive iframe
+   -------------------------------------------------------- */
+.embed-youtube {
+	position: relative;
+	width: 100%;
+	padding-bottom: 56.25%; /* 16:9 */
+	margin: 1.5em 0;
+	border-radius: var(--radius);
+	overflow: hidden;
+	background: var(--bg-soft);
+}
+.embed-youtube iframe {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	border: 0;
+}
+
+/* --------------------------------------------------------
+   Auto-embed: OGP link card
+   -------------------------------------------------------- */
+.link-card {
+	display: flex;
+	flex-direction: row;
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	overflow: hidden;
+	margin: 1.5em 0;
+	background: var(--bg-card);
+	color: var(--text);
+	text-decoration: none;
+	transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+.link-card:hover {
+	box-shadow: var(--shadow-md);
+	transform: translateY(-2px);
+	color: var(--text);
+}
+.link-card__image {
+	flex-shrink: 0;
+	width: 200px;
+	min-height: 120px;
+	background: var(--bg-soft);
+	overflow: hidden;
+}
+.link-card__image img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	border-radius: 0;
+}
+.link-card__content {
+	flex: 1;
+	padding: 0.9em 1em;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	min-width: 0;
+	gap: 0.3em;
+}
+.link-card__title {
+	font-weight: 700;
+	font-size: 0.95em;
+	line-height: 1.4;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+.link-card__description {
+	font-size: 0.8em;
+	color: var(--text-light);
+	line-height: 1.5;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+.link-card__meta {
+	display: flex;
+	align-items: center;
+	gap: 0.4em;
+	margin-top: auto;
+}
+.link-card__favicon {
+	width: 16px;
+	height: 16px;
+	border-radius: 2px;
+	flex-shrink: 0;
+}
+.link-card__hostname {
+	font-size: 0.75em;
+	color: var(--text-light);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+@media (max-width: 720px) {
+	.link-card {
+		flex-direction: column;
+	}
+	.link-card__image {
+		width: 100%;
+		height: 160px;
+		min-height: auto;
+	}
 }

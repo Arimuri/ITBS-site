@@ -3,6 +3,24 @@ import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+
+// Fetch YouTube playlist RSS feeds
+async function fetchPlaylist(playlistId: string) {
+	try {
+		const res = await fetch(`https://www.youtube.com/feeds/videos.xml?playlist_id=${playlistId}`);
+		const xml = await res.text();
+		const entries = xml.match(/<entry>([\s\S]*?)<\/entry>/g) || [];
+		return entries.map((entry) => {
+			const videoId = entry.match(/<yt:videoId>(.*?)<\/yt:videoId>/)?.[1] ?? '';
+			const title = entry.match(/<media:title>(.*?)<\/media:title>/)?.[1]
+				?? entry.match(/<title>(.*?)<\/title>/)?.[1] ?? '';
+			return { videoId, title };
+		});
+	} catch { return []; }
+}
+
+const playlist1 = await fetchPlaylist('PLNdj0Iz_UsvPDvPgyDfii0qix4aHPaa_1');
+const playlist2 = await fetchPlaylist('PLNdj0Iz_UsvMTLJxFynqiRLgM75kh1ugp');
 ---
 
 <!doctype html>
@@ -17,6 +35,7 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 			<section class="hero animate-in">
 				<img src="/logo.png" alt="in the blue shirt" class="hero-logo" />
 				<p class="hero-desc">音楽と映像を楽しく作っています！</p>
+				<p class="hero-desc-en">I enjoy making music and videos!</p>
 				<div class="social-icons">
 					<a href="https://twitter.com/intheblueshirt" target="_blank" rel="noopener" aria-label="Twitter">
 						<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
@@ -32,6 +51,29 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 					</a>
 				</div>
 			</section>
+
+			<!-- Playlists -->
+			{[
+				{ title: "Music Videos", videos: playlist2 },
+				{ title: "Free Association", videos: playlist1 },
+			].map((pl) => pl.videos.length > 0 && (
+				<section class="video-section animate-in">
+					<h2 class="section-title">{pl.title}</h2>
+					<div class="video-scroll">
+						{pl.videos.map((v) => (
+							<a class="video-card" href={`https://www.youtube.com/watch?v=${v.videoId}`} target="_blank" rel="noopener">
+								<div class="video-thumb">
+									<img src={`https://i.ytimg.com/vi/${v.videoId}/mqdefault.jpg`} alt={v.title} loading="lazy" />
+									<div class="play-icon">
+										<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+									</div>
+								</div>
+								<p class="video-title">{v.title}</p>
+							</a>
+						))}
+					</div>
+				</section>
+			))}
 		</main>
 		<Footer />
 	</body>
@@ -40,11 +82,17 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 <style>
 	main {
 		padding-top: 8rem;
+		max-width: 100%;
+		overflow-x: hidden;
 	}
 	/* Hero */
 	.hero {
 		text-align: center;
 		padding: 3rem 0 4rem;
+		max-width: 960px;
+		margin: 0 auto;
+		padding-left: 1.5rem;
+		padding-right: 1.5rem;
 	}
 	.hero-logo {
 		display: block;
@@ -57,29 +105,28 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 	.hero-desc {
 		font-size: 1.1em;
 		color: var(--text-light);
+		margin-bottom: 0.3em;
+	}
+	.hero-desc-en {
+		font-size: 0.95em;
+		color: var(--text-light);
 		margin-bottom: 2em;
 	}
-	.hero-actions {
-		display: flex;
-		gap: 1em;
-		justify-content: center;
-		flex-wrap: wrap;
-	}
 
-/* Social Icons */
+	/* Social Icons */
 	.social-icons {
 		display: flex;
 		justify-content: center;
 		gap: 1.2em;
-		margin-top: 2.5em;
+		margin-top: 1em;
 	}
 	.social-icons a {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 40px;
-		height: 40px;
-		color: var(--text-light);
+		width: 56px;
+		height: 56px;
+		color: var(--accent);
 		transition: color 0.2s ease, transform 0.2s ease;
 	}
 	.social-icons a:hover {
@@ -87,11 +134,96 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 		transform: translateY(-2px);
 	}
 	.social-icons svg {
-		width: 22px;
-		height: 22px;
+		width: 52px;
+		height: 52px;
+	}
+
+	/* Video Sections */
+	.video-section {
+		max-width: 960px;
+		margin: 0 auto;
+		padding: 0 1.5rem 2.5rem;
+	}
+	.section-title {
+		font-size: 1.1em;
+		margin-bottom: 1em;
+		letter-spacing: -0.01em;
+	}
+	.video-scroll {
+		display: flex;
+		gap: 1em;
+		overflow-x: auto;
+		scroll-snap-type: x mandatory;
+		-webkit-overflow-scrolling: touch;
+		padding-bottom: 0.5em;
+		scrollbar-width: thin;
+		scrollbar-color: var(--border) transparent;
+	}
+	.video-scroll::-webkit-scrollbar {
+		height: 6px;
+	}
+	.video-scroll::-webkit-scrollbar-track {
+		background: transparent;
+	}
+	.video-scroll::-webkit-scrollbar-thumb {
+		background: var(--border);
+		border-radius: 3px;
+	}
+	.video-card {
+		flex: 0 0 260px;
+		scroll-snap-align: start;
+		text-decoration: none;
+		color: var(--text);
+		transition: transform 0.2s ease;
+	}
+	.video-card:hover {
+		transform: translateY(-3px);
+		color: var(--text);
+	}
+	.video-thumb {
+		position: relative;
+		border-radius: var(--radius);
+		overflow: hidden;
+		aspect-ratio: 16 / 9;
+		background: #000;
+	}
+	.video-thumb img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		border-radius: 0;
+		transition: opacity 0.2s ease;
+	}
+	.play-icon {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: rgba(0, 0, 0, 0.25);
+		opacity: 0;
+		transition: opacity 0.2s ease;
+	}
+	.play-icon svg {
+		width: 40px;
+		height: 40px;
+		color: #fff;
+	}
+	.video-card:hover .play-icon {
+		opacity: 1;
+	}
+	.video-title {
+		font-size: 0.8em;
+		margin: 0.6em 0 0;
+		line-height: 1.4;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
 	}
 
 	@media (max-width: 640px) {
 		.hero-logo { max-width: 320px; }
+		.video-card { flex: 0 0 200px; }
 	}
 </style>

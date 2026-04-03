@@ -29,3 +29,6 @@ png/
 
 # OGP metadata cache (auto-embed plugin)
 .ogp-cache/
+
+# licensed fonts (not redistributable)
+public/fonts/NIS_SMS3.otf

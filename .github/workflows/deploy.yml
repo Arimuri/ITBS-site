@@ -25,5 +25,8 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H arimuri.sakura.ne.jp >> ~/.ssh/known_hosts
 
-      - name: Deploy via rsync
-        run: rsync -avz --delete ./dist/ arimuri@arimuri.sakura.ne.jp:/home/arimuri/www/
+      - name: Deploy main site
+        run: rsync -avz --delete --exclude='/c4p/' ./dist/ arimuri@arimuri.sakura.ne.jp:/home/arimuri/www/
+
+      - name: Deploy c4p subdomain
+        run: rsync -avz ./c4p-site/ arimuri@arimuri.sakura.ne.jp:/home/arimuri/www/c4p/

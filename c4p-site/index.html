@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create for Personality — 有村崚</title>
+  <meta name="description" content="クリエイト・フォー・パーソナリティ（C4P）— 下手でいい、真似ていい、変でいい。技術論でも自己啓発でもない、態度についての本。">
+  <meta property="og:title" content="Create for Personality — 有村崚">
+  <meta property="og:description" content="クオリティの追求とは別の軸で、創作を通じて自分自身を知っていくエッセイ集。">
+  <meta property="og:image" content="assets/cover.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --paper: #f6f0e6;
+      --ink: #11100d;
+      --muted: #6b6159;
+      --accent: #1a6fb5;
+      --accent-light: #e8f0f8;
+      --card-bg: #faf8f4;
+      --line-height: 1.95;
+      --font-body: 'Shippori Mincho', 'Yu Mincho', serif;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      font-size: 16px;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--font-body);
+      line-height: var(--line-height);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 6rem 2rem 3rem;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .hero-title {
+      font-size: clamp(1.6rem, 4.5vw, 2.8rem);
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      line-height: 1.4;
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .hero-covers {
+      display: flex;
+      gap: 1.5rem;
+      justify-content: center;
+    }
+
+    .hero-cover {
+      width: 260px;
+      height: auto;
+      box-shadow: 4px 8px 24px rgba(0,0,0,0.12);
+      border-radius: 2px;
+      transition: transform 0.3s ease;
+    }
+    .hero-cover:hover {
+      transform: translateY(-4px);
+    }
+
+    .hero-lead {
+      margin-top: 2.5rem;
+      font-size: 0.95rem;
+      line-height: 2;
+      color: var(--ink);
+      text-align: justify;
+      max-width: 600px;
+    }
+
+
+    .hero-meta {
+      margin-top: 1.5rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .hero-links {
+      margin-top: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .buy-btn {
+      display: inline-block;
+      padding: 0.85rem 2.5rem;
+      background: var(--accent);
+      color: #fff;
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      text-decoration: none;
+      border-radius: 3px;
+      letter-spacing: 0.05em;
+      transition: all 0.2s ease;
+    }
+    .buy-btn:hover {
+      background: #155d9a;
+      transform: translateY(-1px);
+    }
+
+    .bunfree-link {
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: all 0.15s;
+    }
+    .bunfree-link:hover {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    /* ── Pretext はじめに section ── */
+    .hajimeni-section {
+      position: relative;
+      max-width: 860px;
+      margin: 2rem auto 0;
+      padding: 3rem 2rem 4rem;
+    }
+
+    .hajimeni-heading {
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .teigi-text {
+      font-size: 0.95rem;
+      line-height: 2;
+      text-align: justify;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .teigi-text p {
+      margin-bottom: 1.2em;
+      text-indent: 1em;
+    }
+
+    .hajimeni-text {
+      font-size: 0.95rem;
+      line-height: 2;
+      text-align: justify;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .hajimeni-graphic {
+      float: right;
+      width: 200px;
+      margin: 0 0 0.5rem 0.8rem;
+      shape-outside: margin-box;
+    }
+
+    /* ── Divider ── */
+    .divider {
+      width: 40px;
+      height: 2px;
+      background: var(--accent);
+      margin: 0 auto;
+      opacity: 0.4;
+    }
+
+    /* ── Chapter Discovery ── */
+    .discovery {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 3rem 2rem 4rem;
+      text-align: center;
+    }
+
+    .discovery-intro {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 2rem;
+    }
+
+    .shuffle-wrap {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+    .shuffle-wrap:hover {
+      transform: scale(1.05);
+    }
+    .shuffle-wrap:active {
+      transform: scale(0.97);
+    }
+
+    .shuffle-img {
+      width: 180px;
+    }
+
+    .shuffle-label {
+      margin-top: 0.6rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+    }
+
+    /* ── Cards ── */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-top: 2.5rem;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.5s ease;
+    }
+    .cards.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid rgba(0,0,0,0.06);
+      border-radius: 4px;
+      padding: 1.8rem 1.5rem;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+      border-color: var(--accent);
+    }
+
+    .card-part {
+      font-size: 0.7rem;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+    }
+
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 0.8rem;
+      line-height: 1.5;
+    }
+
+    .card-excerpt {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.8;
+      flex: 1;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-read {
+      margin-top: 1rem;
+      font-size: 0.75rem;
+      color: var(--accent);
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Reader Modal ── */
+    .reader-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      backdrop-filter: blur(2px);
+    }
+    .reader-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .reader {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: min(680px, 100vw);
+      height: 100vh;
+      background: var(--paper);
+      z-index: 101;
+      overflow-y: auto;
+      transform: translateX(100%);
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      padding: 3rem 3rem 6rem;
+    }
+    .reader.open {
+      transform: translateX(0);
+    }
+
+    .reader-close {
+      position: sticky;
+      top: 0;
+      float: right;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--muted);
+      padding: 0.5rem;
+      font-family: var(--font-body);
+      z-index: 10;
+      transition: color 0.15s;
+    }
+    .reader-close:hover {
+      color: var(--ink);
+    }
+
+    .reader-part {
+      font-size: 0.75rem;
+      color: var(--accent);
+      letter-spacing: 0.15em;
+      margin-bottom: 0.5rem;
+    }
+
+    .reader-title {
+      font-size: 1.6rem;
+      font-weight: 600;
+      margin-bottom: 2rem;
+      line-height: 1.5;
+    }
+
+    .reader-body {
+      font-size: 0.95rem;
+      line-height: 2.1;
+      text-align: justify;
+    }
+    .reader-body p {
+      margin-bottom: 1.2em;
+      text-indent: 1em;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      text-align: center;
+      padding: 3rem 2rem 4rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 700px) {
+      .hero {
+        padding: 4rem 1.5rem 2rem;
+      }
+      .hero-covers {
+        gap: 0.8rem;
+      }
+      .hero-cover {
+        width: 44vw;
+        max-width: 200px;
+      }
+      .cards {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+      .reader {
+        width: 100vw;
+        padding: 2rem 1.5rem 4rem;
+      }
+      .hajimeni-section {
+        padding: 2rem 1.5rem 3rem;
+      }
+    }
+
+    /* ── Fade-in animation ── */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .fade-up.in-view {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hero -->
+  <section class="hero fade-up">
+    <h1 class="hero-title">書籍版「クリエイト・フォー・パーソナリティ」</h1>
+    <div class="hero-covers">
+      <img src="assets/cover.jpg" alt="Create for Personality 表紙" class="hero-cover">
+      <img src="assets/index.jpg" alt="Create for Personality 目次" class="hero-cover">
+    </div>
+    <p class="hero-lead" id="lead-text"></p>
+    <p class="hero-meta">有村崚　著　/　文学フリマ東京41　2026年5月4日</p>
+    <div class="hero-links">
+      <a href="https://shop.intheblueshirt.com/items/140459320" class="buy-btn" target="_blank" rel="noopener">通販で購入する</a>
+      <a href="" class="bunfree-link" id="bunfree-link" target="_blank" rel="noopener">文学フリマ東京41 イベントページ</a>
+    </div>
+  </section>
+
+  <div class="divider fade-up"></div>
+
+  <!-- 用語の定義 -->
+  <section class="hajimeni-section fade-up">
+    <h2 class="hajimeni-heading">用語の定義：C4Q / C4P</h2>
+    <div class="teigi-text">
+      <p>本書では、二つの言葉を定義する。</p>
+      <p>クオリティを目的とした創作を「クリエイト・フォー・クオリティ（Create-for-Quality / C4Q）」と呼ぶ。技術を磨く、結果を出す、他者からの評価を得る。何らかの指標において、より良い状態を目指す態度のことである。</p>
+      <p>個人性を認識するための創作を「クリエイト・フォー・パーソナリティ（Create-for-Personality / C4P）」と呼ぶ。創作物を、自分の内側にあるものが外に出たアウトプットと捉え、それを手がかりに「自分はこういう人間である」という理解を深める態度のことである。C4Pには外部評価の指標がない。問われるのは、自分の「らしさ」、すなわちパーソナリティをどれだけ把握できているかだけである。</p>
+    </div>
+  </section>
+
+  <div class="divider fade-up"></div>
+
+  <!-- はじめに -->
+  <section class="hajimeni-section fade-up">
+    <h2 class="hajimeni-heading">はじめに</h2>
+    <div class="hajimeni-text" id="hajimeni-text">
+      <img src="assets/C4P2.png" alt="" class="hajimeni-graphic">
+    </div>
+  </section>
+
+  <div class="divider fade-up"></div>
+
+  <!-- Chapter Discovery -->
+  <section class="discovery fade-up">
+    <p class="discovery-intro">全43章から、3つのエッセイをランダムでお届けします。</p>
+    <div class="shuffle-wrap" id="shuffle-btn" role="button" tabindex="0">
+      <img src="assets/C4P1.png" alt="" class="shuffle-img">
+      <span class="shuffle-label">クリックでシャッフル</span>
+    </div>
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <!-- Reader -->
+  <div class="reader-overlay" id="reader-overlay"></div>
+  <div class="reader" id="reader">
+    <button class="reader-close" id="reader-close">&times;</button>
+    <div class="reader-part" id="reader-part"></div>
+    <h2 class="reader-title" id="reader-title"></h2>
+    <div class="reader-body" id="reader-body"></div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>『クリエイト・フォー・パーソナリティ』 有村崚</p>
+    <p style="margin-top: 0.5rem;"><a href="https://intheblueshirt.com">intheblueshirt.com</a></p>
+  </footer>
+
+  <script src="chapters.js"></script>
+  <script type="module">
+    // ── Lead text ──
+    const LEAD = `いいものを作りたい。それはそうなんだけど、よい作品ってそもそもなんだったっけ？\n世間で言われるような"クオリティ"とは別の軸があるんじゃないか、と思い立ち、「C4P（Create-for-Personality）」という名前をつけて、クオリティの追求「C4Q（Create-for-Quality）」とは分けて、創作の意義を考えてみました。作ることを通じて自分自身を知っていく過程こそに意義を見出し、自分が何を好きで、何を選んで、どこへ向かおうとしているのかを書いたエッセイ集です。\nSubstackニュースレター「The Blue Envelope」で連載してきたテキストを再構成し、書き下ろしを加えて一冊にまとめました。下手でいい、真似ていい、変でいい。技術論でも自己啓発でもない、態度についての本です。巻末には数理モデルの付録もあります。`;
+    document.getElementById('lead-text').textContent = LEAD;
+
+    // ── はじめに (fallback text) ──
+    const hajimeniEl = document.getElementById('hajimeni-text');
+    const hajimeniImg = hajimeniEl.querySelector('.hajimeni-graphic');
+    hajimeniEl.textContent = '';
+    hajimeniEl.appendChild(hajimeniImg);
+    hajimeniEl.append(HAJIMENI);
+
+
+    // ── HTML escape helper ──
+    function esc(s) {
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    // ── Shuffle & Cards ──
+    const cardsEl = document.getElementById('cards');
+    const shuffleBtn = document.getElementById('shuffle-btn');
+    let currentCards = [];
+
+    function pickRandom(arr, n) {
+      const shuffled = [...arr].sort(() => Math.random() - 0.5);
+      return shuffled.slice(0, n);
+    }
+
+    function renderCards(chapters) {
+      currentCards = chapters;
+      cardsEl.innerHTML = '';
+      chapters.forEach((ch, i) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="card-part">${esc(ch.part)}</div>
+          <div class="card-title">${esc(ch.title)}</div>
+          <div class="card-excerpt">${esc(ch.excerpt)}</div>
+          <div class="card-read">&#8594; 読む</div>
+        `;
+        card.addEventListener('click', () => openReader(ch));
+        // Stagger animation
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(12px)';
+        setTimeout(() => {
+          card.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+          card.style.opacity = '1';
+          card.style.transform = 'translateY(0)';
+        }, i * 100);
+        cardsEl.appendChild(card);
+      });
+      cardsEl.classList.add('visible');
+    }
+
+    function doShuffle() {
+      cardsEl.classList.remove('visible');
+      setTimeout(() => {
+        renderCards(pickRandom(CHAPTERS, 3));
+      }, 200);
+    }
+    shuffleBtn.addEventListener('click', doShuffle);
+    shuffleBtn.addEventListener('keydown', e => { if (e.key === 'Enter') doShuffle(); });
+
+    // Show initial set
+    renderCards(pickRandom(CHAPTERS, 3));
+
+    // ── Reader ──
+    const overlay = document.getElementById('reader-overlay');
+    const reader = document.getElementById('reader');
+    const closeBtn = document.getElementById('reader-close');
+
+    function openReader(ch) {
+      document.getElementById('reader-part').textContent = ch.part;
+      document.getElementById('reader-title').textContent = ch.title;
+      // Convert body text to paragraphs (escaped)
+      const paragraphs = ch.body.split('\n\n').filter(p => p.trim());
+      document.getElementById('reader-body').innerHTML =
+        paragraphs.map(p => `<p>${esc(p.trim()).replace(/\n/g, '<br>')}</p>`).join('');
+      overlay.classList.add('open');
+      reader.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      reader.scrollTop = 0;
+    }
+
+    function closeReader() {
+      overlay.classList.remove('open');
+      reader.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    closeBtn.addEventListener('click', closeReader);
+    overlay.addEventListener('click', closeReader);
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeReader();
+    });
+
+    // ── Scroll fade-in ──
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in-view');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>

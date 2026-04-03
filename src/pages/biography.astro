@@ -5,9 +5,14 @@ import Header from '../components/Header.astro';
 import { SITE_TITLE } from '../consts';
 import bioRaw from '../data/biography.md?raw';
 
-const sections = bioRaw.split(/\n---\n/);
-const jaText = sections[0].trim();
-const enParagraphs = sections[1]?.trim().split(/\n\n/) ?? [];
+const parts = bioRaw.split(/\n===\n/);
+const jaText = parts[0].trim();
+const rest = parts[1]?.split(/\n---\n/) ?? [];
+const careerLines = rest[0]?.trim().split('\n').map((line: string) => {
+	const [period, desc, link] = line.split('|');
+	return { period: period.trim(), desc: desc?.trim(), link: link?.trim() };
+}) ?? [];
+const enParagraphs = rest[1]?.trim().split(/\n\n/) ?? [];
 ---
 
 <!doctype html>
@@ -32,6 +37,15 @@ const enParagraphs = sections[1]?.trim().split(/\n\n/) ?? [];
 				<div class="bio-text">
 					<p>{jaText}</p>
 				</div>
+
+				<dl class="career">
+					{careerLines.map((item: { period: string; desc: string; link?: string }) => (
+						<div class="career-row">
+							<dt>{item.period}</dt>
+							<dd>{item.link ? <a href={item.link} target="_blank" rel="noopener">{item.desc}</a> : item.desc}</dd>
+						</div>
+					))}
+				</dl>
 
 				<hr />
 
@@ -80,6 +94,32 @@ const enParagraphs = sections[1]?.trim().split(/\n\n/) ?? [];
 	.bio-en {
 		color: var(--text-light);
 	}
+
+	.career {
+		margin: 2em 0;
+		padding: 0;
+	}
+	.career-row {
+		display: flex;
+		gap: 1.5em;
+		padding: 0.5em 0;
+		border-bottom: 1px solid var(--border-light);
+	}
+	.career-row:last-child {
+		border-bottom: none;
+	}
+	.career-row dt {
+		flex-shrink: 0;
+		width: 5em;
+		font-size: 0.85em;
+		color: var(--text-light);
+		font-family: "Atkinson", sans-serif;
+	}
+	.career-row dd {
+		margin: 0;
+		font-size: 0.9em;
+	}
+
 	hr {
 		margin: 2em 0;
 	}

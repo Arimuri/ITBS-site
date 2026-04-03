@@ -18,7 +18,7 @@ jobs:
       - run: npm ci
       - run: npx astro build
 
-      - name: Deploy via FTP
+      - name: Deploy via FTPS
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: arimuri.sakura.ne.jp
@@ -26,4 +26,5 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./dist/
           server-dir: /home/arimuri/www/
+          protocol: ftps
           dangerous-clean-slate: false

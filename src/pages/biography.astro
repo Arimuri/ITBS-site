@@ -1,0 +1,91 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import { SITE_TITLE } from '../consts';
+---
+
+<!doctype html>
+<html lang="ja">
+	<head>
+		<BaseHead title={`Biography | ${SITE_TITLE}`} description="in the blue shirt - biography" />
+	</head>
+	<body>
+		<Header />
+		<main>
+			<h1 class="page-title animate-in">Biography</h1>
+			<p class="page-subtitle animate-in">About the artist</p>
+
+			<img src="/photo-artist.jpg" alt="Ryo Arimura" class="bio-photo animate-in" style="animation-delay: 0.1s" />
+
+			<div class="bio-content animate-in" style="animation-delay: 0.15s">
+				<div class="bio-name">
+					<span class="name-en">Ryo Arimura</span>
+					<span class="name-ja">有村 崚</span>
+				</div>
+
+				<div class="bio-text">
+					<p>
+						1991年生まれ、京都在住、有村崚（ありむら・りょう）によるソロプロジェクト。音楽や映像を楽しく作っています。自身の作品の他、TVドラマの劇伴、CMやWEB広告の音楽も手がける。2022年8月に3rdアルバム『Park with a Pond』をリリース。
+					</p>
+				</div>
+
+				<hr />
+
+				<div class="bio-text bio-en">
+					<p>
+						Japanese electronic artist <strong>In The Blue Shirt</strong> has been at the forefront of the country's independent dance music scene for nearly a decade now, crafting a distinct sound built around chopped-up vocal samples and speedy beats. The solo project of <strong>Ryo Arimura</strong> finds fresh angles on familiar sounds, and retrofits them into thrilling new creations.
+					</p>
+					<p>
+						Started in the early 2010s, Arimura quickly attracted attention from electronic-leaning media and fans in the country through tracks shared online showcasing his approach to slicing up vocals and rearranging them into dizzying cuts. He released works via influential Japanese labels such as <strong>Maltine Records</strong> and <strong>Trekkie Trax</strong>, and has been featured in publications such as <strong>Bandcamp Daily</strong> and <strong>The Japan Times</strong>. His latest albums have come through his own label <strong>The Wonder Laundry</strong>.
+					</p>
+					<p>
+						In The Blue Shirt has become a staple at clubs across Japan, performing in both his native Kansai region to the packed venues dotting Tokyo. He's provided official remixes for artists such as <strong>Porter Robinson</strong>, <strong>Pa's Lam System</strong> and <strong>tofubeats</strong> among many others.
+					</p>
+				</div>
+			</div>
+		</main>
+		<Footer />
+	</body>
+</html>
+
+<style>
+	.bio-photo {
+		display: block;
+		width: 100%;
+		max-width: 640px;
+		border-radius: var(--radius-lg);
+		margin: 0 auto 2.5em;
+	}
+	.bio-content {
+		max-width: 640px;
+		margin: 0 auto;
+	}
+	.bio-name {
+		display: flex;
+		align-items: baseline;
+		gap: 0.8em;
+		margin-bottom: 2em;
+	}
+	.name-en {
+		font-size: 1.6em;
+		font-weight: 700;
+		letter-spacing: -0.02em;
+	}
+	.name-ja {
+		font-size: 1em;
+		color: var(--text-light);
+	}
+	.bio-text {
+		line-height: 2;
+	}
+	.bio-text p {
+		margin-bottom: 1em;
+	}
+	.bio-en {
+		color: var(--text-light);
+	}
+	hr {
+		margin: 2em 0;
+	}
+</style>

@@ -7,108 +7,266 @@ import FormattedDate from '../../components/FormattedDate.astro';
 import Header from '../../components/Header.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../../consts';
 
-const posts = (await getCollection('blog')).sort(
-	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
-);
+const posts = (await getCollection('blog')).sort((a, b) => {
+	const dateA = (b.data.pubDate ?? b.data.date)?.valueOf() ?? 0;
+	const dateB = (a.data.pubDate ?? a.data.date)?.valueOf() ?? 0;
+	return dateA - dateB;
+});
+
+// Fetch Substack RSS
+let newsletters: { title: string; link: string; date: Date }[] = [];
+try {
+	const res = await fetch('https://blueenvelope.intheblueshirt.com/feed');
+	const xml = await res.text();
+	const items = xml.match(/<item>([\s\S]*?)<\/item>/g) || [];
+	newsletters = items.map((item) => {
+		const title = item.match(/<title><!\[CDATA\[(.*?)\]\]>/)?.[1]
+			?? item.match(/<title>(.*?)<\/title>/)?.[1] ?? '';
+		const link = item.match(/<link>(.*?)<\/link>/)?.[1] ?? '';
+		const pubDate = item.match(/<pubDate>(.*?)<\/pubDate>/)?.[1] ?? '';
+		return { title, link, date: new Date(pubDate) };
+	});
+} catch (e) {
+	// RSS fetch failed — show empty
+}
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="ja">
 	<head>
-		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
-		<style>
-			main {
-				width: 960px;
-			}
-			ul {
-				display: flex;
-				flex-wrap: wrap;
-				gap: 2rem;
-				list-style-type: none;
-				margin: 0;
-				padding: 0;
-			}
-			ul li {
-				width: calc(50% - 1rem);
-			}
-			ul li * {
-				text-decoration: none;
-				transition: 0.2s ease;
-			}
-			ul li:first-child {
-				width: 100%;
-				margin-bottom: 1rem;
-				text-align: center;
-			}
-			ul li:first-child img {
-				width: 100%;
-			}
-			ul li:first-child .title {
-				font-size: 2.369rem;
-			}
-			ul li img {
-				margin-bottom: 0.5rem;
-				border-radius: 12px;
-			}
-			ul li a {
-				display: block;
-			}
-			.title {
-				margin: 0;
-				color: rgb(var(--black));
-				line-height: 1;
-			}
-			.date {
-				margin: 0;
-				color: rgb(var(--gray));
-			}
-			ul li a:hover h4,
-			ul li a:hover .date {
-				color: rgb(var(--accent));
-			}
-			ul a:hover img {
-				box-shadow: var(--box-shadow);
-			}
-			@media (max-width: 720px) {
-				ul {
-					gap: 0.5em;
-				}
-				ul li {
-					width: 100%;
-					text-align: center;
-				}
-				ul li:first-child {
-					margin-bottom: 0;
-				}
-				ul li:first-child .title {
-					font-size: 1.563em;
-				}
-			}
-		</style>
+		<BaseHead title={`Blog | ${SITE_TITLE}`} description={SITE_DESCRIPTION} />
 	</head>
 	<body>
 		<Header />
 		<main>
-			<section>
-				<ul>
-					{
-						posts.map((post) => (
-							<li>
-								<a href={`/blog/${post.id}/`}>
-									{post.data.heroImage && (
-										<Image width={720} height={360} src={post.data.heroImage} alt="" />
-									)}
-									<h4 class="title">{post.data.title}</h4>
-									<p class="date">
-										<FormattedDate date={post.data.pubDate} />
-									</p>
-								</a>
-							</li>
-						))
-					}
-				</ul>
-			</section>
+			<h1 class="page-title animate-in">Blog</h1>
+
+			<div class="tabs animate-in">
+				<button class="tab active" data-tab="diary">diary</button>
+				<button class="tab" data-tab="newsletter">newsletter</button>
+			</div>
+
+			<!-- Diary Tab -->
+			<div class="tab-content active" id="diary">
+				<div class="post-grid">
+					{posts.map((post, i) => (
+						<a href={`/blog/${post.id}/`} class="post-card animate-in" style={`animation-delay: ${0.05 + i * 0.03}s`}>
+							{post.data.heroImage && (
+								<div class="post-image">
+									<Image width={480} height={240} src={post.data.heroImage} alt="" />
+								</div>
+							)}
+							<div class="post-content">
+								<h2 class="post-title">{post.data.title}</h2>
+								<p class="post-date">
+									<FormattedDate date={post.data.pubDate ?? post.data.date} />
+								</p>
+							</div>
+						</a>
+					))}
+					{posts.length === 0 && <p class="empty">まだ記事がありません。</p>}
+				</div>
+			</div>
+
+			<!-- Newsletter Tab -->
+			<div class="tab-content" id="newsletter">
+				<div class="newsletter-list">
+					{newsletters.map((item, i) => (
+						<a href={item.link} target="_blank" rel="noopener" class="newsletter-card" style={`animation-delay: ${0.05 + i * 0.03}s`}>
+							<span class="newsletter-title">{item.title}</span>
+							<span class="newsletter-date">
+								{item.date.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}
+							</span>
+						</a>
+					))}
+				</div>
+				<div class="newsletter-subscribe">
+					<p>The Blue Envelope — Substackで配信中</p>
+					<a href="https://blueenvelope.intheblueshirt.com/" target="_blank" rel="noopener" class="subscribe-btn">Subscribe</a>
+				</div>
+			</div>
 		</main>
 		<Footer />
 	</body>
 </html>
+
+<style>
+	/* Tabs */
+	.tabs {
+		display: flex;
+		gap: 0;
+		margin-bottom: 2em;
+		border-bottom: 1px solid var(--border);
+	}
+	.tab {
+		background: none;
+		border: none;
+		padding: 0.7em 1.5em;
+		font-size: 0.9em;
+		font-weight: 500;
+		color: var(--text-light);
+		cursor: pointer;
+		border-bottom: 2px solid transparent;
+		margin-bottom: -1px;
+		transition: color 0.2s ease;
+		font-family: inherit;
+	}
+	.tab:hover {
+		color: var(--text);
+	}
+	.tab.active {
+		color: var(--accent);
+		border-bottom-color: var(--accent);
+		font-weight: 600;
+	}
+
+	/* Tab Content */
+	.tab-content {
+		display: none;
+	}
+	.tab-content.active {
+		display: block;
+	}
+
+	/* Diary Grid */
+	.post-grid {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 1.5em;
+	}
+	.post-card {
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		overflow: hidden;
+		text-decoration: none;
+		color: var(--text);
+		transition: all 0.25s ease;
+	}
+	.post-card:hover {
+		box-shadow: var(--shadow-md);
+		transform: translateY(-2px);
+		color: var(--text);
+	}
+	.post-image {
+		overflow: hidden;
+		aspect-ratio: 2 / 1;
+	}
+	.post-image :global(img) {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		border-radius: 0;
+		transition: transform 0.3s ease;
+	}
+	.post-card:hover .post-image :global(img) {
+		transform: scale(1.03);
+	}
+	.post-content {
+		padding: 1.2em 1.4em;
+	}
+	.post-title {
+		font-size: 1em;
+		font-weight: 600;
+		margin-bottom: 0.4em;
+		line-height: 1.4;
+	}
+	.post-date {
+		font-size: 0.8em;
+		color: var(--text-light);
+		margin: 0;
+	}
+
+	/* Newsletter List */
+	.newsletter-list {
+		display: grid;
+		gap: 0;
+	}
+	.newsletter-card {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 1em 0;
+		border-bottom: 1px solid var(--border-light);
+		text-decoration: none;
+		color: var(--text);
+		transition: color 0.2s ease;
+	}
+	.newsletter-card:hover {
+		color: var(--accent);
+	}
+	.newsletter-title {
+		font-weight: 500;
+		font-size: 0.95em;
+	}
+	.newsletter-date {
+		font-size: 0.8em;
+		color: var(--text-light);
+		white-space: nowrap;
+		margin-left: 1.5em;
+	}
+
+	/* Subscribe */
+	.newsletter-subscribe {
+		margin-top: 2.5em;
+		text-align: center;
+		padding: 2em;
+		background: var(--bg-soft);
+		border-radius: var(--radius);
+	}
+	.newsletter-subscribe p {
+		font-size: 0.9em;
+		color: var(--text-light);
+		margin-bottom: 1em;
+	}
+	.subscribe-btn {
+		display: inline-block;
+		padding: 0.6em 2em;
+		background: var(--accent);
+		color: #fff;
+		border-radius: 999px;
+		font-size: 0.85em;
+		font-weight: 600;
+		text-decoration: none;
+		transition: all 0.2s ease;
+	}
+	.subscribe-btn:hover {
+		background: var(--accent-dark);
+		color: #fff;
+		transform: translateY(-1px);
+	}
+
+	.empty {
+		color: var(--text-light);
+		font-size: 0.95em;
+		grid-column: 1 / -1;
+	}
+
+	@media (max-width: 640px) {
+		.post-grid {
+			grid-template-columns: 1fr;
+		}
+		.newsletter-card {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 0.3em;
+		}
+		.newsletter-date {
+			margin-left: 0;
+		}
+	}
+</style>
+
+<script>
+	const tabs = document.querySelectorAll('.tab');
+	const contents = document.querySelectorAll('.tab-content');
+
+	tabs.forEach((tab) => {
+		tab.addEventListener('click', () => {
+			const target = tab.getAttribute('data-tab')!;
+			tabs.forEach((t) => t.classList.remove('active'));
+			contents.forEach((c) => c.classList.remove('active'));
+			tab.classList.add('active');
+			document.getElementById(target)?.classList.add('active');
+		});
+	});
+</script>

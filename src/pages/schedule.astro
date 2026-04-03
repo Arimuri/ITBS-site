@@ -1,0 +1,167 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import { SITE_TITLE } from '../consts';
+import fs from 'node:fs';
+import path from 'node:path';
+
+// Parse schedule.md
+const mdPath = path.resolve('src/data/schedule.md');
+const mdContent = fs.readFileSync(mdPath, 'utf-8');
+const blocks = mdContent.split(/^## /m).slice(1);
+const scheduleData = blocks.map((block) => {
+  const lines = block.trim().split('\n');
+  const title = lines[0].trim();
+  const get = (key: string) => {
+    const line = lines.find((l) => l.match(new RegExp(`^- ${key}:`)));
+    return line?.replace(new RegExp(`^- ${key}:\\s*`), '').trim() ?? '';
+  };
+  return { title, date: get('date'), venue: get('venue'), city: get('city'), url: get('url'), note: get('note') };
+}).filter((e) => e.date);
+
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+
+const upcoming = scheduleData
+  .filter((e) => new Date(e.date) >= today)
+  .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+const past = scheduleData
+  .filter((e) => new Date(e.date) < today)
+  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+function formatDate(dateStr: string) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
+}
+---
+
+<!doctype html>
+<html lang="ja">
+	<head>
+		<BaseHead title={`Schedule | ${SITE_TITLE}`} description="in the blue shirt - live schedule" />
+	</head>
+	<body>
+		<Header />
+		<main>
+			<h1 class="page-title animate-in">Schedule</h1>
+			<p class="page-subtitle animate-in">Live &amp; Events</p>
+
+			<section class="schedule-section animate-in" style="animation-delay: 0.1s">
+				<h2 class="section-label">Upcoming</h2>
+				{upcoming.length === 0 ? (
+					<p class="no-events">現在予定されているライブはありません。</p>
+				) : (
+					<div class="event-list">
+						{upcoming.map((e) => (
+							<div class="event-card">
+								<div class="event-date">{formatDate(e.date)}</div>
+								<div class="event-info">
+									<h3 class="event-title">
+										{e.url ? <a href={e.url} target="_blank" rel="noopener">{e.title}</a> : e.title}
+									</h3>
+									{e.venue && <p class="event-venue">{e.venue}{e.city ? ` / ${e.city}` : ''}</p>}
+									{e.note && <p class="event-note">{e.note}</p>}
+								</div>
+							</div>
+						))}
+					</div>
+				)}
+			</section>
+
+			{past.length > 0 && (
+				<section class="schedule-section past-section animate-in" style="animation-delay: 0.2s">
+					<h2 class="section-label">Past</h2>
+					<div class="event-list past">
+						{past.map((e) => (
+							<div class="event-card">
+								<div class="event-date">{formatDate(e.date)}</div>
+								<div class="event-info">
+									<h3 class="event-title">{e.title}</h3>
+									{e.venue && <p class="event-venue">{e.venue}{e.city ? ` / ${e.city}` : ''}</p>}
+								</div>
+							</div>
+						))}
+					</div>
+				</section>
+			)}
+		</main>
+		<Footer />
+	</body>
+</html>
+
+<style>
+	.schedule-section {
+		margin-bottom: 3em;
+	}
+	.section-label {
+		font-size: 0.8em;
+		font-weight: 700;
+		color: var(--accent);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		margin-bottom: 1.2em;
+	}
+	.event-list {
+		display: grid;
+		gap: 1em;
+	}
+	.event-card {
+		display: grid;
+		grid-template-columns: 180px 1fr;
+		gap: 1.5em;
+		padding: 1.2em 1.5em;
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		transition: all 0.2s ease;
+	}
+	.event-card:hover {
+		box-shadow: var(--shadow-sm);
+	}
+	.event-date {
+		font-size: 0.85em;
+		color: var(--text-light);
+		font-weight: 500;
+		padding-top: 0.1em;
+	}
+	.event-title {
+		font-size: 1em;
+		font-weight: 600;
+		margin: 0 0 0.2em;
+	}
+	.event-title a {
+		color: inherit;
+		text-decoration: none;
+	}
+	.event-title a:hover {
+		color: var(--accent);
+	}
+	.event-venue {
+		font-size: 0.85em;
+		color: var(--text-light);
+		margin: 0;
+	}
+	.event-note {
+		font-size: 0.8em;
+		color: var(--text-light);
+		margin: 0.3em 0 0;
+	}
+	.no-events {
+		color: var(--text-light);
+		font-size: 0.95em;
+		padding: 1em 0;
+	}
+	.past .event-card {
+		opacity: 0.55;
+	}
+	.past .event-card:hover {
+		opacity: 0.8;
+	}
+	@media (max-width: 600px) {
+		.event-card {
+			grid-template-columns: 1fr;
+			gap: 0.3em;
+		}
+	}
+</style>

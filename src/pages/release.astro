@@ -1,0 +1,128 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import { SITE_TITLE } from '../consts';
+
+const releases = [
+  {
+    year: 2022,
+    title: "Park with a Pond",
+    type: "Album",
+    description: "3rd album",
+    bandcamp: "https://intheblueshirt.bandcamp.com/album/park-with-a-pond",
+    appleMusic: "",
+    spotify: "",
+  },
+  {
+    year: 2019,
+    title: "Asagao",
+    type: "Album",
+    description: "2nd album",
+    bandcamp: "https://intheblueshirt.bandcamp.com/album/asagao",
+    appleMusic: "",
+    spotify: "",
+  },
+  {
+    year: 2016,
+    title: "Claster",
+    type: "Album",
+    description: "1st album",
+    bandcamp: "https://intheblueshirt.bandcamp.com/album/claster",
+    appleMusic: "",
+    spotify: "",
+  },
+];
+---
+
+<!doctype html>
+<html lang="ja">
+	<head>
+		<BaseHead title={`Release | ${SITE_TITLE}`} description="in the blue shirt - discography" />
+	</head>
+	<body>
+		<Header />
+		<main>
+			<h1 class="page-title animate-in">Release</h1>
+			<p class="page-subtitle animate-in">Discography</p>
+
+			<div class="release-grid">
+				{releases.map((r, i) => (
+					<div class="release-card animate-in" style={`animation-delay: ${0.1 + i * 0.1}s`}>
+						<div class="release-header">
+							<span class="release-year">{r.year}</span>
+							<span class="badge badge-blue">{r.type}</span>
+						</div>
+						<h2 class="release-title">{r.title}</h2>
+						<p class="release-desc">{r.description}</p>
+						<div class="release-links">
+							{r.bandcamp && <a href={r.bandcamp} target="_blank" rel="noopener">Bandcamp</a>}
+							{r.appleMusic && <a href={r.appleMusic} target="_blank" rel="noopener">Apple Music</a>}
+							{r.spotify && <a href={r.spotify} target="_blank" rel="noopener">Spotify</a>}
+						</div>
+					</div>
+				))}
+			</div>
+		</main>
+		<Footer />
+	</body>
+</html>
+
+<style>
+	.release-grid {
+		display: grid;
+		gap: 1.5em;
+	}
+	.release-card {
+		border: 1px solid var(--border);
+		border-radius: var(--radius-lg);
+		padding: 2em;
+		transition: all 0.25s ease;
+	}
+	.release-card:hover {
+		box-shadow: var(--shadow-md);
+		transform: translateY(-2px);
+	}
+	.release-header {
+		display: flex;
+		align-items: center;
+		gap: 0.8em;
+		margin-bottom: 0.8em;
+	}
+	.release-year {
+		font-size: 0.85em;
+		color: var(--text-light);
+		font-weight: 600;
+	}
+	.release-title {
+		font-size: 1.5em;
+		margin-bottom: 0.2em;
+		letter-spacing: -0.01em;
+	}
+	.release-desc {
+		color: var(--text-light);
+		font-size: 0.9em;
+		margin-bottom: 1.2em;
+	}
+	.release-links {
+		display: flex;
+		gap: 0.6em;
+		flex-wrap: wrap;
+	}
+	.release-links a {
+		display: inline-block;
+		padding: 0.4em 1em;
+		border: 1.5px solid var(--border);
+		border-radius: 999px;
+		font-size: 0.8em;
+		font-weight: 600;
+		color: var(--text);
+		text-decoration: none;
+		transition: all 0.2s ease;
+	}
+	.release-links a:hover {
+		border-color: var(--accent);
+		color: var(--accent);
+		background: #e6f3fb;
+	}
+</style>

@@ -10,7 +10,7 @@ const today = new Date();
 			<a href="https://www.youtube.com/@intheblueshirt" target="_blank" rel="noopener">YouTube</a>
 			<a href="https://intheblueshirt.bandcamp.com/" target="_blank" rel="noopener">Bandcamp</a>
 		</div>
-		<p class="copyright">&copy; {today.getFullYear()} in the blue shirt</p>
+		<p class="copyright"><span class="copy-symbol">&copy;</span> {today.getFullYear()} in the blue shirt</p>
 	</div>
 </footer>
 
@@ -46,5 +46,8 @@ const today = new Date();
 		font-size: 0.8em;
 		color: var(--text-light);
 		margin: 0;
+	}
+	.copy-symbol {
+		font-family: "Atkinson", sans-serif;
 	}
 </style>

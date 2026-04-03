@@ -1,0 +1,292 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import { SITE_TITLE } from '../consts';
+---
+
+<!doctype html>
+<html lang="ja">
+	<head>
+		<BaseHead title={`Budget Guide | ${SITE_TITLE}`} description="in the blue shirt - お仕事依頼予算ガイドライン" />
+	</head>
+	<body>
+		<Header />
+		<main>
+			<h1 class="page-title animate-in">Budget Guide</h1>
+			<p class="page-subtitle animate-in">お仕事依頼 予算ガイドライン</p>
+
+			<div class="intro animate-in" style="animation-delay: 0.05s">
+				<p>ご依頼を検討いただく際の目安としてご参照ください。案件の内容・規模・スケジュール等により変動します。記載の金額はあくまで参考値です。</p>
+				<p>ご予算が目安に届かない場合でも、ご相談いただくこと自体はもちろん歓迎です。スケジュールや内容次第で対応が難しかったり、お返事にお時間をいただく場合はありますが、お気軽にお声がけください。</p>
+			</div>
+
+			<!-- Production Heatmap Section -->
+			<section class="section animate-in" style="animation-delay: 0.1s">
+				<h2>楽曲制作</h2>
+				<p class="section-desc">用途 × 規模による価格分布</p>
+
+				<div class="heatmap-wrapper">
+					<div class="heatmap-legend">
+						<span class="legend-label">少</span>
+						<div class="legend-bar"></div>
+						<span class="legend-label">多</span>
+					</div>
+
+					<div class="heatmap-axis">
+						<span>¥0</span>
+						<span>¥100,000</span>
+						<span>¥200,000</span>
+						<span>¥300,000</span>
+						<span>¥400,000</span>
+						<span>¥500,000+</span>
+					</div>
+
+					<div class="heatmap-rows">
+						<div class="heatmap-row">
+							<span class="heatmap-label">CM・広告音楽</span>
+							<div class="heatmap-bar" style="--peak: 33%; --spread: 28%;"></div>
+						</div>
+						<div class="heatmap-row">
+							<span class="heatmap-label">楽曲提供</span>
+							<div class="heatmap-bar" style="--peak: 42%; --spread: 24%;"></div>
+						</div>
+						<div class="heatmap-row">
+							<span class="heatmap-label">リミックス</span>
+							<div class="heatmap-bar" style="--peak: 25%; --spread: 20%;"></div>
+						</div>
+						<div class="heatmap-row">
+							<span class="heatmap-label">劇伴・映像音楽</span>
+							<div class="heatmap-bar" style="--peak: 60%; --spread: 30%;"></div>
+						</div>
+					</div>
+
+					<ul class="heatmap-notes">
+						<li>尺・曲数・権利範囲・納期等により変動します</li>
+						<li>著作権の買取/譲渡が含まれる場合は別途相談</li>
+						<li>ミックス・マスタリングを含む基本制作費です</li>
+					</ul>
+				</div>
+			</section>
+
+			<!-- Performance Section -->
+			<section class="section animate-in" style="animation-delay: 0.15s">
+				<h2>DJ・ライブ出演</h2>
+
+				<div class="performance-card">
+					<div class="perf-formula">
+						<span class="perf-transport">交通費実費</span>
+						<span class="perf-plus">+</span>
+						<span class="perf-fee">¥30,000</span>
+					</div>
+					<ul class="perf-notes">
+						<li>関西圏以外の場合は宿泊費も含みます</li>
+						<li>機材持ち込みの有無はご相談ください</li>
+						<li>学生企画・非営利イベント等は柔軟に対応します</li>
+					</ul>
+				</div>
+			</section>
+
+			<!-- CTA -->
+			<section class="section cta animate-in" style="animation-delay: 0.2s">
+				<p>まずはお気軽にご相談ください</p>
+				<a href="/contact" class="cta-btn">Contact</a>
+			</section>
+		</main>
+		<Footer />
+	</body>
+</html>
+
+<style>
+	.intro {
+		max-width: 640px;
+		margin-bottom: 2.5em;
+	}
+	.intro p {
+		color: var(--text-light);
+		font-size: 0.9em;
+		line-height: 1.8;
+	}
+
+	.section {
+		margin-bottom: 3em;
+	}
+	.section h2 {
+		font-size: 1.3em;
+		margin-bottom: 0.2em;
+	}
+	.section-desc {
+		color: var(--text-light);
+		font-size: 0.85em;
+		margin-bottom: 1.5em;
+	}
+
+	/* Heatmap */
+	.heatmap-wrapper {
+		background: var(--bg-soft);
+		border-radius: var(--radius-lg);
+		padding: 1.5em;
+	}
+	.heatmap-legend {
+		display: flex;
+		align-items: center;
+		gap: 0.6em;
+		margin-bottom: 1.5em;
+		font-size: 0.75em;
+		color: var(--text-light);
+	}
+	.legend-bar {
+		flex: 1;
+		max-width: 180px;
+		height: 8px;
+		border-radius: 4px;
+		background: linear-gradient(90deg, transparent, #339af0, #1864ab);
+	}
+
+	.heatmap-axis {
+		display: flex;
+		justify-content: space-between;
+		font-size: 0.72em;
+		color: var(--text-light);
+		padding-left: 140px;
+		margin-bottom: 0.6em;
+	}
+
+	.heatmap-rows {
+		display: flex;
+		flex-direction: column;
+		gap: 0.6em;
+	}
+	.heatmap-row {
+		display: flex;
+		align-items: center;
+		gap: 0;
+	}
+	.heatmap-label {
+		width: 140px;
+		flex-shrink: 0;
+		font-size: 0.85em;
+		font-weight: 600;
+		white-space: nowrap;
+	}
+	.heatmap-bar {
+		flex: 1;
+		height: 2.4em;
+		border-radius: 8px;
+		background: radial-gradient(
+			ellipse calc(var(--spread) * 2.5) 100% at var(--peak) 50%,
+			#1864ab 0%,
+			#339af0 30%,
+			#74c0fc 50%,
+			#d0ebff 70%,
+			transparent 100%
+		);
+	}
+
+	.heatmap-notes {
+		margin: 1.2em 0 0;
+		padding: 0;
+		list-style: none;
+		font-size: 0.78em;
+		color: var(--text-light);
+		line-height: 1.8;
+	}
+	.heatmap-notes li::before {
+		content: "※ ";
+	}
+
+	/* Performance */
+	.performance-card {
+		background: var(--bg-soft);
+		border-radius: var(--radius-lg);
+		padding: 2em;
+	}
+	.perf-formula {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.8em;
+		margin-bottom: 1.5em;
+		flex-wrap: wrap;
+	}
+	.perf-transport {
+		font-size: 1.1em;
+		font-weight: 600;
+		padding: 0.5em 1.2em;
+		background: var(--bg);
+		border-radius: var(--radius);
+		border: 1px solid var(--border);
+	}
+	.perf-plus {
+		font-size: 1.4em;
+		font-weight: 300;
+		color: var(--text-light);
+	}
+	.perf-fee {
+		font-size: 1.6em;
+		font-weight: 700;
+		color: var(--accent);
+	}
+	.perf-notes {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		font-size: 0.8em;
+		color: var(--text-light);
+		line-height: 1.9;
+		text-align: center;
+	}
+	.perf-notes li::before {
+		content: "· ";
+	}
+
+	/* CTA */
+	.cta {
+		text-align: center;
+		padding: 2.5em 1em;
+		background: var(--bg-soft);
+		border-radius: var(--radius-lg);
+	}
+	.cta p {
+		color: var(--text-light);
+		font-size: 0.95em;
+		margin-bottom: 1em;
+	}
+	.cta-btn {
+		display: inline-block;
+		padding: 0.7em 2.5em;
+		background: var(--accent);
+		color: #fff;
+		border-radius: 999px;
+		font-size: 0.9em;
+		font-weight: 600;
+		text-decoration: none;
+		transition: all 0.2s ease;
+	}
+	.cta-btn:hover {
+		background: var(--accent-dark);
+		color: #fff;
+		transform: translateY(-1px);
+		box-shadow: var(--shadow-md);
+	}
+
+	@media (max-width: 640px) {
+		.heatmap {
+			font-size: 0.72em;
+		}
+		.heatmap tbody th {
+			font-size: 0.8em;
+			padding: 0.6em 0.7em;
+		}
+		.heatmap td {
+			height: 2em;
+			min-width: 2.4em;
+		}
+		.performance-card {
+			padding: 1.5em;
+		}
+		.perf-fee {
+			font-size: 1.3em;
+		}
+	}
+</style>

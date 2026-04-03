@@ -16,6 +16,10 @@ import { SITE_TITLE } from '../consts';
 			<h1 class="page-title animate-in">Contact</h1>
 			<p class="page-subtitle animate-in">お問い合わせ</p>
 
+			<div class="budget-link animate-in" style="animation-delay: 0.05s">
+				<a href="/budget">お仕事依頼 予算ガイドライン →</a>
+			</div>
+
 			<div class="form-wrap animate-in" style="animation-delay: 0.1s">
 				<iframe
 					src="https://docs.google.com/forms/d/e/1FAIpQLScmBZi12zvwHZmWMDbsTRstEzhxax4owqx6TIZ71texDIMuXg/viewform?embedded=true"
@@ -36,6 +40,28 @@ import { SITE_TITLE } from '../consts';
 	.form-wrap {
 		max-width: 640px;
 		margin: 0 auto;
+	}
+	.budget-link {
+		max-width: 640px;
+		margin: 0 auto 2em;
+	}
+	.budget-link a {
+		display: inline-block;
+		padding: 0.6em 1.4em;
+		background: var(--bg-soft);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		font-size: 0.85em;
+		font-weight: 500;
+		color: var(--text);
+		transition: all 0.2s ease;
+	}
+	.budget-link a:hover {
+		background: var(--accent);
+		color: #fff;
+		border-color: var(--accent);
+		transform: translateY(-1px);
+		box-shadow: var(--shadow-sm);
 	}
 	.form-wrap iframe {
 		border: none;

@@ -18,13 +18,12 @@ jobs:
       - run: npm ci
       - run: npx astro build
 
-      - name: Deploy via FTPS
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: arimuri.sakura.ne.jp
-          username: arimuri
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./dist/
-          server-dir: /home/arimuri/www/
-          protocol: ftps
-          dangerous-clean-slate: false
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H arimuri.sakura.ne.jp >> ~/.ssh/known_hosts
+
+      - name: Deploy via rsync
+        run: rsync -avz --delete ./dist/ arimuri@arimuri.sakura.ne.jp:/home/arimuri/www/

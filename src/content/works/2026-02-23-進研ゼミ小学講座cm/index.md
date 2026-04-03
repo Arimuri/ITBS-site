@@ -1,6 +1,6 @@
 ---
 title: "進研ゼミ小学講座CM"
-date: 2026-04-03
+date: 2026-02-23
 categories: 
   - "CM"
 ---

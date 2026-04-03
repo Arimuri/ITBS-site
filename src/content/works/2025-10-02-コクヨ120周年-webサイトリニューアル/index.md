@@ -1,6 +1,6 @@
 ---
 title: "コクヨ120周年 Webサイトリニューアル"
-date: 2026-04-03
+date: 2025-10-02
 categories: 
   - "Web"
 ---

@@ -1,6 +1,6 @@
 ---
 title: "popman3580 アートワークス＆スケッチ\"CITRUS2\" PR動画"
-date: 2026-04-03
+date: 2025-11-07
 categories: 
   - "映像音楽"
 ---

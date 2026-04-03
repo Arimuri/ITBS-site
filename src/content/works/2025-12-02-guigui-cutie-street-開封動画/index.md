@@ -1,6 +1,6 @@
 ---
 title: "guigui×CUTIE STREET かなちゃんとえみるちゃん 開封動画！"
-date: 2026-04-03
+date: 2025-12-02
 categories: 
   - "映像音楽"
 ---

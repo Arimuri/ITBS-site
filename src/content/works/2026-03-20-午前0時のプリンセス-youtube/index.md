@@ -1,6 +1,6 @@
 ---
 title: "午前0時のプリンセス YouTubeに登場"
-date: 2026-04-03
+date: 2026-03-20
 categories: 
   - "出演"
 ---

@@ -1,6 +1,6 @@
 ---
 title: "NISSEI「ニックン＆セイチャン物語」篇"
-date: 2026-04-03
+date: 2025-11-05
 categories: 
   - "CM"
 ---

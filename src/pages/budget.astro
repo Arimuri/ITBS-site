@@ -34,30 +34,30 @@ import { SITE_TITLE } from '../consts';
 					</div>
 
 					<div class="heatmap-axis">
-						<span>¥0</span>
-						<span>¥100,000</span>
-						<span>¥200,000</span>
-						<span>¥300,000</span>
-						<span>¥400,000</span>
-						<span>¥500,000+</span>
+						<span>0万</span>
+						<span>10万</span>
+						<span>20万</span>
+						<span>30万</span>
+						<span>40万</span>
+						<span>50万円+</span>
 					</div>
 
 					<div class="heatmap-rows">
 						<div class="heatmap-row">
 							<span class="heatmap-label">CM・広告音楽</span>
-							<div class="heatmap-bar" style="--peak: 33%; --spread: 28%;"></div>
+							<div class="heatmap-bar" style="--peak: 43%; --spread: 28%;"></div>
 						</div>
 						<div class="heatmap-row">
 							<span class="heatmap-label">楽曲提供</span>
-							<div class="heatmap-bar" style="--peak: 42%; --spread: 24%;"></div>
+							<div class="heatmap-bar" style="--peak: 52%; --spread: 16%;"></div>
 						</div>
 						<div class="heatmap-row">
 							<span class="heatmap-label">リミックス</span>
-							<div class="heatmap-bar" style="--peak: 25%; --spread: 20%;"></div>
+							<div class="heatmap-bar" style="--peak: 35%; --spread: 20%;"></div>
 						</div>
 						<div class="heatmap-row">
 							<span class="heatmap-label">劇伴・映像音楽</span>
-							<div class="heatmap-bar" style="--peak: 60%; --spread: 30%;"></div>
+							<div class="heatmap-bar" style="--peak: 78%; --spread: 34%;"></div>
 						</div>
 					</div>
 
@@ -75,12 +75,11 @@ import { SITE_TITLE } from '../consts';
 
 				<div class="performance-card">
 					<div class="perf-formula">
-						<span class="perf-transport">交通費実費</span>
+						<span class="perf-transport">交通費+宿泊費</span>
 						<span class="perf-plus">+</span>
 						<span class="perf-fee">¥30,000</span>
 					</div>
 					<ul class="perf-notes">
-						<li>関西圏以外の場合は宿泊費も含みます</li>
 						<li>機材持ち込みの有無はご相談ください</li>
 						<li>学生企画・非営利イベント等は柔軟に対応します</li>
 					</ul>
@@ -193,6 +192,7 @@ import { SITE_TITLE } from '../consts';
 	}
 	.heatmap-notes li::before {
 		content: "※ ";
+		font-family: "Atkinson", sans-serif;
 	}
 
 	/* Performance */
@@ -226,6 +226,7 @@ import { SITE_TITLE } from '../consts';
 		font-size: 1.6em;
 		font-weight: 700;
 		color: var(--accent);
+		font-family: "Atkinson", sans-serif;
 	}
 	.perf-notes {
 		margin: 0;
@@ -238,6 +239,7 @@ import { SITE_TITLE } from '../consts';
 	}
 	.perf-notes li::before {
 		content: "· ";
+		font-family: "Atkinson", sans-serif;
 	}
 
 	/* CTA */

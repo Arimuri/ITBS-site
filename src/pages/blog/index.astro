@@ -48,6 +48,7 @@ try {
 
 			<!-- Diary Tab -->
 			<div class="tab-content active" id="diary">
+				<p class="tab-note">だいぶ更新が滞っています</p>
 				<div class="post-grid">
 					{posts.map((post, i) => (
 						<a href={`/blog/${post.id}/`} class="post-card animate-in" style={`animation-delay: ${0.05 + i * 0.03}s`}>
@@ -70,6 +71,7 @@ try {
 
 			<!-- Newsletter Tab -->
 			<div class="tab-content" id="newsletter">
+				<p class="tab-note">不定期発行のメールマガジンです。 <a href="https://blueenvelope.intheblueshirt.com/" target="_blank" rel="noopener">Subscribe</a></p>
 				<div class="newsletter-list">
 					{newsletters.map((item, i) => (
 						<a href={item.link} target="_blank" rel="noopener" class="newsletter-card" style={`animation-delay: ${0.05 + i * 0.03}s`}>
@@ -91,6 +93,15 @@ try {
 </html>
 
 <style>
+	.tab-note {
+		font-size: 0.85em;
+		color: var(--text-light);
+		margin-bottom: 1.5em;
+	}
+	.tab-note a {
+		font-weight: 600;
+	}
+
 	/* Tabs */
 	.tabs {
 		display: flex;

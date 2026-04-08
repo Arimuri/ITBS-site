@@ -12,6 +12,19 @@
 # 新しいイベントを上に追加してください。
 # ---
 
+## 活性化サーバー presents "POLYSH!!!" #No.03
+- date: 2026-04-25
+- venue: 音楽喫茶 茶箱
+- city: 東京
+- url: https://www.activation-server.com/events/3
+- note: DJ / OPEN 16:00 / CLOSE 22:00
+
+## PETAGINE vol.10
+- date: 2026-06-13
+- venue: Barフェーダー
+- city: 大阪
+- note: DJ / OPEN 17:00 / ¥2,600 w/1drink
+
 ## 文学フリマ東京42
 - date: 2026-05-04
 - venue: 東京流通センター（TRC）

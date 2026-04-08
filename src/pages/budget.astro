@@ -24,7 +24,7 @@ import { SITE_TITLE } from '../consts';
 			<!-- Production Heatmap Section -->
 			<section class="section animate-in" style="animation-delay: 0.1s">
 				<h2>楽曲制作</h2>
-				<p class="section-desc">用途 × 規模による価格分布</p>
+				<p class="section-desc">用途 × 規模による価格分布（2025年実績ベース）</p>
 
 				<div class="heatmap-wrapper">
 					<div class="heatmap-legend">
@@ -45,23 +45,24 @@ import { SITE_TITLE } from '../consts';
 					<div class="heatmap-rows">
 						<div class="heatmap-row">
 							<span class="heatmap-label">CM・広告音楽</span>
-							<div class="heatmap-bar" style="--peak: 43%; --spread: 28%;"></div>
+							<div class="heatmap-bar" style="--peak: 40%; --sl: 18%; --sr: 100%;"></div>
 						</div>
 						<div class="heatmap-row">
 							<span class="heatmap-label">楽曲提供</span>
-							<div class="heatmap-bar" style="--peak: 52%; --spread: 16%;"></div>
+							<div class="heatmap-bar" style="--peak: 53%; --sl: 16%; --sr: 100%;"></div>
 						</div>
 						<div class="heatmap-row">
 							<span class="heatmap-label">リミックス</span>
-							<div class="heatmap-bar" style="--peak: 35%; --spread: 20%;"></div>
+							<div class="heatmap-bar" style="--peak: 37%; --sl: 19%; --sr: 40%;"></div>
 						</div>
 						<div class="heatmap-row">
 							<span class="heatmap-label">劇伴・映像音楽</span>
-							<div class="heatmap-bar" style="--peak: 78%; --spread: 34%;"></div>
+							<div class="heatmap-bar" style="--peak: 58%; --sl: 24%; --sr: 100%;"></div>
 						</div>
 					</div>
 
 					<ul class="heatmap-notes">
+						<li>作詞・作曲・編曲すべて対応可能です</li>
 						<li>尺・曲数・権利範囲・納期・ミックスマスタリングやレコーディング立ち会いの有無等により変動します</li>
 						<li>著作権の買取/譲渡が含まれる場合は別途相談</li>
 					</ul>
@@ -172,16 +173,16 @@ import { SITE_TITLE } from '../consts';
 		flex: 1;
 		height: 2.4em;
 		border-radius: 8px;
-		background: radial-gradient(
-			ellipse calc(var(--spread) * 2.5) 100% at var(--peak) 50%,
-			#1864ab 0%,
-			#339af0 30%,
-			#74c0fc 50%,
-			#d0ebff 70%,
-			transparent 100%
+		background: linear-gradient(90deg,
+			transparent calc(var(--peak) - var(--sl)),
+			#a5d8ff calc(var(--peak) - var(--sl) * 0.6),
+			#339af0 calc(var(--peak) - var(--sl) * 0.25),
+			#1864ab calc(var(--peak)),
+			#339af0 calc(var(--peak) + var(--sr) * 0.25),
+			#a5d8ff calc(var(--peak) + var(--sr) * 0.6),
+			transparent calc(var(--peak) + var(--sr))
 		);
 	}
-
 	.heatmap-notes {
 		margin: 1.2em 0 0;
 		padding: 0;

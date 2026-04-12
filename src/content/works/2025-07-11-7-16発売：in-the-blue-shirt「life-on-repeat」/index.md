@@ -12,8 +12,8 @@ categories:
 
 [![](images/02_side-1024x819.jpg)](https://intheblueshirt.com/wp-content/uploads/2025/07/02_side.jpg)
 
-[![](images/02_展開図-1024x819.jpg)](https://intheblueshirt.com/wp-content/uploads/2025/07/02_展開図.jpg)
+[![](images/02_diagram-1024x819.jpg)](https://intheblueshirt.com/wp-content/uploads/2025/07/02_diagram.jpg)
 
-[![](images/02_箱本体-1024x819.jpg)](https://intheblueshirt.com/wp-content/uploads/2025/07/02_箱本体.jpg)
+[![](images/02_box-1024x819.jpg)](https://intheblueshirt.com/wp-content/uploads/2025/07/02_box.jpg)
 
 [![](images/KV-1024x819.jpg)](https://intheblueshirt.com/wp-content/uploads/2025/07/KV.jpg)

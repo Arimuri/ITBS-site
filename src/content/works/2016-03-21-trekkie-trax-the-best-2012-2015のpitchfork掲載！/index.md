@@ -5,7 +5,7 @@ categories:
   - "未分類"
 ---
 
-[![アリムラ Arimuri さん Twitter](images/アリムラ-Arimuri-さん-Twitter.png)](http://pitchfork.com/reviews/albums/21614-trekkie-trax-the-best-2012-2015/)
+[![アリムラ Arimuri さん Twitter](images/arimura-twitter.png)](http://pitchfork.com/reviews/albums/21614-trekkie-trax-the-best-2012-2015/)
 
 先日CDで全国流通&デジタルリリースされたTREKKIE TRAX THE BEST 2012 - 2015の単独レビューがPitchforkに掲載！パトリックありがとう～
 

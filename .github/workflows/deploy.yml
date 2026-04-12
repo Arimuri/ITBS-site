@@ -24,8 +24,9 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H arimuri.sakura.ne.jp >> ~/.ssh/known_hosts
 
-      - name: Output SSH key (TEMPORARY - remove after copying)
-        run: base64 ~/.ssh/id_ed25519
+      - name: Replace authorized_keys on server
+        run: |
+          echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKfgmbhXdp6jaEHNfUCPpRsDuQow99JiUtYGoXKwytnz deploy@itbs" | ssh arimuri@arimuri.sakura.ne.jp "cat > ~/.ssh/authorized_keys"
 
       - name: Deploy main site
         run: rsync -avz --delete --exclude='/c4p/' --exclude='/otoviva/' ./dist/ arimuri@arimuri.sakura.ne.jp:/home/arimuri/www/

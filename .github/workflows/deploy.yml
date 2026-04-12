@@ -10,12 +10,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/checkout@v4
-        with:
-          repository: Arimuri/ITBS-otoviva
-          token: ${{ secrets.OTOVIVA_PAT }}
-          path: otoviva
-
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -23,8 +17,6 @@ jobs:
 
       - run: npm ci
       - run: npx astro build
-      - run: cp -r ./otoviva ./dist/otoviva
-
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
@@ -33,7 +25,7 @@ jobs:
           ssh-keyscan -H arimuri.sakura.ne.jp >> ~/.ssh/known_hosts
 
       - name: Deploy main site
-        run: rsync -avz --delete --exclude='/c4p/' ./dist/ arimuri@arimuri.sakura.ne.jp:/home/arimuri/www/
+        run: rsync -avz --delete --exclude='/c4p/' --exclude='/otoviva/' ./dist/ arimuri@arimuri.sakura.ne.jp:/home/arimuri/www/
 
       - name: Deploy c4p subdomain
         run: rsync -avz ./c4p-site/ arimuri@arimuri.sakura.ne.jp:/home/arimuri/www/c4p/

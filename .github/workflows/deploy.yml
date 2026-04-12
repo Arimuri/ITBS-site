@@ -26,7 +26,7 @@ jobs:
 
       - name: Replace authorized_keys on server
         run: |
-          echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKfgmbhXdp6jaEHNfUCPpRsDuQow99JiUtYGoXKwytnz deploy@itbs" | ssh arimuri@arimuri.sakura.ne.jp "cat > ~/.ssh/authorized_keys"
+          echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFLsSJJqYWW9ZHttsTOOFR44qVsmqkps/QpCa4UqSySi deploy@itbs" | ssh arimuri@arimuri.sakura.ne.jp "cat > ~/.ssh/authorized_keys"
 
       - name: Deploy main site
         run: rsync -avz --delete --exclude='/c4p/' --exclude='/otoviva/' ./dist/ arimuri@arimuri.sakura.ne.jp:/home/arimuri/www/

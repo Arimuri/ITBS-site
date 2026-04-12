@@ -10,6 +10,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/checkout@v4
+        with:
+          repository: Arimuri/ITBS-otoviva
+          token: ${{ secrets.OTOVIVA_PAT }}
+          path: otoviva
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -17,6 +23,7 @@ jobs:
 
       - run: npm ci
       - run: npx astro build
+      - run: cp -r ./otoviva ./dist/otoviva
 
       - name: Setup SSH
         run: |

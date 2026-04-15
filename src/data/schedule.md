@@ -19,6 +19,13 @@
 - url: https://www.activation-server.com/events/3
 - note: DJ / OPEN 16:00 / CLOSE 22:00
 
+## 神保町サウンドシェア 〜やさしい試聴会〜 vol.10
+- date: 2026-06-14
+- venue: 美学校
+- city: 東京・神保町
+- url: https://bigakko.jp/event/2026/soundshare10
+- note: 主催
+
 ## PETAGINE vol.10
 - date: 2026-06-13
 - venue: Barフェーダー

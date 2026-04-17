@@ -53,6 +53,12 @@
 - url: https://x.com/yuzuyuzu4712/status/2023367720675533115
 - note: DJ / 13:00〜20:00
 
+## 5 Star Cowboy presents BBQ #1
+- date: 2026-05-09
+- venue: club daphnia
+- city: 大阪・北加賀屋
+- note: DJ / 18:30〜23:00 / ¥3,000 (ベアーズとのハシゴ割 ¥2,000)
+
 ## Oaiko pre.「おあいこ」
 - date: 2026-05-17
 - venue: AOYAMA 月見ル君想フ

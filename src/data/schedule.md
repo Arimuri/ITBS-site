@@ -56,6 +56,7 @@
 ## Conflua
 - date: 2026-05-02
 - venue: Live-art-bar MagaYura
+- city: 大阪
 - url: https://x.com/howring_otomame/status/2045499031389081642
 - note: Live & DJ / OPEN 14:30 / START 15:00
 

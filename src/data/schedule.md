@@ -53,6 +53,12 @@
 - url: https://x.com/yuzuyuzu4712/status/2023367720675533115
 - note: DJ / 13:00〜20:00
 
+## Conflua
+- date: 2026-05-02
+- venue: Live-art-bar MagaYura
+- url: https://x.com/howring_otomame/status/2045499031389081642
+- note: Live & DJ / OPEN 14:30 / START 15:00
+
 ## 5 Star Cowboy presents BBQ #1
 - date: 2026-05-09
 - venue: club daphnia

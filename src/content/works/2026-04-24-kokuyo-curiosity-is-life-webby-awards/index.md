@@ -1,6 +1,6 @@
 ---
 title: "KOKUYO Curiosity is Life が THE WEBBY AWARDS 受賞"
-date: 2026-04-18
+date: 2026-04-24
 categories:
   - "受賞"
 ---

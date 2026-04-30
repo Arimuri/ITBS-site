@@ -46,6 +46,13 @@
 - url: https://livehouse-nano.com/schedule.php
 - note: ライブ / OPEN 13:00 / 約9時間連続開催
 
+## KMNPARTY vol.6
+- date: 2026-05-24
+- venue: WOMB
+- city: 東京・渋谷
+- url: https://tribalcon.zaiko.io/e/kmnparty-vol6
+- note: OPEN 14:00 / START 15:00 / END 20:30
+
 ## TAU -タウ-
 - date: 2026-05-30
 - venue: covo-ushimado

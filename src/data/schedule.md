@@ -46,6 +46,13 @@
 - url: https://livehouse-nano.com/schedule.php
 - note: ライブ / OPEN 13:00 / 約9時間連続開催
 
+## 横浜✧カルチャーセンター「想像の体操〜わたしの地層を考える〜」
+- date: 2026-07-18
+- venue: Art Center NEW
+- city: 横浜・みなとみらい
+- url: https://artcenter-new.jp/school/yokohama_culture_center/
+- note: w/ okadada, 長濵よし野 / 17:00〜20:00
+
 ## KMNPARTY vol.6
 - date: 2026-05-24
 - venue: WOMB

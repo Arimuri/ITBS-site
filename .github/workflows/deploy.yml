@@ -29,4 +29,4 @@ jobs:
         run: rsync -avz --delete --exclude='/c4p/' --exclude='/otoviva/' ./dist/ arimuri@arimuri.sakura.ne.jp:/home/arimuri/www/
 
       - name: Deploy c4p subdomain
-        run: rsync -avz ./c4p-site/ arimuri@arimuri.sakura.ne.jp:/home/arimuri/www/c4p/
+        run: rsync -avz --delete ./c4p-site/ arimuri@arimuri.sakura.ne.jp:/home/arimuri/www/c4p/

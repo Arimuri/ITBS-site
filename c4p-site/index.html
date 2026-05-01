@@ -92,10 +92,36 @@
       text-align: center;
     }
 
+    .booth-banner {
+      margin-top: 2rem;
+      padding: 1.4rem 2rem;
+      border: 3px solid var(--accent);
+      border-radius: 6px;
+      text-align: center;
+      background: var(--accent-light);
+      max-width: 480px;
+      width: 100%;
+    }
+    .booth-banner-label {
+      font-size: 0.85rem;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+    }
+    .booth-banner-number {
+      font-size: clamp(2.4rem, 7vw, 3.6rem);
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.08em;
+      line-height: 1.1;
+    }
+
     .hero-links {
       margin-top: 2rem;
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: center;
       align-items: center;
       gap: 0.8rem;
     }
@@ -115,18 +141,6 @@
     .buy-btn:hover {
       background: #155d9a;
       transform: translateY(-1px);
-    }
-
-    .bunfree-link {
-      font-size: 0.8rem;
-      color: var(--muted);
-      text-decoration: none;
-      border-bottom: 1px solid transparent;
-      transition: all 0.15s;
-    }
-    .bunfree-link:hover {
-      color: var(--accent);
-      border-bottom-color: var(--accent);
     }
 
     /* ── Pretext はじめに section ── */
@@ -180,6 +194,91 @@
       background: var(--accent);
       margin: 0 auto;
       opacity: 0.4;
+    }
+
+    /* ── Goods ── */
+    .goods-section {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 3rem 2rem 4rem;
+    }
+
+    .goods-heading {
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    .goods-lead {
+      font-size: 0.95rem;
+      line-height: 2;
+      text-align: center;
+      max-width: 600px;
+      margin: 0 auto 2rem;
+    }
+
+    .goods-price {
+      display: inline-block;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 0.05em;
+    }
+
+    .goods-block-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      letter-spacing: 0.15em;
+      text-align: center;
+      margin: 2rem 0 1rem;
+    }
+
+    .covers-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.8rem;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .cover-thumb {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 3 / 2;
+      object-fit: cover;
+      background: #fff;
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 3px;
+    }
+
+    .bookmarks-img {
+      display: block;
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      height: auto;
+      background: #fff;
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 3px;
+    }
+
+    .cover-caution-img {
+      display: block;
+      width: 100%;
+      max-width: 720px;
+      margin: 1rem auto 0;
+      height: auto;
+      border-radius: 3px;
+    }
+
+    .goods-note {
+      margin-top: 2rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-align: center;
+      letter-spacing: 0.05em;
     }
 
     /* ── Chapter Discovery ── */
@@ -395,6 +494,13 @@
       .hajimeni-section {
         padding: 2rem 1.5rem 3rem;
       }
+      .goods-section {
+        padding: 2rem 1.5rem 3rem;
+      }
+      .covers-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.6rem;
+      }
     }
 
     /* ── Fade-in animation ── */
@@ -419,11 +525,42 @@
       <img src="assets/index.jpg" alt="Create for Personality 目次" class="hero-cover">
     </div>
     <p class="hero-lead" id="lead-text"></p>
-    <p class="hero-meta">有村崚　著　/　文学フリマ東京41　2026年5月4日</p>
+    <p class="hero-meta">有村崚　著　/　文学フリマ東京42　2026年5月4日</p>
+    <div class="booth-banner">
+      <div class="booth-banner-label">BOOTH</div>
+      <div class="booth-banner-number">と-54</div>
+    </div>
     <div class="hero-links">
       <a href="https://shop.intheblueshirt.com/items/140459320" class="buy-btn" target="_blank" rel="noopener">通販で購入する</a>
-      <a href="" class="bunfree-link" id="bunfree-link" target="_blank" rel="noopener">文学フリマ東京41 イベントページ</a>
+      <a href="https://bunfree.net/event/tokyo42/" class="buy-btn" id="bunfree-link" target="_blank" rel="noopener">文学フリマ東京42 イベントページ</a>
     </div>
+  </section>
+
+  <div class="divider fade-up"></div>
+
+  <!-- 会場限定グッズ -->
+  <section class="goods-section fade-up">
+    <h2 class="goods-heading">会場限定グッズ</h2>
+    <p class="goods-lead">
+      文学フリマ会場では、ブックカバー6種類のなかから<strong>好きな2枚</strong>と、<strong>しおり1枚</strong>のセットを<span class="goods-price">¥500</span>で販売します。<br>
+      しおりは多数のデザインからお選びいただけます。
+    </p>
+
+    <p class="goods-block-label">ブックカバー（全6種）</p>
+    <div class="covers-grid">
+      <img src="assets/goods/cover_01.jpg" alt="ブックカバー 01" class="cover-thumb">
+      <img src="assets/goods/cover_02.jpg" alt="ブックカバー 02" class="cover-thumb">
+      <img src="assets/goods/cover_03.jpg" alt="ブックカバー 03" class="cover-thumb">
+      <img src="assets/goods/cover_04.jpg" alt="ブックカバー 04" class="cover-thumb">
+      <img src="assets/goods/cover_05.jpg" alt="ブックカバー 05" class="cover-thumb">
+      <img src="assets/goods/cover_06.jpg" alt="ブックカバー 06" class="cover-thumb">
+    </div>
+    <img src="assets/goods/cover_caution.jpg" alt="C4P Book Cover 使い方と注意" class="cover-caution-img">
+
+    <p class="goods-block-label">しおり</p>
+    <img src="assets/goods/bookmarks.jpg" alt="しおりデザイン一覧" class="bookmarks-img">
+
+    <p class="goods-note">※ 文学フリマ東京42 当日（2026年5月4日）の会場販売のみ</p>
   </section>
 
   <div class="divider fade-up"></div>

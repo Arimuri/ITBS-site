@@ -68,6 +68,12 @@
       font-weight: 700;
       margin-right: 0.1em;
     }
+    .stock-bar--soldout {
+      background: #b22222;
+    }
+    .stock-bar--soldout .stock-count strong {
+      color: #fff;
+    }
 
     /* ── Hero ── */
     .hero {
@@ -548,9 +554,9 @@
 <body>
 
   <!-- 在庫カウンター -->
-  <div class="stock-bar">
-    <span class="stock-label">初版在庫</span>
-    <span class="stock-count"><strong>3</strong>/500部</span>
+  <div class="stock-bar stock-bar--soldout">
+    <span class="stock-label">初版</span>
+    <span class="stock-count"><strong>！完売！</strong></span>
   </div>
 
   <!-- Hero -->

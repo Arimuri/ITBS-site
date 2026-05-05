@@ -39,6 +39,36 @@
       overflow-x: hidden;
     }
 
+    /* ── 在庫カウンター ── */
+    .stock-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: center;
+      align-items: baseline;
+      gap: 0.8em;
+      padding: 0.6em 1em;
+      background: var(--ink);
+      color: var(--paper);
+      font-size: 0.9rem;
+      letter-spacing: 0.04em;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .stock-label {
+      font-size: 0.8rem;
+      opacity: 0.85;
+    }
+    .stock-count {
+      font-feature-settings: "tnum";
+    }
+    .stock-count strong {
+      font-size: 1.2rem;
+      color: #ffd166;
+      font-weight: 700;
+      margin-right: 0.1em;
+    }
+
     /* ── Hero ── */
     .hero {
       display: flex;
@@ -516,6 +546,12 @@
   </style>
 </head>
 <body>
+
+  <!-- 在庫カウンター -->
+  <div class="stock-bar">
+    <span class="stock-label">初版在庫</span>
+    <span class="stock-count"><strong>20</strong>/500部</span>
+  </div>
 
   <!-- Hero -->
   <section class="hero fade-up">

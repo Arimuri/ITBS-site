@@ -75,6 +75,34 @@
       color: #fff;
     }
 
+    /* ── 第2版予約バナー ── */
+    .preorder-banner {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1em;
+      padding: 0.9em 1em;
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      font-size: 0.95rem;
+      transition: background 0.2s ease;
+    }
+    .preorder-banner:hover {
+      background: #155a96;
+    }
+    .preorder-label {
+      font-size: 1rem;
+    }
+    .preorder-cta {
+      background: rgba(255,255,255,0.18);
+      padding: 0.3em 0.9em;
+      border-radius: 999px;
+      font-size: 0.85rem;
+    }
+
     /* ── Hero ── */
     .hero {
       display: flex;
@@ -608,6 +636,12 @@
     <span class="stock-count"><strong>！完売！</strong></span>
   </div>
 
+  <!-- 第2版予約 -->
+  <a class="preorder-banner" href="https://shop.intheblueshirt.com/items/143915595" target="_blank" rel="noopener">
+    <span class="preorder-label">第2版 受注受付中</span>
+    <span class="preorder-cta">予約する →</span>
+  </a>
+
   <!-- Hero -->
   <section class="hero fade-up">
     <h1 class="hero-title">書籍版「クリエイト・フォー・パーソナリティ」</h1>
@@ -622,7 +656,7 @@
       <div class="booth-banner-number">と-54</div>
     </div>
     <div class="hero-links">
-      <a href="https://shop.intheblueshirt.com/items/140459320" class="buy-btn" target="_blank" rel="noopener">通販で購入する</a>
+      <a href="https://shop.intheblueshirt.com/items/143915595" class="buy-btn" target="_blank" rel="noopener">第2版を予約する</a>
       <a href="https://bunfree.net/event/tokyo42/" class="buy-btn" id="bunfree-link" target="_blank" rel="noopener">文学フリマ東京42 イベントページ</a>
     </div>
   </section>

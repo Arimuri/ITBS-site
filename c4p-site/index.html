@@ -539,6 +539,55 @@
       }
     }
 
+    /* ── 取扱書店 ── */
+    .stores-section {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 3rem 2rem;
+    }
+    .stores-heading {
+      font-size: 1.5rem;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+      text-align: center;
+    }
+    .stores-lead {
+      color: var(--muted);
+      font-size: 0.95rem;
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .stores-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1rem;
+    }
+    .store-card {
+      display: block;
+      padding: 1.2rem 1.4rem;
+      background: var(--card-bg);
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 10px;
+      text-decoration: none;
+      color: var(--ink);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .store-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+      border-color: var(--accent);
+    }
+    .store-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+    }
+    .store-address {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
     /* ── Fade-in animation ── */
     .fade-up {
       opacity: 0;
@@ -627,6 +676,22 @@
   </section>
 
   <div class="divider fade-up"></div>
+
+  <!-- 取扱書店 -->
+  <section class="stores-section fade-up">
+    <h2 class="stores-heading">取扱書店</h2>
+    <p class="stores-lead">本書を取り扱ってくださっている独立系書店です。</p>
+    <div class="stores-grid">
+      <a class="store-card" href="https://x.com/llttbbss5522" target="_blank" rel="noopener">
+        <div class="store-name">ラフトラックブックストア</div>
+        <div class="store-address">大阪府大阪市西区靱本町1-15-19 フジビル 3階</div>
+      </a>
+      <a class="store-card" href="https://sakeme.shop/" target="_blank" rel="noopener">
+        <div class="store-name">裂け目</div>
+        <div class="store-address">宮城県仙台市青葉区国分町3-2-3 プレイス・ハンズビル 4F</div>
+      </a>
+    </div>
+  </section>
 
   <!-- Chapter Discovery -->
   <section class="discovery fade-up">

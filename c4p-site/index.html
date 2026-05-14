@@ -74,6 +74,12 @@
     .stock-bar--soldout .stock-count strong {
       color: #fff;
     }
+    .stock-bar--2nd {
+      background: var(--accent);
+    }
+    .stock-bar--2nd .stock-count strong {
+      color: #ffd166;
+    }
 
     /* ── 第2版予約バナー ── */
     .preorder-banner {
@@ -647,9 +653,15 @@
     <span class="stock-count"><strong>！完売！</strong></span>
   </div>
 
+  <!-- 第2版在庫カウンター -->
+  <div class="stock-bar stock-bar--2nd">
+    <span class="stock-label">第2版 受注受付中</span>
+    <span class="stock-count"><strong>0</strong>/500部</span>
+  </div>
+
   <!-- 第2版予約 -->
   <a class="preorder-banner" href="https://shop.intheblueshirt.com/items/143915595" target="_blank" rel="noopener">
-    <span class="preorder-label">第2版 受注受付中</span>
+    <span class="preorder-label">第2版を予約する</span>
     <span class="preorder-cta">予約する →</span>
   </a>
 

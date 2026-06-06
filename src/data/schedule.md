@@ -12,6 +12,13 @@
 # 新しいイベントを上に追加してください。
 # ---
 
+## FOREVER YOUNG 2026 Kasago × PU$H! × WÖNDER GIRL pre.
+- date: 2026-06-07
+- venue: SOCORE FACTORY
+- city: 大阪・南堀江
+- url: https://socorefactory.com/schedule/2026/06/07/forever-young-2026/
+- note: ライブ / OPEN/START 16:30 / 前売¥3,500 + 1D
+
 ## 活性化サーバー presents "POLYSH!!!" #No.03
 - date: 2026-04-25
 - venue: 音楽喫茶 茶箱

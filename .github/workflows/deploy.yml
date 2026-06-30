@@ -18,6 +18,21 @@ jobs:
 
       - run: npm ci
       - run: npx astro build
+
+      - name: Normalize filenames to NFC
+        run: |
+          python3 <<'PY'
+          import os, unicodedata
+          for root, dirs, files in os.walk('./dist', topdown=False):
+              for name in files + dirs:
+                  nfc = unicodedata.normalize('NFC', name)
+                  if nfc != name:
+                      src = os.path.join(root, name)
+                      dst = os.path.join(root, nfc)
+                      os.rename(src, dst)
+                      print(f'renamed: {src} -> {dst}')
+          PY
+
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh

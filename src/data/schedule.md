@@ -12,6 +12,13 @@
 # 新しいイベントを上に追加してください。
 # ---
 
+## Vacances vol.5
+- date: 2026-09-12
+- venue: 江の島 OPPA-LA
+- city: 江の島
+- url: https://ticketme.io/event/group/66b943e4-d6c2-4932-b393-afaae9f2b061/23940d5e-64e3-43f4-85bc-5ecb7ef15697
+- note: ライブ / OPEN 14:30 / START 15:00 / w/ シタバ from ザ・おめでたズ
+
 ## DR. MARTENS × MHL. Launch Event
 - date: 2026-07-16
 - venue: MHL. 南船場店

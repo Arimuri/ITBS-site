@@ -18,6 +18,13 @@
 - city: 神戸・北長狭通
 - note: DJ / OPEN 19:00 / DOOR ¥2,000 / w/ ratiff (Neibiss), sober bear, zico, nami de zzZ
 
+## elemog vol.179
+- date: 2026-08-21
+- venue: MOGRA
+- city: 東京・秋葉原
+- url: https://club-mogra.jp/2026/08/21/9829/
+- note: DJ / OPEN 23:00 〜 5:00 CLOSE / DOOR ¥3,000 + 1D / w/ Hercelot ほか
+
 ## hommy -TOWA TEI New Album『ZAMBIENT』Release Party-
 - date: 2026-08-30
 - venue: CLUB METRO

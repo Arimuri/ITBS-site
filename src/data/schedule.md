@@ -12,6 +12,13 @@
 # 新しいイベントを上に追加してください。
 # ---
 
+## hommy -TOWA TEI New Album『ZAMBIENT』Release Party-
+- date: 2026-08-30
+- venue: CLUB METRO
+- city: 京都・神宮丸太町
+- url: https://www.metro.ne.jp/schedule/260830/
+- note: DJ / OPEN 17:30 〜 23:30 CLOSE / 前売 ¥4,500 + 1D / w/ TOWA TEI, tofubeats, 原口沙輔, HALFBY, dj colaboy
+
 ## Vacances vol.5
 - date: 2026-09-12
 - venue: 江の島 OPPA-LA

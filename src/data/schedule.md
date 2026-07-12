@@ -19,6 +19,13 @@
 - url: https://ticketme.io/event/group/66b943e4-d6c2-4932-b393-afaae9f2b061/23940d5e-64e3-43f4-85bc-5ecb7ef15697
 - note: ライブ / OPEN 14:30 / START 15:00 / w/ シタバ from ザ・おめでたズ
 
+## スクエアプッシャー特別講義「見える室内楽 ― 構造を可視化する視聴会」
+- date: 2026-07-17
+- venue: 京都精華大学 友愛館 Y004教室
+- city: 京都
+- url: https://natalie.mu/music/news/679773
+- note: 講義 / 参加無料
+
 ## DR. MARTENS × MHL. Launch Event
 - date: 2026-07-16
 - venue: MHL. 南船場店

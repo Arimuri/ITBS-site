@@ -12,6 +12,12 @@
 # 新しいイベントを上に追加してください。
 # ---
 
+## SAI /062/
+- date: 2026-07-31
+- venue: PLATINUM BLDG. B1F
+- city: 神戸・北長狭通
+- note: DJ / OPEN 19:00 / DOOR ¥2,000 / w/ ratiff (Neibiss), sober bear, zico, nami de zzZ
+
 ## hommy -TOWA TEI New Album『ZAMBIENT』Release Party-
 - date: 2026-08-30
 - venue: CLUB METRO

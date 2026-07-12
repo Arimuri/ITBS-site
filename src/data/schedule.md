@@ -12,6 +12,19 @@
 # 新しいイベントを上に追加してください。
 # ---
 
+## knock
+- date: 2026-06-27
+- venue: REDSUN
+- city: 石川県
+- url: https://livepocket.jp/e/knock001rs
+- note: DJ / OPEN 13:00 / スタンディング ¥2,500 / w/ batsu, PSYQUI
+
+## terrapod '26 SUMMER "IMPRESSION"
+- date: 2026-07-05
+- venue: Rolling Hall
+- city: Seoul
+- note: DJ / 13:00〜19:00 / w/ ESAI, gaburyu, higma, Kijibato, Nor, すずめのめ, TEMPLIME(kbsnk)
+
 ## FOREVER YOUNG 2026 Kasago × PU$H! × WÖNDER GIRL pre.
 - date: 2026-06-07
 - venue: SOCORE FACTORY

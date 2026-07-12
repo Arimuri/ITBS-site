@@ -12,6 +12,12 @@
 # 新しいイベントを上に追加してください。
 # ---
 
+## DR. MARTENS × MHL. Launch Event
+- date: 2026-07-16
+- venue: MHL. 南船場店
+- city: 大阪・南船場
+- note: DJ / 18:00〜21:00
+
 ## knock
 - date: 2026-06-27
 - venue: REDSUN

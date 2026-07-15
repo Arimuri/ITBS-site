@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Squarepusher 振り子年表｜in the blue shirt</title>
+<meta name="description" content="Squarepusherの30年を「打ち込み（機械）⇄ 生演奏（身体）」の振り子として視覚化した年表。2026-07-17 京都精華大学「見える室内楽 — 構造を可視化する視聴会」関連資料。#スクエアプッシャー視聴会">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Squarepusher 振り子年表">
+<meta property="og:description" content="Squarepusherの30年を「打ち込み（機械）⇄ 生演奏（身体）」の振り子として視覚化した年表。2026-07-17 京都精華大学「見える室内楽 — 構造を可視化する視聴会」関連資料。#スクエアプッシャー視聴会">
+<meta property="og:url" content="https://intheblueshirt.com/kammerkonzert/timeline/">
+<meta property="og:image" content="https://intheblueshirt.com/kammerkonzert/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+:root{
+  --page:#f9f9f7; --surface:#fcfcfb;
+  --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --ring:rgba(11,11,11,0.10);
+  --d90:#2a78d6; --d00:#1baf7a; --d10:#eda100; --d20:#008300;
+  --lineclr:#898781;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --page:#0d0d0d; --surface:#1a1a19;
+    --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
+    --grid:#2c2c2a; --axis:#383835; --ring:rgba(255,255,255,0.10);
+    --d90:#3987e5; --d00:#199e70; --d10:#c98500; --d20:#008300;
+  }
+}
+:root[data-theme="dark"]{
+  --page:#0d0d0d; --surface:#1a1a19;
+  --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
+  --grid:#2c2c2a; --axis:#383835; --ring:rgba(255,255,255,0.10);
+  --d90:#3987e5; --d00:#199e70; --d10:#c98500; --d20:#008300;
+}
+:root[data-theme="light"]{
+  --page:#f9f9f7; --surface:#fcfcfb;
+  --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --ring:rgba(11,11,11,0.10);
+  --d90:#2a78d6; --d00:#1baf7a; --d10:#eda100; --d20:#008300;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--page); color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI","Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+  line-height:1.6;
+}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-variant-numeric:tabular-nums}
+.wrap{max-width:960px; margin:0 auto; padding:28px 16px 20px}
+.eyebrow{font-size:11px; letter-spacing:.14em; color:var(--muted); text-transform:uppercase; margin:0 0 6px}
+h1{font-size:clamp(21px,3.4vw,30px); margin:0 0 8px; letter-spacing:-.01em; text-wrap:balance}
+.lede{color:var(--ink-2); font-size:13.5px; max-width:62ch; margin:0 0 10px}
+.legend{display:flex; flex-wrap:wrap; gap:12px 18px; font-size:12px; color:var(--ink-2); margin:8px 0 0}
+.lg{display:inline-flex; align-items:center; gap:6px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+.refdot{width:10px;height:10px;border-radius:50%;display:inline-block;border:1.5px dashed var(--muted);flex:none}
+
+.axisbar{
+  position:sticky; top:0; z-index:10;
+  background:color-mix(in srgb, var(--page) 88%, transparent);
+  backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  border-bottom:1px solid var(--grid);
+}
+.axisbar .inner{max-width:960px; margin:0 auto; padding:10px 16px; position:relative}
+.axlabels{display:flex; justify-content:space-between; font-size:13px; font-weight:700}
+.axlabels .l{color:var(--muted)}
+.axlabels .r{color:var(--d90)}
+.axticks{position:relative; height:14px; margin-top:2px}
+.axticks span{position:absolute; transform:translateX(-50%); font-size:10px; color:var(--muted)}
+
+.tl{position:relative; max-width:960px; margin:0 auto; padding:0 16px}
+.canvasbox{position:relative}
+svg.pend{position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:1}
+.vline{position:absolute; top:0; bottom:0; width:1px; background:var(--grid); z-index:0}
+.vline.mid{background:var(--grid)}
+.item{position:absolute; z-index:2}
+.node{
+  position:absolute; transform:translate(-50%,-50%);
+  border-radius:50%; background:var(--nc,var(--muted));
+  border:2px solid var(--page);
+  box-shadow:0 0 0 1px var(--ring);
+}
+.node.ref{background:transparent; border:2px dashed var(--muted); box-shadow:none}
+.node.kk{box-shadow:0 0 0 3px var(--page), 0 0 0 4.5px var(--ink)}
+.yr{
+  position:absolute; transform:translateY(-50%);
+  font-size:11px; color:var(--muted); white-space:nowrap;
+}
+.card{
+  position:absolute; transform:translateY(-50%);
+  max-width:min(46%,340px); background:var(--surface);
+  border:1px solid var(--ring); border-radius:10px; padding:9px 12px;
+}
+.card h3{margin:0; font-size:13.5px; line-height:1.35}
+.card h3 .cy{color:var(--muted); font-weight:400; font-size:12px}
+.card p{margin:4px 0 0; font-size:11.5px; color:var(--ink-2); line-height:1.55}
+.elbar{position:relative; height:4px; background:var(--grid); border-radius:2px; margin:7px 0 2px}
+.elbar i{position:absolute; top:50%; width:9px; height:9px; border-radius:50%; transform:translate(-50%,-50%); background:var(--nc,var(--ink))}
+.elval{font-size:10px; color:var(--muted); display:flex; justify-content:space-between}
+.evt{
+  position:absolute; transform:translate(-50%,-50%);
+  text-align:center; width:min(72%,520px); z-index:2;
+}
+.evt .d{width:9px;height:9px;background:var(--muted);transform:rotate(45deg);margin:0 auto 5px;opacity:.8}
+.evt .t{font-size:11.5px; color:var(--muted); background:var(--page); display:inline-block; padding:1px 10px; line-height:1.5}
+.evt .t b{color:var(--ink-2)}
+
+.reveal{opacity:0; transition:opacity .6s ease}
+.reveal.show{opacity:1}
+@media (prefers-reduced-motion: reduce){ .reveal{opacity:1; transition:none} }
+
+.foot{max-width:960px; margin:0 auto; padding:18px 16px 46px; font-size:11.5px; color:var(--muted); line-height:1.8}
+@media (max-width:620px){
+  .card{max-width:56%}
+  .card p{font-size:11px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Squarepusher / Kammerkonzert 準備資料</p>
+  <h1>振り子年表 — 打ち込み（機械）⇄ 生演奏（身体）</h1>
+  <p class="lede">上から下へ＝時間。横位置＝各作品の「エレクトロニック(0) ⇄ 生演奏(10)」スコア（3軸マッピングと同じ採点）。左に振れるほど打ち込み、右に振れるほど生演奏。折れ線がそのまま30年の振り子運動になる。</p>
+  <div class="legend">
+    <span class="lg"><span class="dot" style="background:var(--d90)"></span>1990s</span>
+    <span class="lg"><span class="dot" style="background:var(--d00)"></span>2000s</span>
+    <span class="lg"><span class="dot" style="background:var(--d10)"></span>2010s</span>
+    <span class="lg"><span class="dot" style="background:var(--d20)"></span>2020s</span>
+    <span class="lg"><span class="refdot"></span>参考（ナンバリング外・折れ線に含めない）</span>
+    <span class="lg">◆ 出来事（横位置に意味なし）</span>
+  </div>
+</div>
+
+<div class="axisbar"><div class="inner">
+  <div class="axlabels"><span class="l">← 打ち込み（機械）</span><span class="r">生演奏（身体） →</span></div>
+  <div class="axticks" id="axticks"></div>
+</div></div>
+
+<div class="tl"><div class="canvasbox" id="box">
+  <svg class="pend" id="pend" preserveAspectRatio="none"></svg>
+</div></div>
+
+<div class="foot">
+  <p><a href="../map/" style="color:inherit">🎛 3軸マッピング版（散布図・時系列再生つき）はこちら</a>／<a href="../" style="color:inherit">資料トップ</a></p>
+  ※ELスコアは公開情報（クレジット・レビュー・インタビュー）と音像のみを根拠にした0〜10の相対配置（後述の『アルバム3軸マッピング.csv』と同一値）。有村の主観なので軽い気持ちで見てください<br>
+  ※KAMMERKONZERTは生/打ち込みの内訳が非公開であるのと、講義当日に決めたいんで真ん中に置いてます。<br>
+  ※出来事（◆）は横位置に意味を持たせていない。<br>
+  ※全ての作品を網羅してはいません。適当に取捨選択しています。
+  <br>感想・当日の様子は <b>#スクエアプッシャー視聴会</b> で。
+</div>
+
+<script>
+const ROWS = [
+ {type:"evt", y:1995, t:"<b>Warp Recordsと契約</b>（Aphex Twinの推挙）"},
+ {type:"album", y:1996, n:"Feed Me Weird Things", el:5, note:"アシッド・ブレイクビーツ＋前面の生ベース。これを基準に考える。"},
+ {type:"album", y:1997, n:"Hard Normal Daddy", el:5, note:"打ち込みドラムに生ベースがメインで乗る。基準2"},
+ {type:"album", y:1997, n:"Big Loada（EP・参考）", el:1, ref:true, note:"高速アーメンブレイク＝極めて打ち込み寄り"},
+ {type:"album", y:1998, n:"Music Is Rotted One Note", el:8, note:"ドラムも鍵盤も本人が生で多重録音した「一人バンド」。"},
+ {type:"album", y:1999, n:"Selection Sixteen", el:4, note:"ドラムンベース回帰。ただしライブ楽器とジャズ色は残る。"},
+ {type:"album", y:2001, n:"Go Plastic", el:2, note:"過激な音響編集・グリッチ。生楽器はごく僅か。"},
+ {type:"album", y:2002, n:"Do You Know Squarepusher", el:3, note:"UKガラージ／エレクトロ寄りの聴きやすい電子作。"},
+ {type:"album", y:2004, n:"Ultravisitor", el:6, note:"客席音入りライブ録音と苛烈な編集の統合＝最も均衡した金字塔。"},
+ {type:"album", y:2006, n:"Hello Everything", el:4, note:"旋律的ドリルンベース。生ベース／ギターは要所のみ。"},
+ {type:"album", y:2008, n:"Just a Souvenir", el:6, note:"架空バンドのライブを、本人がギター・ベース・生ドラムで実演。"},
+ {type:"album", y:2009, n:"Solo Electric Bass 1", el:10, note:"パリ公演の独奏を無編集収録＝がっつり生演奏。"},
+ {type:"album", y:2010, n:"Shobaleader One: d'Demonstrator", el:4, note:"覆面バンド名義。実制作は打ち込み中心＋生ギター。"},
+ {type:"album", y:2012, n:"Ufabulum", el:1, note:"生楽器を意図的に排した純電子音楽"},
+ {type:"evt", y:2014, t:"<b>Music for Robots</b> — ロボット奏者のために作曲"},
+ {type:"album", y:2015, n:"Damogen Furies", el:2, note:"自作ソフトで各曲ワンテイク。即興的だが全電子。"},
+ {type:"evt", y:2016, t:"<b>オーケストラのための作曲を開始</b> — 楽団とワークショップ→「伝統的記譜法では捉えきれない」"},
+ {type:"album", y:2017, n:"Shobaleader One: Elektrac（参考）", el:9, ref:true, note:"覆面バンド＝実在の4人が過去曲を人力再現したライブ盤。"},
+ {type:"evt", y:2019, t:"<b>All Night Chroma</b> — オルガン奏者のために記譜し、本人は演奏せず"},
+ {type:"album", y:2020, n:"Be Up A Hello", el:2, note:"90年代ヴィンテージ機材へ回帰した電子作。"},
+ {type:"evt", y:2021, t:"<b>手首の負傷＋コロナ禍</b>で楽団共演が頓挫 → 独力での完成へ（2016–25）"},
+ {type:"evt", y:2022, t:"<b>来日ツアー</b>（Rhizomatiks/真鍋大度のA/Vライブ）"},
+ {type:"album", y:2024, n:"Dostrotime", el:4, note:"Arkteon独奏ベース三部を柱にした電子作。"},
+ {type:"evt", y:2026, t:"<b>K7 Museum (Score Vid)</b> 公開 — 本人自ら楽譜動画を出す"},
+ {type:"album", y:2026, n:"KAMMERKONZERT", el:6, kk:true, note:"全パートを本人が演奏・打ち込みした一人室内オーケストラ。どこに位置付けるか考えましょう！"},
+ {type:"evt", y:2026, t:"<b>2026-07-17 試聴会「見える室内楽」</b>（京都精華大学）"},
+];
+const DEC = y => y<2000?"--d90":y<2010?"--d00":y<2020?"--d10":"--d20";
+const rows = ROWS.map(r => ({...r}));
+
+const ROW_H = {album: 148, evt: 84};
+let total = 60;
+rows.forEach(r => { r.yc = total + ROW_H[r.type]/2; total += ROW_H[r.type]; });
+total += 40;
+
+const box = document.getElementById("box");
+box.style.height = total + "px";
+const PADL = 7, PADR = 7;  // % padding
+const xp = v => PADL + v/10*(100-PADL-PADR);   // percent
+
+// gridlines
+[0,5,10].forEach(v => {
+  const d = document.createElement("div");
+  d.className = "vline" + (v===5 ? " mid" : "");
+  d.style.left = xp(v) + "%";
+  box.appendChild(d);
+});
+// sticky axis ticks
+const at = document.getElementById("axticks");
+[0,2,4,6,8,10].forEach(v => {
+  const s = document.createElement("span");
+  s.className = "mono"; s.style.left = xp(v) + "%"; s.textContent = v;
+  at.appendChild(s);
+});
+
+// items
+rows.forEach(r => {
+  if (r.type === "evt"){
+    const e = document.createElement("div");
+    e.className = "evt reveal";
+    e.style.left = "50%"; e.style.top = r.yc + "px";
+    e.innerHTML = `<div class="d"></div><div class="t">${r.t}</div>`;
+    box.appendChild(e);
+    return;
+  }
+  const x = xp(r.el);
+  const size = r.kk ? 30 : 18;
+  const node = document.createElement("div");
+  node.className = "node reveal" + (r.ref ? " ref" : "") + (r.kk ? " kk" : "");
+  node.style.setProperty("--nc", `var(${DEC(r.y)})`);
+  node.style.width = node.style.height = size + "px";
+  node.style.left = x + "%"; node.style.top = r.yc + "px";
+  node.style.zIndex = 3;
+  box.appendChild(node);
+
+  const onLeft = r.el <= 5;   // card goes to the opposite side of the swing
+  const card = document.createElement("div");
+  card.className = "card reveal";
+  card.style.top = r.yc + "px";
+  card.style.zIndex = 2;
+  if (onLeft) card.style.left = `calc(${x}% + ${size/2 + 10}px)`;
+  else { card.style.right = `calc(${100-x}% + ${size/2 + 10}px)`; card.style.textAlign = "left"; }
+  card.innerHTML = `
+    <h3>${r.n} <span class="cy mono">${Math.floor(r.y)}</span></h3>
+    <div class="elbar"><i style="left:${r.el*10}%; --nc:var(${DEC(r.y)})"></i></div>
+    <div class="elval"><span>打ち込み</span><span class="mono">EL ${r.el}</span><span>生演奏</span></div>
+    <p>${r.note}</p>`;
+  box.appendChild(card);
+
+  const yr = document.createElement("div");
+  yr.className = "yr mono reveal";
+  yr.style.top = r.yc + "px";
+  if (onLeft) { yr.style.right = `calc(${100-x}% + ${size/2+8}px)`; }
+  else { yr.style.left = `calc(${x}% + ${size/2+8}px)`; }
+  yr.textContent = Math.floor(r.y);
+  box.appendChild(yr);
+});
+
+// pendulum polyline (numbering albums only)
+function drawLine(){
+  const svg = document.getElementById("pend");
+  const w = box.clientWidth;
+  svg.setAttribute("viewBox", `0 0 ${w} ${total}`);
+  const pts = rows.filter(r => r.type==="album" && !r.ref)
+                  .map(r => `${xp(r.el)/100*w},${r.yc}`).join(" ");
+  svg.innerHTML = `<polyline points="${pts}" fill="none" stroke="var(--lineclr)" stroke-width="2" opacity="0.65"/>`;
+}
+drawLine();
+addEventListener("resize", drawLine);
+
+// reveal on scroll
+const io = new IntersectionObserver(es => es.forEach(e => {
+  if (e.isIntersecting) e.target.classList.add("show");
+}), {threshold: 0.15});
+document.querySelectorAll(".reveal").forEach(el => io.observe(el));
+</script>
+</body>
+</html>

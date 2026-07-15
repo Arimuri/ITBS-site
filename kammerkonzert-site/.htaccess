@@ -1,0 +1,3 @@
+# WordPressのリライトを無効化し、静的ファイルを直接配信
+DirectoryIndex index.html
+RewriteEngine Off

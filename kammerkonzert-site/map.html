@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Squarepusher 3軸マッピング｜in the blue shirt</title>
+<meta name="description" content="Squarepusherのスタジオ作16枚を「エレクトロニック⇄生演奏」×「アカデミック⇄バイブス」×「ソロ⇄アンサンブル（音像の人数感）」の3軸で採点したインタラクティブ・マップ。#スクエアプッシャー視聴会">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Squarepusher 3軸マッピング">
+<meta property="og:description" content="Squarepusherのスタジオ作16枚を「エレクトロニック⇄生演奏」×「アカデミック⇄バイブス」×「ソロ⇄アンサンブル（音像の人数感）」の3軸で採点したインタラクティブ・マップ。#スクエアプッシャー視聴会">
+<meta property="og:url" content="https://intheblueshirt.com/kammerkonzert/map.html">
+<meta property="og:image" content="https://intheblueshirt.com/kammerkonzert/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+:root{
+  --page:#f9f9f7; --surface:#fcfcfb;
+  --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --ring:rgba(11,11,11,0.10);
+  --d90:#2a78d6; --d00:#1baf7a; --d10:#eda100; --d20:#008300;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --page:#0d0d0d; --surface:#1a1a19;
+    --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
+    --grid:#2c2c2a; --axis:#383835; --ring:rgba(255,255,255,0.10);
+    --d90:#3987e5; --d00:#199e70; --d10:#c98500; --d20:#008300;
+  }
+}
+:root[data-theme="dark"]{
+  --page:#0d0d0d; --surface:#1a1a19;
+  --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
+  --grid:#2c2c2a; --axis:#383835; --ring:rgba(255,255,255,0.10);
+  --d90:#3987e5; --d00:#199e70; --d10:#c98500; --d20:#008300;
+}
+:root[data-theme="light"]{
+  --page:#f9f9f7; --surface:#fcfcfb;
+  --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --ring:rgba(11,11,11,0.10);
+  --d90:#2a78d6; --d00:#1baf7a; --d10:#eda100; --d20:#008300;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--page); color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI","Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+  line-height:1.6; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1100px; margin:0 auto; padding:28px 20px 48px}
+.eyebrow{font-size:11px; letter-spacing:.14em; color:var(--muted); text-transform:uppercase; margin:0 0 6px}
+h1{font-size:clamp(20px,3.2vw,28px); line-height:1.25; margin:0 0 8px; text-wrap:balance; letter-spacing:-.01em}
+.lede{color:var(--ink-2); font-size:13.5px; max-width:64ch; margin:0}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+
+.controls{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:18px 0 10px}
+.btn{
+  appearance:none; border:1px solid var(--ring); background:var(--surface); color:var(--ink);
+  border-radius:8px; padding:6px 12px; font-size:12.5px; cursor:pointer; font-family:inherit;
+}
+.btn:hover{border-color:var(--axis)}
+.btn:focus-visible{outline:2px solid var(--ink); outline-offset:2px}
+.btn[aria-pressed="true"]{background:var(--ink); color:var(--page); border-color:var(--ink)}
+.playyear{font-size:12px; color:var(--ink-2); min-width:11em}
+
+.legend{display:flex; flex-wrap:wrap; gap:14px 18px; align-items:center; margin:2px 0 12px; font-size:12px; color:var(--ink-2)}
+.lg{display:inline-flex; align-items:center; gap:6px}
+.dot{width:10px; height:10px; border-radius:50%; display:inline-block; flex:none}
+.sz{display:inline-flex; align-items:center; gap:6px; color:var(--muted)}
+.szc{border:1.5px solid var(--muted); border-radius:50%; display:inline-block; flex:none}
+
+.grid2{display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:18px; align-items:start}
+@media (max-width:900px){ .grid2{grid-template-columns:1fr} }
+
+.chartcard{background:var(--surface); border:1px solid var(--ring); border-radius:12px; padding:10px 10px 4px; position:relative}
+svg{display:block; width:100%; height:auto}
+.gridline{stroke:var(--grid); stroke-width:1}
+.axisline{stroke:var(--axis); stroke-width:1}
+.axlab{fill:var(--muted); font-size:11px}
+.axend{fill:var(--ink-2); font-size:11.5px; font-weight:600}
+.qlab{fill:var(--muted); font-size:10.5px; letter-spacing:.08em}
+.void rect{fill:none; stroke:var(--grid); stroke-dasharray:4 4; stroke-width:1; rx:10}
+.voidlab{fill:var(--muted); font-size:10.5px; letter-spacing:.06em}
+.bub{stroke:var(--surface); stroke-width:2; cursor:pointer}
+.halo{fill:transparent; cursor:pointer}
+.node:focus-visible .bub{stroke:var(--ink); stroke-width:2.5}
+.node.sel .bub{stroke:var(--ink); stroke-width:2}
+.node.dim{opacity:.14}
+.refbub{stroke:var(--ink-2); stroke-dasharray:4 3; stroke-width:1.5}
+.blab{fill:var(--ink-2); font-size:10.5px; pointer-events:none}
+.blab.kk{fill:var(--ink); font-weight:700; font-size:11.5px}
+.traj{fill:none; stroke:var(--muted); stroke-width:1.5; opacity:.55}
+.kkring{fill:none; stroke:var(--ink); stroke-width:1; stroke-dasharray:2 3; opacity:.55}
+
+.tip{
+  position:absolute; pointer-events:none; z-index:5; display:none;
+  background:var(--ink); color:var(--page); border-radius:8px; padding:7px 10px;
+  font-size:11.5px; line-height:1.5; max-width:230px; box-shadow:0 4px 14px rgba(0,0,0,.25);
+}
+.tip b{font-size:12px}
+.tip .trow{display:flex; gap:8px; justify-content:space-between}
+
+.panel{background:var(--surface); border:1px solid var(--ring); border-radius:12px; padding:16px}
+.panel h2{font-size:16px; margin:0; line-height:1.35; letter-spacing:-.01em}
+.pyear{color:var(--muted); font-weight:400}
+.chips{display:flex; gap:6px; flex-wrap:wrap; margin:8px 0 12px}
+.chip{font-size:10.5px; border:1px solid var(--ring); border-radius:999px; padding:2px 9px; color:var(--ink-2); display:inline-flex; align-items:center; gap:5px}
+.meter{margin:10px 0}
+.mhead{display:flex; justify-content:space-between; font-size:10.5px; color:var(--muted); letter-spacing:.04em}
+.mtrack{position:relative; height:6px; background:var(--grid); border-radius:3px; margin:5px 0 2px}
+.mdot{position:absolute; top:50%; width:12px; height:12px; border-radius:50%; transform:translate(-50%,-50%); border:2px solid var(--surface)}
+.mval{text-align:right; font-size:11px; color:var(--ink-2)}
+.rats{margin-top:12px; display:flex; flex-direction:column; gap:10px}
+.rat b{display:block; font-size:10.5px; color:var(--muted); letter-spacing:.05em; margin-bottom:2px}
+.rat p{margin:0; font-size:12.5px; color:var(--ink-2)}
+.vnote{margin-top:12px; font-size:11px; color:var(--muted); border-top:1px solid var(--grid); padding-top:8px}
+
+.tablewrap{display:none; margin-top:16px; overflow-x:auto; background:var(--surface); border:1px solid var(--ring); border-radius:12px}
+.tablewrap.show{display:block}
+table{border-collapse:collapse; width:100%; min-width:640px; font-size:12.5px}
+th,td{padding:7px 12px; text-align:left; border-bottom:1px solid var(--grid); white-space:nowrap}
+th{font-size:10.5px; color:var(--muted); letter-spacing:.07em; font-weight:600}
+td.num,th.num{text-align:right}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--page)}
+tbody tr:last-child td{border-bottom:none}
+
+.notes{margin-top:18px; font-size:11.5px; color:var(--muted); max-width:78ch}
+.notes p{margin:4px 0}
+
+@media (prefers-reduced-motion: no-preference){
+  .node,.bub{transition:opacity .35s ease}
+}
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Squarepusher / Kammerkonzert 準備資料 — 2026-07-12</p>
+  <h1>ナンバリングアルバム 3軸マッピング</h1>
+  <p class="lede">スタジオ作16枚を「エレクトロニック⇄生演奏」×「アカデミック⇄バイブス」の平面に置き、<strong>丸の大きさ＝ソロ⇄アンサンブル（音像の人数感）</strong>で表した。丸をクリック（タップ）すると採点理由を表示。スコアは0〜10の相対配置で、公開情報と音像のみを根拠にしている。</p>
+
+  <div class="controls">
+    <button class="btn" id="btnTraj" aria-pressed="false">時系列の軌跡</button>
+    <button class="btn" id="btnPlay">▶ 再生</button>
+    <button class="btn" id="btnTable" aria-pressed="false">データ表</button>
+    <span class="playyear mono" id="playYear"></span>
+  </div>
+
+  <div class="legend" aria-hidden="true">
+    <span class="lg"><span class="dot" style="background:var(--d90)"></span>1990s</span>
+    <span class="lg"><span class="dot" style="background:var(--d00)"></span>2000s</span>
+    <span class="lg"><span class="dot" style="background:var(--d10)"></span>2010s</span>
+    <span class="lg"><span class="dot" style="background:var(--d20)"></span>2020s</span>
+    <span class="sz">人数感：<span class="szc" style="width:8px;height:8px"></span> ソロ（2）</span>
+    <span class="sz"><span class="szc" style="width:20px;height:20px"></span> 室内オーケストラ級（10）</span>
+    <span class="lg"><span class="dot" style="background:transparent;border:1.5px dashed var(--ink-2)"></span>参考点（バンド名義ライブ盤・採点対象外）</span>
+  </div>
+
+  <div class="grid2">
+    <div class="chartcard">
+      <svg id="chart" viewBox="0 0 920 620" role="img" aria-label="散布図：横軸エレクトロニックから生演奏、縦軸アカデミックからバイブス、円の大きさが音像の人数感。全16作＋参考点1（Elektrac）。詳細はデータ表を参照。"></svg>
+      <div class="tip" id="tip"></div>
+    </div>
+    <aside class="panel" id="panel" aria-live="polite"></aside>
+  </div>
+
+  <div class="tablewrap" id="tablewrap">
+    <table>
+      <thead>
+        <tr><th class="num">年</th><th>アルバム</th><th class="num">EL</th><th class="num">AV</th><th class="num">SE</th><th>想起人数</th><th>確度</th></tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="notes">
+    <p>※ EL＝エレクトロニック(0)⇄生演奏(10)／AV＝アカデミック(0)⇄バイブス(10)／SE＝ソロ(0)⇄アンサンブル(10・音像の人数感)。</p>
+    <p>※ 座標が重なる3作（Selection Sixteen・Hello Everything・Dostrotime、いずれもEL4/AV6）は表示位置のみ微調整。実値はツールチップと表を参照。</p>
+    <p>※ 確度low：KAMMERKONZERT（生/打ち込み内訳が非公開）・d'Demonstrator（バンド実在性が未決着）。スコアの±1程度の差は解釈に影響させないこと。詳細は「準備/今作の考察_3軸マッピング.md」。</p>
+    <p><a href="./" style="color:inherit">🎚 振り子年表版はこちら</a></p>
+    <p>※ 破線の丸＝参考点：Shobaleader One『Elektrac』(2017)。バンド名義のライブ再演盤でナンバリング外のため、軌跡・多段検証の対象外（略式採点）。ソロ名義のスタジオ作に限れば「生演奏×バイブス」象限は空白のまま。</p>
+  </div>
+</div>
+
+<script>
+const DATA = [
+{n:"Feed Me Weird Things", s:"Feed Me", y:1996, el:5, av:7, se:6, p:"≈4人",
+ rel:"アシッド・ブレイクビーツの打ち込みに本人の生ベースを前面で重ね、ブレイク刻みと生演奏がほぼ拮抗する原点。",
+ rav:"温かくファンキーでグルーヴ主導のデビュー作だが、タイトル通り実験的な捻れも残り純バイブスには一歩届かない。",
+ rse:"ベース＋ドラム＋鍵盤のジャズ・ファンク・コンボが想起される小編成の合奏感",
+ c:"medium", note:"",
+ lx:0, ly:-1, anch:"end"},
+{n:"Hard Normal Daddy", s:"HND", y:1997, el:5, av:9, se:7, p:"≈4〜5人",
+ rel:"高速チョップ&フリップのドラムに生ベース（と一部鍵盤）がメインで乗る、生／打ち込み拮抗のブレイクビーツ期。",
+ rav:"ジャズ・フュージョン色もあるファンクで、躍動とユーモアが全編を貫く最も愉快な一枚＝バイブス側。",
+ rse:"Weather Report／Return to Forever的な鍵盤・ベース・管的シンセの厚みで生バンドのフュージョン合奏に聴こえる（≈4〜5人）。",
+ c:"medium", note:"",
+ lx:0, ly:-1, anch:"middle"},
+{n:"Music Is Rotted One Note", s:"MIRON", y:1998, el:8, av:1, se:7, p:"≈4人",
+ rel:"ドラム・ベース・鍵盤を本人が生で多重録音した全楽器自演のジャズ作で通常のシーケンス処理は最小、Solo Electric Bass 1に次ぐ生演奏寄り。",
+ rav:"拍子を曖昧化し磨き上げを避けた非ダンスの難解作として受容され（Miles Davis『Live Evil』を参照点に評される）、聴取体験がアカデミック寄り。",
+ rse:"本人が電化ジャズ・コンボを生で多重録音したライブな合奏感（≈4人）。",
+ c:"high", note:"",
+ lx:0, ly:-1, anch:"middle"},
+{n:"Selection Sixteen", s:"Selection 16", y:1999, el:4, av:6, se:3, p:"≈2〜3人",
+ rel:"ドラムンベース／エレクトロニカ回帰だがレビューはライブ楽器とジャズ色の残存を明記、生比は小さくなくグリッチ電子色の濃いDYKS(3)より生寄りの4。",
+ rav:"実験の後の直截でグルーヴ主体の作。派手な仕掛けは控えめで温かく快楽寄りだが穏当で気持ちバイブス寄り。",
+ rse:"メロディックなDnBにジャズ色の楽器が絡む小コンボ感で機械の手触りとの中間（≈2〜3人）。",
+ c:"medium", note:"",
+ jx:3.7, jy:6.2, lx:-1, ly:0, anch:"end"},
+{n:"Go Plastic", s:"Go Plastic", y:2001, el:2, av:5, se:2, p:"≈1人＋機械",
+ rel:"過激な音響編集・グリッチが核の純電子的処理の探究で生楽器演奏はごく僅か、Ufabulumに次ぐ電子の極。",
+ rav:"頭脳的なグリッチ／ブレイクコア編集の実験性と「My Red Hot Car」の生々しい身体的インパクトが拮抗する。",
+ rse:"フラグメント化したグリッチが主役で合奏感はほぼ消え機械そのものに近い（≈1人＋機械）。EL/SEが共に低いのは電子かつ疎という実体に由来し、軸混同ではない。",
+ c:"high", note:"",
+ lx:-1, ly:0, anch:"end"},
+{n:"Do You Know Squarepusher", s:"DYKS", y:2002, el:3, av:8, se:4, p:"≈2人",
+ rel:"ブレイクコアではなくUKガラージ／エレクトロ寄りで、聴きやすく前作より派手さが抑制されている。電子作、生ベースは僅少で打ち込み寄り。",
+ rav:"エレクトロ／ダンス志向でユーモアも効いた最も親しみやすいアプローチ、一部曲が音響インスタレーション化するため9には一歩届かない。",
+ rse:"ロボ的エレクトロに荒々しいブレイクの躍動が残り純機械勢よりわずかに上（≈2人）。",
+ c:"medium", note:"",
+ lx:-1, ly:-1, anch:"end"},
+{n:"Ultravisitor", s:"Ultravisitor", y:2004, el:6, av:3, se:6, p:"≈1〜5人（変動）",
+ rel:"客席音入りライブ録音やアコースティック・ギター独奏と苛烈なプログラミング／編集を統合し、生と打ち込みが最も均衡した金字塔でやや生寄り。",
+ rav:"密度が高く難解な前衛的ステートメントとして受容される大作で、『Iambic 9 Poetry』等の美しさも宿すが聴取態度は総じてアカデミック寄り。",
+ rse:"独奏のギター／ベース曲から生バンド級『Iambic 9 Poetry』、客席入りライブまで横断し全体では中間の合奏感（≈1〜5人で変動）。",
+ c:"medium", note:"",
+ jx:6.05, jy:3.1, lx:1, ly:0, anch:"start"},
+{n:"Hello Everything", s:"Hello Everything", y:2006, el:4, av:6, se:5, p:"≈3人",
+ rel:"旋律的なドリルンベースの打ち込みが基調で生ベース／ギターは要所に留まるやや電子寄り。",
+ rav:"旋律的で温かく色彩豊かな聴き心地の良い作だが突出したダンス性や難解さはなく中庸強め。",
+ rse:"フュージョン寄りの旋律とブレイクだが電子的な作り込みが勝り小編成感にとどまる（≈3人）。",
+ c:"medium", note:"",
+ jx:4.3, jy:6.1, lx:1, ly:0, anch:"start"},
+{n:"Just a Souvenir", s:"Souvenir", y:2008, el:6, av:5, se:8, p:"≈5〜6人",
+ rel:"架空のバンドのライブを構想し本人がギター・ベース・生ドラムを実演、ただし自演のサンプリング／加工も併用しIDM色が最も薄く生バンド寄り。",
+ rav:"『架空のロックバンドの夢のライヴ』という戯画的コンセプトが快楽側に引く一方、プログ／メタル混交で密度が高く中間。",
+ rse:"分厚いギター・ドラム・鍵盤のバンド／プログ的合奏感で最もオーガニック（≈5〜6人）、EL(6)より高くSEが独立して意味を持つ分岐ケース。",
+ c:"medium", note:"",
+ lx:1, ly:0, anch:"start"},
+{n:"Solo Electric Bass 1", s:"SEB1", y:2009, el:10, av:3, se:2, p:"≈1人（独奏者）",
+ rel:"パリCité de la Musiqueでの独奏を無編集収録した、シーケンス・編集がほぼ皆無の生演奏100%作＝かなり生演奏寄り",
+ rav:"ビート／快楽志向を欠く禁欲的なリサイタルとして受容されアカデミック寄り、物理的な超絶技巧を備えるが真面目な芸術記録の態度。",
+ rse:"文字通りのエレクトリック・ベース独奏＝この軸の『2＝独奏者1人』の教科書例（≈1人）。EL10／SE2で両軸が完全独立する意図的分岐ケース。",
+ c:"medium", note:"",
+ lx:-1, ly:-1, anch:"end"},
+{n:"Shobaleader One: d'Demonstrator", s:"Shobaleader", y:2010, el:4, av:7, se:7, p:"≈4〜5人",
+ rel:"実制作はドラムマシン＋ヴォコーダー内蔵シンセの打ち込み中心に生ギター等を重ねる電子ポップ的プロダクションでやや電子寄り。",
+ rav:"全編ヴォコーダーのファンク／ポップ楽曲群で『聴きやすさとシュールさの均衡』が良いと評される歌もの・快楽寄り、無機質との批判もあり8には届かない。",
+ rse:"ヴォコーダー歌唱を伴うファンク／フュージョンのバンド・サウンドとして明確な合奏である（≈4〜5人）が、変名メンバーの扱いは未決着でJenkinson単独とは断定できない。",
+ c:"low", note:"",
+ lx:0, ly:-1, anch:"middle"},
+{n:"Ufabulum", s:"Ufabulum", y:2012, el:1, av:7, se:3, p:"多層シンセ／声部多・奏者像なし（≈3人相当）",
+ rel:"生楽器を意図的に排した純電子（シンセ／シーケンス）作で人の手の楽器演奏がほぼ無い＝電子の極アンカー。",
+ rav:"壮大なシンセと聴感の気持ちよさ、LED同期のA/Vショーを伴う旋律的レイヴ作で親しみやすい快楽寄り。",
+ rse:"思いっきり電子だが、多層なシンセは独奏のSEB1(2)を上回る声部を持ち3。",
+ c:"medium", note:"",
+ lx:-1, ly:-1, anch:"start"},
+{n:"Damogen Furies", s:"Damogen", y:2015, el:2, av:4, se:2, p:"≈1人",
+ rel:"自作ソフトのシンセで各曲ワンテイク収録した全電子作で即興的な演奏感はあるが物理楽器の生演奏ではなく電子側。",
+ rav:"耳を刺す攻撃性と猛烈な高速さ、ややアカデミック寄り。",
+ rse:"一発録りの緊張感が人間味を感じさせるが、バンド感は皆無（≈1人）。",
+ c:"medium", note:"",
+ lx:-1, ly:1, anch:"end"},
+{n:"Be Up A Hello", s:"Be Up A Hello", y:2020, el:2, av:8, se:2, p:"≈1人",
+ rel:"90年代ヴィンテージのハードウェア・シンセ／ドラムマシンへ回帰した電子作で、ハードの手弾き感はあるが生楽器の生演奏は僅少。",
+ rav:"ノスタルジックで祝祭的なアシッド／ドリルンベース作で聴感の快楽を前面に出したバイブス寄りの一枚。",
+ rse:"マシン主導のレイヴ／アシッド。（≈1人＋機械）。",
+ c:"medium", note:"",
+ lx:0, ly:-1, anch:"middle"},
+{n:"Dostrotime", s:"Dostrotime", y:2024, el:4, av:6, se:4, p:"≈2人",
+ rel:"生演奏はArkteon独奏ベース三部（intro/interlude/outro）に事実上限定され本体は電子的drill'n'bass、終始生ベースが前面のFeed Me／HND(5)より生比は低く4。",
+ rav:"『すべての曲が心地よい』『万人向け』と評される起伏豊かな作でブレイクビーツのバラッド性やアコースティックの温かさが快楽寄りに引く、シネマティックな内省もあり中間。",
+ rse:"ソロ・ベース曲を柱にドラムンベースや激しいベース・ソロ。少人数感（≈2人）。",
+ c:"medium", note:"",
+ jx:4.0, jy:5.62, lx:0, ly:1, anch:"middle"},
+{n:"KAMMERKONZERT", s:"KAMMERKONZERT", y:2026, el:5, av:2, se:10, p:"室内オーケストラ級",
+ rel:"室内協奏曲を基盤に生ドラム・ベース・ギターの実奏と打ち込み／サンプルのクラシック楽器群を本人が全パート担当、管弦部の生／打ち込み内訳は非公開で生優位とは断定できず中央寄せの6（MIRON8より下は維持）。",
+ rav:"楽譜動画や大学での構造可視化視聴会を伴い研究対象として受容される最もアカデミックな枠組み、ただし本人が『成熟・洗練』の含意を否定し粗削りな躍動とビートを保つため絶対極ではなく2。",
+ rse:"弦・ハープシコード・マレット・管に生ドラム／ベース／ギターまで室内オーケストラ規模の編成が鳴り人数感は多い。とはいえトム一人でのワークス",
+ c:"low", note:"", kk:true,
+ lx:1, ly:1, anch:"start"},
+];
+
+/* スコープ外の参考点：バンド名義ライブ盤（略式採点・多段検証なし） */
+const REF = {n:"Shobaleader One: Elektrac（参考）", s:"Elektrac（参考）", y:2017, el:9, av:8, se:8, p:"実在の4人組バンド",
+ rel:"覆面バンドが過去のドリルンベース曲を人力のジャズファンクで再現したライブ盤。ほぼ全面が生演奏。",
+ rav:"快楽全開のファンク再解釈としてライブの熱気ごと受容される、バイブス側の演目。",
+ rse:"実在の4人が実際に合奏——「聴こえる人数」と「実際の人数」がほぼ一致する唯一の例（KAMMERKONZERTはその乖離が最大）。",
+ c:"参考", note:""};
+
+const DEC = y => y<2000?["1990s","--d90"]:y<2010?["2000s","--d00"]:y<2020?["2010s","--d10"]:["2020s","--d20"];
+const NS = "http://www.w3.org/2000/svg";
+const VW=920, VH=620, ML=56, MR=40, MT=44, MB=52, PAD=0.85;
+const PW=VW-ML-MR, PH=VH-MT-MB, DOM=10+2*PAD;
+const X = v => ML + (v+PAD)/DOM*PW;
+const Y = v => MT + PH - (v+PAD)/DOM*PH;
+const R = se => 6 + se*1.9;
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+const svg = document.getElementById("chart");
+const el = (tag, attrs, parent) => {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  (parent||svg).appendChild(e); return e;
+};
+
+/* grid */
+for (let v=0; v<=10; v+=2){
+  el("line",{x1:X(v),x2:X(v),y1:Y(-PAD),y2:Y(10+PAD),class:"gridline"});
+  el("line",{y1:Y(v),y2:Y(v),x1:X(-PAD),x2:X(10+PAD),class:"gridline"});
+  el("text",{x:X(v),y:Y(-PAD)+16,class:"axlab mono","text-anchor":"middle"}).textContent=v;
+  el("text",{x:X(-PAD)-8,y:Y(v)+4,class:"axlab mono","text-anchor":"end"}).textContent=v;
+}
+el("line",{x1:X(-PAD),x2:X(10+PAD),y1:Y(-PAD),y2:Y(-PAD),class:"axisline"});
+el("line",{x1:X(-PAD),x2:X(-PAD),y1:Y(-PAD),y2:Y(10+PAD),class:"axisline"});
+/* axis end labels */
+el("text",{x:X(0),y:VH-10,class:"axend","text-anchor":"start"}).textContent="← エレクトロニック";
+el("text",{x:X(10),y:VH-10,class:"axend","text-anchor":"end"}).textContent="生演奏 →";
+el("text",{x:ML-38,y:Y(10)-14,class:"axend","text-anchor":"start"}).textContent="↑ バイブス";
+el("text",{x:ML-38,y:Y(0)+30,class:"axend","text-anchor":"start"}).textContent="↓ アカデミック";
+/* empty quadrant */
+const vq = el("g",{class:"void"});
+el("rect",{x:X(6.6),y:Y(10.4),width:X(10.55)-X(6.6),height:Y(5.6)-Y(10.4),rx:10},vq);
+el("text",{x:(X(6.6)+X(10.55))/2,y:Y(10.4)+20,class:"voidlab","text-anchor":"middle"},vq).textContent="《空白象限》";
+el("text",{x:(X(6.6)+X(10.55))/2,y:Y(10.4)+36,class:"voidlab","text-anchor":"middle"},vq).textContent="ソロ名義のスタジオ作は30年間ここに無い";
+
+/* trajectory (chronological) */
+const ordered = [...DATA].sort((a,b)=>a.y-b.y);
+const pts = d => `${X(d.jx??d.el)},${Y(d.jy??d.av)}`;
+const traj = el("polyline",{class:"traj",points:ordered.map(pts).join(" ")});
+traj.style.display="none";
+
+/* nodes */
+const tip = document.getElementById("tip");
+const card = document.querySelector(".chartcard");
+let selected = null;
+const nodes = new Map();
+
+ordered.forEach(d=>{
+  const cx=X(d.jx??d.el), cy=Y(d.jy??d.av), r=R(d.se);
+  const [dec,varname]=DEC(d.y);
+  const g = el("g",{class:"node",tabindex:"0",role:"button","aria-label":`${d.n}（${d.y}）EL${d.el} AV${d.av} SE${d.se}`});
+  if(d.kk) el("circle",{cx,cy,r:r+5,class:"kkring"},g);
+  el("circle",{cx,cy,r:Math.max(r+6,16),class:"halo"},g);
+  const c = el("circle",{cx,cy,r,class:"bub",fill:`var(${varname})`,"fill-opacity":"0.88"},g);
+  /* direct label */
+  const lyoff = d.ly<0 ? -(r+7) : d.ly>0 ? (r+15) : 4;
+  const lxoff = d.lx<0 ? -(r+8) : d.lx>0 ? (r+8) : 0;
+  el("text",{x:cx+lxoff,y:cy+lyoff,class:"blab"+(d.kk?" kk":""),"text-anchor":d.anch},g).textContent=d.s;
+  g.addEventListener("pointerenter",ev=>showTip(d,ev));
+  g.addEventListener("pointermove",ev=>moveTip(ev));
+  g.addEventListener("pointerleave",()=>tip.style.display="none");
+  g.addEventListener("click",()=>select(d));
+  g.addEventListener("keydown",ev=>{if(ev.key==="Enter"||ev.key===" "){ev.preventDefault();select(d);}});
+  nodes.set(d.n,g);
+  svg.appendChild(g);
+});
+
+/* 参考点（破線）：Shobaleader One: Elektrac */
+{
+  const d=REF, cx=X(d.el), cy=Y(d.av), r=R(d.se);
+  const g = el("g",{class:"node",tabindex:"0",role:"button","aria-label":`${d.n}（${d.y}）EL${d.el} AV${d.av} SE${d.se}。バンド名義ライブ盤のため採点対象外の参考点`});
+  el("circle",{cx,cy,r:Math.max(r+6,16),class:"halo"},g);
+  el("circle",{cx,cy,r,class:"bub refbub",fill:"var(--d10)","fill-opacity":"0.18"},g);
+  el("text",{x:cx,y:cy-(r+7),class:"blab","text-anchor":"middle"},g).textContent=d.s;
+  g.addEventListener("pointerenter",ev=>showTip(d,ev));
+  g.addEventListener("pointermove",ev=>moveTip(ev));
+  g.addEventListener("pointerleave",()=>tip.style.display="none");
+  g.addEventListener("click",()=>select(d));
+  g.addEventListener("keydown",ev=>{if(ev.key==="Enter"||ev.key===" "){ev.preventDefault();select(d);}});
+  nodes.set(d.n,g);
+  svg.appendChild(g);
+}
+
+function showTip(d,ev){
+  tip.innerHTML=`<b>${d.n}</b>（${d.y}）
+  <div class="trow"><span>エレクトロニック⇄生演奏</span><span class="mono">${d.el}</span></div>
+  <div class="trow"><span>アカデミック⇄バイブス</span><span class="mono">${d.av}</span></div>
+  <div class="trow"><span>ソロ⇄アンサンブル</span><span class="mono">${d.se}</span></div>
+  <div class="trow"><span>想起人数</span><span>${d.p}</span></div>`;
+  tip.style.display="block"; moveTip(ev);
+}
+function moveTip(ev){
+  const b=card.getBoundingClientRect();
+  let x=ev.clientX-b.left+14, y=ev.clientY-b.top+10;
+  if(x+tip.offsetWidth>b.width-8) x=ev.clientX-b.left-tip.offsetWidth-12;
+  if(y+tip.offsetHeight>b.height-8) y=ev.clientY-b.top-tip.offsetHeight-8;
+  tip.style.left=x+"px"; tip.style.top=y+"px";
+}
+
+/* detail panel */
+const panel=document.getElementById("panel");
+function meter(lab0,lab1,v,color){
+  return `<div class="meter">
+    <div class="mhead"><span>${lab0}</span><span>${lab1}</span></div>
+    <div class="mtrack"><span class="mdot" style="left:${v*10}%;background:${color}"></span></div>
+    <div class="mval mono">${v} / 10</div>
+  </div>`;
+}
+function select(d){
+  selected=d;
+  nodes.forEach((g,n)=>g.classList.toggle("sel",n===d.n));
+  const [dec,varname]=DEC(d.y);
+  const color=`var(${varname})`;
+  panel.innerHTML=`
+    <h2>${d.n} <span class="pyear mono">${d.y}</span></h2>
+    <div class="chips">
+      <span class="chip"><span class="dot" style="background:${color}"></span>${dec}</span>
+      <span class="chip">想起人数：${d.p}</span>
+      <span class="chip">確度：${d.c}</span>
+    </div>
+    ${meter("エレクトロニック","生演奏",d.el,color)}
+    ${meter("アカデミック","バイブス",d.av,color)}
+    ${meter("ソロ","アンサンブル",d.se,color)}
+    <div class="rats">
+      <div class="rat"><b>エレクトロニック⇄生演奏</b><p>${d.rel}</p></div>
+      <div class="rat"><b>アカデミック⇄バイブス</b><p>${d.rav}</p></div>
+      <div class="rat"><b>ソロ⇄アンサンブル</b><p>${d.rse}</p></div>
+    </div>
+    ${d.note?`<div class="vnote">検証メモ：${d.note}</div>`:""}`;
+}
+select(DATA[DATA.length-1]); /* KAMMERKONZERT selected on load */
+
+/* table */
+const tbody=document.getElementById("tbody");
+ordered.forEach(d=>{
+  const tr=document.createElement("tr");
+  tr.innerHTML=`<td class="num mono">${d.y}</td><td>${d.n}</td><td class="num mono">${d.el}</td><td class="num mono">${d.av}</td><td class="num mono">${d.se}</td><td>${d.p}</td><td>${d.c}</td>`;
+  tr.addEventListener("click",()=>select(d));
+  tbody.appendChild(tr);
+});
+{
+  const tr=document.createElement("tr");
+  tr.innerHTML=`<td class="num mono">${REF.y}</td><td>${REF.n}</td><td class="num mono">${REF.el}</td><td class="num mono">${REF.av}</td><td class="num mono">${REF.se}</td><td>${REF.p}</td><td>${REF.c}</td>`;
+  tr.addEventListener("click",()=>select(REF));
+  tbody.appendChild(tr);
+}
+
+/* controls */
+const btnTraj=document.getElementById("btnTraj");
+btnTraj.addEventListener("click",()=>{
+  const on=btnTraj.getAttribute("aria-pressed")!=="true";
+  btnTraj.setAttribute("aria-pressed",on);
+  traj.style.display=on?"":"none";
+});
+const btnTable=document.getElementById("btnTable");
+btnTable.addEventListener("click",()=>{
+  const on=btnTable.getAttribute("aria-pressed")!=="true";
+  btnTable.setAttribute("aria-pressed",on);
+  document.getElementById("tablewrap").classList.toggle("show",on);
+});
+
+const btnPlay=document.getElementById("btnPlay");
+const playYear=document.getElementById("playYear");
+let playing=null;
+btnPlay.addEventListener("click",()=>{ playing?stopPlay():startPlay(); });
+function startPlay(){
+  btnPlay.textContent="⏸ 停止";
+  let i=0;
+  const step=()=>{
+    if(i>=ordered.length){ stopPlay(); return; }
+    const d=ordered[i];
+    ordered.forEach((o,j)=>nodes.get(o.n).classList.toggle("dim",j>i));
+    traj.style.display="";
+    traj.setAttribute("points",ordered.slice(0,i+1).map(pts).join(" "));
+    playYear.textContent=`${d.y} — ${d.s}`;
+    select(d);
+    i++;
+    playing=setTimeout(step, reduced?350:1050);
+  };
+  step();
+}
+function stopPlay(){
+  clearTimeout(playing); playing=null;
+  btnPlay.textContent="▶ 再生";
+  playYear.textContent="";
+  ordered.forEach(o=>nodes.get(o.n).classList.remove("dim"));
+  traj.setAttribute("points",ordered.map(pts).join(" "));
+  traj.style.display=btnTraj.getAttribute("aria-pressed")==="true"?"":"none";
+}
+</script>
+</body>
+</html>

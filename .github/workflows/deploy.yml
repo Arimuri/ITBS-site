@@ -45,6 +45,3 @@ jobs:
 
       - name: Deploy c4p subdomain
         run: rsync -avz --delete ./c4p-site/ arimuri@arimuri.sakura.ne.jp:/home/arimuri/www/c4p/
-
-      - name: Deploy kammerkonzert page
-        run: rsync -avz --delete ./kammerkonzert-site/ arimuri@arimuri.sakura.ne.jp:/home/arimuri/www/kammerkonzert/

@@ -3,9 +3,11 @@ import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import videosCache from '../data/videos.json';
 
-// Fetch YouTube playlist RSS feeds
-async function fetchPlaylist(playlistId: string) {
+// Fetch YouTube playlist RSS feed; fall back to committed JSON cache
+// if YouTube blocks the request (common on GitHub Actions runners).
+async function fetchPlaylist(playlistId: string, fallback: { videoId: string; title: string }[]) {
 	const url = `https://www.youtube.com/feeds/videos.xml?playlist_id=${playlistId}`;
 	try {
 		const res = await fetch(url, {
@@ -16,13 +18,14 @@ async function fetchPlaylist(playlistId: string) {
 			},
 		});
 		if (!res.ok) {
-			console.warn(`[playlist ${playlistId}] HTTP ${res.status}`);
-			return [];
+			console.warn(`[playlist ${playlistId}] HTTP ${res.status} — using cache (${fallback.length} videos)`);
+			return fallback;
 		}
 		const xml = await res.text();
 		const entries = xml.match(/<entry>([\s\S]*?)<\/entry>/g) || [];
 		if (entries.length === 0) {
-			console.warn(`[playlist ${playlistId}] 0 entries parsed (xml length: ${xml.length})`);
+			console.warn(`[playlist ${playlistId}] 0 entries parsed — using cache (${fallback.length} videos)`);
+			return fallback;
 		}
 		return entries.map((entry) => {
 			const videoId = entry.match(/<yt:videoId>(.*?)<\/yt:videoId>/)?.[1] ?? '';
@@ -31,13 +34,13 @@ async function fetchPlaylist(playlistId: string) {
 			return { videoId, title };
 		});
 	} catch (err) {
-		console.warn(`[playlist ${playlistId}] fetch error:`, err);
-		return [];
+		console.warn(`[playlist ${playlistId}] fetch error — using cache:`, err);
+		return fallback;
 	}
 }
 
-const playlist1 = await fetchPlaylist('PLNdj0Iz_UsvPDvPgyDfii0qix4aHPaa_1');
-const playlist2 = await fetchPlaylist('PLNdj0Iz_UsvMTLJxFynqiRLgM75kh1ugp');
+const playlist1 = await fetchPlaylist('PLNdj0Iz_UsvPDvPgyDfii0qix4aHPaa_1', videosCache.playlist1);
+const playlist2 = await fetchPlaylist('PLNdj0Iz_UsvMTLJxFynqiRLgM75kh1ugp', videosCache.playlist2);
 ---
 
 <!doctype html>

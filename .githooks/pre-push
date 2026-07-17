@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Refresh videos.json cache from YouTube before pushing.
+# Runs from local IP where YouTube RSS is accessible (GHA is blocked).
+# If it changes videos.json, aborts push so you can review & commit.
+
+set -e
+cd "$(git rev-parse --show-toplevel)"
+
+echo "[pre-push] refreshing videos.json…"
+if ! node scripts/update-videos.mjs; then
+  echo "[pre-push] update-videos failed — pushing anyway (existing cache stays)"
+  exit 0
+fi
+
+if ! git diff --quiet -- src/data/videos.json; then
+  echo ""
+  echo "[pre-push] videos.json changed — commit it and push again:"
+  echo "  git add src/data/videos.json && git commit -m 'update videos cache' && git push"
+  exit 1
+fi
+
+exit 0

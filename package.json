@@ -6,7 +6,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "update-videos": "node scripts/update-videos.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^4.3.13",

@@ -1,58 +1,4 @@
 {
-  "playlist2": [
-    {
-      "videoId": "ytq5pGcM77w",
-      "title": "in the blue shirt - Cluster A"
-    },
-    {
-      "videoId": "GfYOOuuTHmc",
-      "title": "in the blue shirt - toward morning"
-    },
-    {
-      "videoId": "KjJDGORlGCw",
-      "title": "in the blue shirt - Everyday affair"
-    },
-    {
-      "videoId": "ABnuu2_1vh8",
-      "title": "in the blue shirt - Breakthrough (for me)"
-    },
-    {
-      "videoId": "3bO9NwuEwQU",
-      "title": "in the blue shirt - seven bridge"
-    },
-    {
-      "videoId": "URw19cJdM68",
-      "title": "in the blue shirt - Stevenson Screen"
-    },
-    {
-      "videoId": "gEr0WuztoXg",
-      "title": "in the blue shirt -  Past Self (Music Video by AMUNOA)"
-    },
-    {
-      "videoId": "yNh0aTkulJ0",
-      "title": "in the blue shirt - Footloose"
-    },
-    {
-      "videoId": "lMijLfiIyZU",
-      "title": "in the blue shirt - Ghost Greeting"
-    },
-    {
-      "videoId": "rYqwieyw64Q",
-      "title": "in the blue shirt - Between Us"
-    },
-    {
-      "videoId": "t_GnY7S9V2M",
-      "title": "in the blue shirt - Fly High"
-    },
-    {
-      "videoId": "TwEkY7U3m5s",
-      "title": "in the blue shirt - Dream of You"
-    },
-    {
-      "videoId": "CgOagLd3_yg",
-      "title": "in the blue shirt - Into Deep (What I Need)"
-    }
-  ],
   "playlist1": [
     {
       "videoId": "UPEnhZOkZSk",
@@ -113,6 +59,60 @@
     {
       "videoId": "y2vJ9Tf0_Xs",
       "title": "”Free Association” #14  Plastulo"
+    }
+  ],
+  "playlist2": [
+    {
+      "videoId": "ytq5pGcM77w",
+      "title": "in the blue shirt - Cluster A"
+    },
+    {
+      "videoId": "GfYOOuuTHmc",
+      "title": "in the blue shirt - toward morning"
+    },
+    {
+      "videoId": "KjJDGORlGCw",
+      "title": "in the blue shirt - Everyday affair"
+    },
+    {
+      "videoId": "ABnuu2_1vh8",
+      "title": "in the blue shirt - Breakthrough (for me)"
+    },
+    {
+      "videoId": "3bO9NwuEwQU",
+      "title": "in the blue shirt - seven bridge"
+    },
+    {
+      "videoId": "URw19cJdM68",
+      "title": "in the blue shirt - Stevenson Screen"
+    },
+    {
+      "videoId": "gEr0WuztoXg",
+      "title": "in the blue shirt -  Past Self (Music Video by AMUNOA)"
+    },
+    {
+      "videoId": "yNh0aTkulJ0",
+      "title": "in the blue shirt - Footloose"
+    },
+    {
+      "videoId": "lMijLfiIyZU",
+      "title": "in the blue shirt - Ghost Greeting"
+    },
+    {
+      "videoId": "rYqwieyw64Q",
+      "title": "in the blue shirt - Between Us"
+    },
+    {
+      "videoId": "t_GnY7S9V2M",
+      "title": "in the blue shirt - Fly High"
+    },
+    {
+      "videoId": "TwEkY7U3m5s",
+      "title": "in the blue shirt - Dream of You"
+    },
+    {
+      "videoId": "CgOagLd3_yg",
+      "title": "in the blue shirt - Into Deep (What I Need)"
     }
   ]
 }

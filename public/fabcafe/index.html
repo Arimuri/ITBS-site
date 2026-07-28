@@ -51,11 +51,17 @@
 		font-size: 0.8rem;
 		margin-bottom: 28px;
 	}
+	.group-caption {
+		font-size: 0.72rem;
+		color: var(--text-light);
+		letter-spacing: 0.06em;
+		margin-bottom: 8px;
+	}
 	.lengths {
 		display: flex;
 		justify-content: center;
 		gap: 12px;
-		margin-bottom: 28px;
+		margin-bottom: 20px;
 	}
 	.lengths label {
 		display: flex;
@@ -76,6 +82,34 @@
 	}
 	.lengths input {
 		accent-color: var(--accent);
+		width: 15px;
+		height: 15px;
+	}
+	.grid-select {
+		display: flex;
+		justify-content: center;
+		gap: 12px;
+		margin-bottom: 28px;
+	}
+	.grid-select label {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 8px 14px;
+		border: 1.5px solid var(--border);
+		border-radius: 999px;
+		cursor: pointer;
+		font-size: 0.9rem;
+		user-select: none;
+		transition: border-color 0.15s, background 0.15s;
+	}
+	.grid-select label:has(input:checked) {
+		border-color: var(--pop-pink);
+		background: #fdeef4;
+		color: #c4356e;
+	}
+	.grid-select input {
+		accent-color: var(--pop-pink);
 		width: 15px;
 		height: 15px;
 	}
@@ -137,10 +171,17 @@
 		<h1>fabcafe sampler</h1>
 		<p class="sub">in the blue shirt</p>
 
+		<p class="group-caption">使うサンプル</p>
 		<div class="lengths">
 			<label><input type="checkbox" value="6" checked />6sec</label>
 			<label><input type="checkbox" value="15" checked />15sec</label>
 			<label><input type="checkbox" value="30" checked />30sec</label>
+		</div>
+
+		<p class="group-caption">切替の単位</p>
+		<div class="grid-select">
+			<label><input type="radio" name="grid" value="15" />15sec単位</label>
+			<label><input type="radio" name="grid" value="30" checked />30sec単位</label>
 		</div>
 
 		<div class="buttons">
@@ -157,56 +198,159 @@
 		15: ['audio/15sec_1.m4a', 'audio/15sec_2.m4a', 'audio/15sec_3.m4a'],
 		30: ['audio/30sec_1.m4a', 'audio/30sec_2.m4a', 'audio/30sec_3.m4a'],
 	};
+	const ALL = Object.values(FILES).flat();
 
 	const playBtn = document.getElementById('playBtn');
 	const stopBtn = document.getElementById('stopBtn');
 	const nowEl = document.getElementById('now');
 	const checks = [...document.querySelectorAll('.lengths input')];
+	const grids = [...document.querySelectorAll('input[name="grid"]')];
 
-	const audio = new Audio();
-	audio.preload = 'auto';
+	// 切替の単位(15 or 30秒)。1枠=1サンプルで、短ければループで埋め、長ければ境界でカット
+	function grid() {
+		return Number(grids.find(g => g.checked).value);
+	}
+
+	// ページ表示時に音源のダウンロードだけ先行させる(デコードは初回再生時)
+	const fetched = new Map(ALL.map(src => [src, fetch(src).then(r => r.arrayBuffer())]));
+
+	let ctx = null;
+	const buffers = new Map(); // src -> {buffer, offset, duration}(無音トリム済み)
 	let playing = false;
 	let lastSrc = null;
+	let current = null; // {source, src, when, endTime}
+	let pending = null; // 次に鳴らす予約済みソース
+
+	// AACのエンコーダパディング等による先頭/末尾の無音を除いた範囲を求める
+	function trim(buffer) {
+		const TH = 0.0005;
+		let start = buffer.length, end = 0;
+		for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+			const d = buffer.getChannelData(ch);
+			let i = 0;
+			while (i < start && Math.abs(d[i]) < TH) i++;
+			start = Math.min(start, i);
+			let j = buffer.length - 1;
+			while (j > end && Math.abs(d[j]) < TH) j--;
+			end = Math.max(end, j);
+		}
+		return {
+			buffer,
+			offset: start / buffer.sampleRate,
+			duration: Math.max(0, end + 1 - start) / buffer.sampleRate,
+		};
+	}
+
+	async function loadAll() {
+		if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+		await ctx.resume();
+		await Promise.all(ALL.map(async src => {
+			if (buffers.has(src)) return;
+			const raw = await fetched.get(src);
+			buffers.set(src, trim(await ctx.decodeAudioData(raw.slice(0))));
+		}));
+	}
 
 	function pool() {
 		return checks.filter(c => c.checked).flatMap(c => FILES[c.value]);
 	}
 
-	function pickNext() {
+	function pick() {
 		const p = pool();
 		if (p.length === 0) return null;
-		// 直前と同じサンプルは避ける(候補が2つ以上あるとき)
 		const candidates = p.length > 1 ? p.filter(s => s !== lastSrc) : p;
 		return candidates[Math.floor(Math.random() * candidates.length)];
 	}
 
-	function playNext() {
-		const src = pickNext();
-		if (!src) { stop('チェックが空です'); return; }
+	function makeSource(src, when) {
+		const { buffer, offset, duration } = buffers.get(src);
+		const G = grid();
+		const source = ctx.createBufferSource();
+		source.buffer = buffer;
+		source.loop = true;
+		source.loopStart = offset;
+		source.loopEnd = offset + duration;
+		source.connect(ctx.destination);
+		source.start(when, offset);
+		source.stop(when + G);
+		return { source, src, when, endTime: when + G };
+	}
+
+	// 次のサンプルを現在の終了時刻ちょうどに予約する
+	function scheduleNext(when) {
+		const src = pick();
+		if (!src) { pending = null; return; }
 		lastSrc = src;
-		audio.src = src;
-		audio.play().catch(() => stop());
+		pending = makeSource(src, when);
+	}
+
+	// 現在のサンプルが終わった瞬間、予約済みが再生中になる
+	function promote() {
+		if (!playing) return;
+		if (!pending) { stop(); return; }
+		current = pending;
+		pending = null;
+		show(current.src);
+		current.source.onended = promote;
+		scheduleNext(current.endTime);
+	}
+
+	function show(src) {
 		nowEl.innerHTML = '<span class="dot"></span>' + src.replace('audio/', '').replace('.m4a', '');
 	}
 
-	function start() {
+	async function start() {
 		if (pool().length === 0) { nowEl.textContent = 'チェックを入れてください'; return; }
-		playing = true;
 		playBtn.disabled = true;
+		nowEl.textContent = '読み込み中…';
+		try {
+			await loadAll();
+		} catch (e) {
+			nowEl.textContent = '読み込みに失敗しました';
+			playBtn.disabled = false;
+			return;
+		}
+		playing = true;
 		stopBtn.disabled = false;
-		playNext();
+		const src = pick();
+		lastSrc = src;
+		current = makeSource(src, ctx.currentTime + 0.05);
+		show(src);
+		current.source.onended = promote;
+		scheduleNext(current.endTime);
 	}
 
 	function stop(msg) {
 		playing = false;
-		audio.pause();
-		audio.removeAttribute('src');
+		for (const x of [current, pending]) {
+			if (!x) continue;
+			x.source.onended = null;
+			try { x.source.stop(); } catch (e) {}
+		}
+		current = pending = null;
+		if (ctx) ctx.suspend();
 		playBtn.disabled = false;
 		stopBtn.disabled = true;
 		nowEl.textContent = msg || '';
 	}
 
-	audio.addEventListener('ended', () => { if (playing) playNext(); });
+	// チェック/切替単位の変更は予約済みの次サンプルに即反映(開始前なら取り消して選び直す)
+	function repick() {
+		if (!playing || !ctx) return;
+		if (pending && pending.when > ctx.currentTime + 0.05) {
+			const when = pending.when;
+			pending.source.onended = null;
+			try { pending.source.stop(); } catch (e) {}
+			pending = null;
+			lastSrc = current ? current.src : null;
+			scheduleNext(when);
+		} else if (!pending && current && current.endTime > ctx.currentTime) {
+			// 全チェックが外れて予約なしだった後、再度チェックされた場合
+			scheduleNext(current.endTime);
+		}
+	}
+	checks.forEach(c => c.addEventListener('change', repick));
+	grids.forEach(g => g.addEventListener('change', repick));
 
 	playBtn.addEventListener('click', start);
 	stopBtn.addEventListener('click', () => stop());

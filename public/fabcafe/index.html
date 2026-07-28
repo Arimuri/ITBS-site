@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>fabcafe sampler — in the blue shirt</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<style>
+	:root {
+		--accent: #0078c8;
+		--accent-dark: #005a96;
+		--pop-pink: #f06595;
+		--text: #1a1a2e;
+		--text-light: #6b7280;
+		--bg: #ffffff;
+		--bg-soft: #f8f9fc;
+		--border: #e5e7eb;
+		--radius: 12px;
+		--radius-lg: 20px;
+		--shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+	}
+	* { box-sizing: border-box; margin: 0; padding: 0; }
+	body {
+		font-family: "Hiragino Sans", "Noto Sans JP", sans-serif;
+		background: var(--bg-soft);
+		color: var(--text);
+		min-height: 100dvh;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 24px;
+	}
+	.player {
+		background: var(--bg);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-md);
+		padding: 40px 32px;
+		width: 100%;
+		max-width: 420px;
+		text-align: center;
+	}
+	h1 {
+		font-size: 1.2rem;
+		letter-spacing: 0.02em;
+		margin-bottom: 4px;
+	}
+	.sub {
+		color: var(--text-light);
+		font-size: 0.8rem;
+		margin-bottom: 28px;
+	}
+	.lengths {
+		display: flex;
+		justify-content: center;
+		gap: 12px;
+		margin-bottom: 28px;
+	}
+	.lengths label {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 8px 14px;
+		border: 1.5px solid var(--border);
+		border-radius: 999px;
+		cursor: pointer;
+		font-size: 0.9rem;
+		user-select: none;
+		transition: border-color 0.15s, background 0.15s;
+	}
+	.lengths label:has(input:checked) {
+		border-color: var(--accent);
+		background: #eaf4fb;
+		color: var(--accent-dark);
+	}
+	.lengths input {
+		accent-color: var(--accent);
+		width: 15px;
+		height: 15px;
+	}
+	.buttons {
+		display: flex;
+		justify-content: center;
+		gap: 14px;
+		margin-bottom: 24px;
+	}
+	button {
+		font-family: inherit;
+		font-size: 1rem;
+		font-weight: 700;
+		padding: 13px 36px;
+		border: none;
+		border-radius: 999px;
+		cursor: pointer;
+		transition: transform 0.1s, opacity 0.15s;
+	}
+	button:active { transform: scale(0.97); }
+	#playBtn {
+		background: var(--accent);
+		color: #fff;
+	}
+	#playBtn:hover { background: var(--accent-dark); }
+	#stopBtn {
+		background: var(--bg);
+		color: var(--text);
+		border: 1.5px solid var(--border);
+	}
+	#stopBtn:hover { border-color: var(--text-light); }
+	button:disabled {
+		opacity: 0.4;
+		cursor: default;
+		transform: none;
+	}
+	.now {
+		font-size: 0.85rem;
+		color: var(--text-light);
+		min-height: 1.4em;
+	}
+	.now .dot {
+		display: inline-block;
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: var(--pop-pink);
+		margin-right: 7px;
+		animation: pulse 1s infinite alternate;
+	}
+	@keyframes pulse {
+		from { opacity: 1; }
+		to { opacity: 0.25; }
+	}
+</style>
+</head>
+<body>
+	<main class="player">
+		<h1>fabcafe sampler</h1>
+		<p class="sub">in the blue shirt</p>
+
+		<div class="lengths">
+			<label><input type="checkbox" value="6" checked />6sec</label>
+			<label><input type="checkbox" value="15" checked />15sec</label>
+			<label><input type="checkbox" value="30" checked />30sec</label>
+		</div>
+
+		<div class="buttons">
+			<button id="playBtn">再生</button>
+			<button id="stopBtn" disabled>停止</button>
+		</div>
+
+		<p class="now" id="now"></p>
+	</main>
+
+<script>
+	const FILES = {
+		6:  ['audio/6sec_1.m4a', 'audio/6sec_2.m4a', 'audio/6sec_3.m4a', 'audio/6sec_4.m4a'],
+		15: ['audio/15sec_1.m4a', 'audio/15sec_2.m4a', 'audio/15sec_3.m4a'],
+		30: ['audio/30sec_1.m4a', 'audio/30sec_2.m4a', 'audio/30sec_3.m4a'],
+	};
+
+	const playBtn = document.getElementById('playBtn');
+	const stopBtn = document.getElementById('stopBtn');
+	const nowEl = document.getElementById('now');
+	const checks = [...document.querySelectorAll('.lengths input')];
+
+	const audio = new Audio();
+	audio.preload = 'auto';
+	let playing = false;
+	let lastSrc = null;
+
+	function pool() {
+		return checks.filter(c => c.checked).flatMap(c => FILES[c.value]);
+	}
+
+	function pickNext() {
+		const p = pool();
+		if (p.length === 0) return null;
+		// 直前と同じサンプルは避ける(候補が2つ以上あるとき)
+		const candidates = p.length > 1 ? p.filter(s => s !== lastSrc) : p;
+		return candidates[Math.floor(Math.random() * candidates.length)];
+	}
+
+	function playNext() {
+		const src = pickNext();
+		if (!src) { stop('チェックが空です'); return; }
+		lastSrc = src;
+		audio.src = src;
+		audio.play().catch(() => stop());
+		nowEl.innerHTML = '<span class="dot"></span>' + src.replace('audio/', '').replace('.m4a', '');
+	}
+
+	function start() {
+		if (pool().length === 0) { nowEl.textContent = 'チェックを入れてください'; return; }
+		playing = true;
+		playBtn.disabled = true;
+		stopBtn.disabled = false;
+		playNext();
+	}
+
+	function stop(msg) {
+		playing = false;
+		audio.pause();
+		audio.removeAttribute('src');
+		playBtn.disabled = false;
+		stopBtn.disabled = true;
+		nowEl.textContent = msg || '';
+	}
+
+	audio.addEventListener('ended', () => { if (playing) playNext(); });
+
+	playBtn.addEventListener('click', start);
+	stopBtn.addEventListener('click', () => stop());
+
+	// 再生中に全チェックが外れたら、いま鳴っているサンプルの終わりで止まる
+</script>
+</body>
+</html>

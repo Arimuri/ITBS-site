@@ -12,6 +12,20 @@
 # 新しいイベントを上に追加してください。
 # ---
 
+## 文学フリマ大阪14
+- date: 2026-09-13
+- venue: インテックス大阪 2号館
+- city: 大阪
+- url: https://bunfree.net/event/osaka14/
+- note: 出展 / 12:00〜17:00
+
+## MUSIC BAR BOUNCE
+- date: 2026-09-04
+- venue: MUSIC BAR BOUNCE
+- city: 大阪
+- url: https://www.instagram.com/p/DcTbO70hlcj/
+- note: DJ / OPEN 20:00 / ¥2,000 / w/ SEX山口, PARKGOLF, shakke, ChibiChael, okadada
+
 ## Maripopi
 - date: 2026-09-06
 - venue: octave kyoto

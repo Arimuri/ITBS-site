@@ -12,6 +12,13 @@
 # 新しいイベントを上に追加してください。
 # ---
 
+## Maripopi
+- date: 2026-09-06
+- venue: octave kyoto
+- city: 京都・河原町三条
+- url: https://www.instagram.com/p/Db3cGHmk2Fc/
+- note: DJ / 17:00〜23:00 / ADV ¥3,000 / DOOR ¥3,500 / w/ Neibiss, なかむらみなみ ほか
+
 ## SAI /062/
 - date: 2026-07-31
 - venue: PLATINUM BLDG. B1F

@@ -43,7 +43,7 @@
 ## MUSIC BAR BOUNCE
 - date: 2026-09-04
 - venue: MUSIC BAR BOUNCE
-- city: 大阪
+- city: 東京・渋谷（道玄坂）
 - url: https://www.instagram.com/p/DcTbO70hlcj/
 - note: DJ / OPEN 20:00 / ¥2,000 / w/ SEX山口, PARKGOLF, shakke, ChibiChael, okadada
 

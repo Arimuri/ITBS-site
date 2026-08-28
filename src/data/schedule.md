@@ -12,6 +12,27 @@
 # 新しいイベントを上に追加してください。
 # ---
 
+## Bread, Music, and Antiques Autumn 2026
+- date: 2026-09-19
+- venue: 京王多摩川フローラルガーデン ANGE
+- city: 東京・調布
+- url: https://livepocket.jp/e/0btv6
+- note: 9/19(土)・9/20(日) 2日間開催
+
+## 神保町サウンドシェア 〜やさしい試聴会〜 vol.11
+- date: 2026-09-19
+- venue: 美学校
+- city: 東京・神保町
+- url: https://bigakko.jp/event/2026/soundshare11
+- note: 主催
+
+## GOLD DISC
+- date: 2026-09-18
+- venue: ZEROTOKYO
+- city: 東京・新宿
+- url: https://zerotokyo.zaiko.io/en/e/gold-disc-0918
+- note: DJ / OPEN 23:00 〜 04:30 CLOSE / w/ Aiobahn ほか
+
 ## 文学フリマ大阪14
 - date: 2026-09-13
 - venue: インテックス大阪 2号館

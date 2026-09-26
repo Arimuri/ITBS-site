@@ -7,4 +7,4 @@ categories:
 
 https://youtu.be/AFp-fYjr_70?si=0-WAUbEIj-KTw9_o
 
-音楽とSEを担当しています！
+音楽を担当しています！

@@ -129,6 +129,26 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
 .rc.barstart{border-left:2px solid var(--muted)}
 .rc.now{background-image:linear-gradient(rgba(31,111,196,.14),rgba(31,111,196,.14))}
 .rc.on{background:var(--acc);border-right-color:var(--acc)}
+/* インターバル鍵盤。中身は assets/interval.js が作る */
+.iv-top{display:flex;gap:8px;align-items:center;margin:14px 0 10px}
+.iv-top select{font:inherit;font-size:13px;border:1px solid var(--ring);border-radius:9px;padding:7px 12px;
+  background:var(--surface);color:var(--ink);cursor:pointer}
+.iv-scroll{overflow-x:auto;padding:2px 0 6px}
+.iv-kb{position:relative;height:150px;min-width:560px;user-select:none;touch-action:manipulation}
+.iv-whites{display:flex;height:100%}
+.iv-key{display:flex;align-items:flex-end;justify-content:center;cursor:pointer;font-weight:700}
+.iv-key.w{flex:1;background:#fbfdff;border:1px solid #b9cddd;border-top:none;border-radius:0 0 7px 7px;
+  margin-right:-1px;padding-bottom:9px;font-size:11.5px;color:var(--acc-ink)}
+.iv-key.b{position:absolute;top:0;height:60%;background:#1a2634;border:1px solid #0d141c;border-top:none;
+  border-radius:0 0 6px 6px;z-index:2;padding-bottom:6px;font-size:10px;color:#cfe0ee}
+.iv-key.off{cursor:default}
+.iv-key.w.off{background:#edf2f6;color:transparent}
+.iv-key.b.off{background:#56626f}
+.iv-key.w.root,.iv-key.b.root{background:var(--acc);border-color:var(--acc);color:#fff}
+.iv-key.w.hit{background:var(--acc-soft)}
+.iv-key.b.hit{background:#31506f}
+.iv-status{font-size:13px;color:var(--ink2);margin:6px 0 0;min-height:1.6em}
+.tablebox tr.iv-hl td{background:var(--acc-soft)}
 .roll-note{font-size:12px;color:var(--ink2);margin:10px 0 0}
 .roll-warn{font-size:12.5px;color:var(--ng-ink);font-weight:700;margin:10px 0 0}
 .roll-warn:empty{display:none}

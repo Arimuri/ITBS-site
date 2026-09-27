@@ -1487,7 +1487,9 @@ def build_tips(d):
         f'<p class="lead">{inline(d["tips_note"])}</p>',
     ]
     if d.get("tips_top"):
-        parts.append(d["tips_top"])
+        # 冒頭文の下の「**鉄則**」＋1段落は、ページ全体の鉄則として大きく出す
+        top = re.sub(r"<h3>鉄則</h3>\s*(<p>.*?</p>)", r'<div class="motto">\1</div>', d["tips_top"], flags=re.S)
+        parts.append(top)
     # 覚えるべきコードの色分けは、コツ「…グループ分け…」の例・理由（I IIIm VIm ／ IIm IV ／ V）から取る
     grouping = next((t["why"] for t in d["tips"] if "グループ分け" in t["tip"]), "")
     groups_attr = "|".join(g.strip() for g in grouping.split("／") if g.strip())

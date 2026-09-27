@@ -1109,7 +1109,8 @@ def build_roadmap(d):
                 f'<div class="row"><div class="lbl">{inline(label)}</div>'
                 f'<p class="val">{inline(text)}</p></div>'
             )
-        parts.append(f'<div class="rows tight">{"".join(rows)}</div>')
+        if rows:  # 地の文だけで書いた段階は行を出さない
+            parts.append(f'<div class="rows tight">{"".join(rows)}</div>')
         if st.get("extra"):
             parts.append(st["extra"])
         if src:

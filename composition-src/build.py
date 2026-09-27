@@ -1149,7 +1149,7 @@ KEYBOARD_JS = r"""/* 鍵盤ウィジェット（composition-src/build.py が生�
   const DEG = { I: 0, II: 2, III: 4, IV: 5, V: 7, VI: 9, VII: 11 };
   const QUALITY = {
     '': [0, 4, 7], 'm': [0, 3, 7], '7': [0, 4, 7, 10], 'M7': [0, 4, 7, 11], 'm7': [0, 3, 7, 10],
-    'm7-5': [0, 3, 6, 10], 'm-5': [0, 3, 6], 'dim': [0, 3, 6, 9], 'sus4': [0, 5, 7], 'aug': [0, 4, 8]
+    'm7-5': [0, 3, 6, 10], 'm-5': [0, 3, 6], 'dim': [0, 3, 6, 9], 'dim7': [0, 3, 6, 9], 'sus4': [0, 5, 7], 'aug': [0, 4, 8]
   };
   function parseChord(name) {
     const m = NUMERAL.exec(name.trim());
@@ -1197,7 +1197,10 @@ KEYBOARD_JS = r"""/* 鍵盤ウィジェット（composition-src/build.py が生�
         if (label) groupEl.appendChild(mk('span', 'cw-glabel', label));
         text.split(/[\s　]+/).filter(Boolean).forEach(tok => {
           const name = tok.split('→')[0], ch = parseChord(name);
-          const chip = mk('button', 'cw-chip t' + level + (groupOf[name] ? ' g' + groupOf[name] : ''), name);
+          // 色分けは tier1 のダイアトニックだけ。IM7→I、IIm7→IIm、VIIm7-5→VIIm-5 のように7thを外して照らす
+          const triad = name.replace(/m7-5$|M7$|7$/, s => (s === 'm7-5' ? 'm-5' : ''));
+          const g = level === '1' && name.indexOf('sus') < 0 ? groupOf[triad] : 0;
+          const chip = mk('button', 'cw-chip t' + level + (g ? ' g' + g : ''), name);
           chip.addEventListener('click', () => {
             if (!ch) return;
             playChord(ch, tonicPc, 0, 1.1);

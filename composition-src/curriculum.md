@@ -277,9 +277,9 @@ Sep 27, 2026 · @Ryo Arimura
 
 | tier | コード |
 | --- | --- |
-| tier1 | I　IIm　IIIm　IV　V　VIm　VIIm-5　／　Isus4　IVsus4　Vsus4 |
-| tier2 | III7　IVm |
-| tier3 | 引っ張る：VI7　II7　I7　Vm7　#IVm7-5　#Idim　#Vdim　♭II7　／　借りる：♭VIM7　♭VII7 |
+| tier1 | IM7　IIm7　IIIm7　IVM7　V7　VIm7　VIIm7-5　／　Isus4　IVsus4　Vsus4 |
+| tier2 | III7　IVm7 |
+| tier3 | VI7　II7　I7　Vm7　#IVm7-5　#Idim7　#Vdim7　♭II7　／　♭VIM7　♭VII7 |
 
 | 観点 | コツ | 例・理由 | 導入回 |
 | --- | --- | --- | --- |

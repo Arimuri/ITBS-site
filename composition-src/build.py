@@ -327,25 +327,41 @@ def load():
     data["tips_note"] = next(
         (l.strip() for l in body if l.strip() and not l.startswith("|")), ""
     )
-    # 最初の表だけがコツの一覧。その後ろに「**観点：見出し**」で始まる塊があれば、
-    # その観点の節の下に出す（例：コードの tier 表）
-    # コツの一覧は「| 観点」で始まる表。冒頭文とその表の間にあるもの（tier 表など）はページの一番上に出す
+    # コツの一覧は「| 観点」で始まる表。
+    # 冒頭文とその表の間に「**観点：見出し**」の塊を置くと、その観点の節ごとページの一番上に出す
+    # （例：コードの tier 表）。表の後ろに置いた塊は、その観点の節の下に出す。
     ni = next(i for i, l in enumerate(body) if l.strip() and not l.startswith("|"))
     t0 = next(i for i, l in enumerate(body) if l.startswith("| 観点"))
-    data["tips_top"] = render_blocks(body[ni + 1 : t0])
     t1 = t0
     while t1 < len(body) and body[t1].startswith("|"):
         t1 += 1
     header, rows = parse_table(body[t0:t1])
-    extra, cur, buf = {}, None, []
-    for ln in body[t1:] + ["**__end__：__end__**"]:
-        m = re.fullmatch(r"\*\*(.+?)：(.+?)\*\*", ln.strip())
-        if m:
-            if cur:
-                extra.setdefault(cur[0], []).append((cur[1], render_blocks(buf)))
-            cur, buf = (m.group(1), m.group(2)), []
-        elif cur:
-            buf.append(ln)
+
+    def split_blocks(lines):
+        pre, out, cur, buf = [], [], None, []
+        for ln in lines + ["**__end__：__end__**"]:
+            m = re.fullmatch(r"\*\*(.+?)：(.+?)\*\*", ln.strip())
+            if m:
+                if cur:
+                    out.append((cur[0], cur[1], render_blocks(buf)))
+                cur, buf = (m.group(1), m.group(2)), []
+            elif cur:
+                buf.append(ln)
+            else:
+                pre.append(ln)
+        return pre, out
+
+    pre, top_blocks = split_blocks(body[ni + 1 : t0])
+    _, after_blocks = split_blocks(body[t1:])
+    data["tips_top"] = render_blocks(pre)
+    data["tips_top_views"] = []
+    extra = {}
+    for view, title, h in top_blocks:
+        extra.setdefault(view, []).append((title, h))
+        if view not in data["tips_top_views"]:
+            data["tips_top_views"].append(view)
+    for view, title, h in after_blocks:
+        extra.setdefault(view, []).append((title, h))
     data["tips_extra"] = extra
     col = {name: idx for idx, name in enumerate(header)}
     tips = []
@@ -1049,27 +1065,11 @@ def build_tips(d):
         if t["view"] not in views:
             views.append(t["view"])
     slug = {v: VIEW_SLUG.get(v, f"view{i+1}") for i, v in enumerate(views)}
+    top_views = [v for v in d.get("tips_top_views", []) if v in views]
+    rest = [v for v in views if v not in top_views]
 
-    parts = [
-        '<div class="wrap narrow">',
-        nav(1, "ポップスのコツ"),
-        '<p class="eyebrow">応用実習1,2：作曲</p>',
-        "<h1>ポップスのコツ</h1>",
-        f'<p class="lead">{inline(d["tips_note"])}</p>',
-    ]
-    if d.get("tips_top"):
-        parts.append(d["tips_top"].replace("<h3>", "<h2>").replace("</h3>", "</h2>"))
-    counts = {v: sum(1 for t in d["tips"] if t["view"] == v) for v in views}
-    parts.append(
-        '<div class="index">'
-        + "".join(
-            f'<a href="#{slug[v]}">{inline(v)}<span>{counts[v]}</span></a>' for v in views
-        )
-        + "</div>"
-    )
-
-    for view in views:
-        parts.append(f'<h2 id="{slug[view]}">{inline(view)}</h2>')
+    def section(view):
+        out = [f'<h2 id="{slug[view]}">{inline(view)}</h2>']
         items = []
         for t in d["tips"]:
             if t["view"] != view:
@@ -1083,10 +1083,32 @@ def build_tips(d):
                 f'<li class="tip"><p class="t">{inline(t["tip"])}</p>'
                 f'<p class="d">{inline(t["why"])}</p>{src}</li>'
             )
-        parts.append(f'<ol class="tips">{"".join(items)}</ol>')
+        out.append(f'<ol class="tips">{"".join(items)}</ol>')
         for title, blocks in d.get("tips_extra", {}).get(view, []):
-            parts.append(f"<h3>{inline(title)}</h3>")
-            parts.append(blocks)
+            out.append(f"<h3>{inline(title)}</h3>")
+            out.append(blocks)
+        return out
+
+    parts = [
+        '<div class="wrap narrow">',
+        nav(1, "ポップスのコツ"),
+        '<p class="eyebrow">応用実習1,2：作曲</p>',
+        "<h1>ポップスのコツ</h1>",
+        f'<p class="lead">{inline(d["tips_note"])}</p>',
+    ]
+    if d.get("tips_top"):
+        parts.append(d["tips_top"])
+    for view in top_views:          # 一番上に出す観点（コードの tier 表など）
+        parts += section(view)
+    counts = {v: sum(1 for t in d["tips"] if t["view"] == v) for v in rest}
+    if rest:
+        parts.append(
+            '<div class="index">'
+            + "".join(f'<a href="#{slug[v]}">{inline(v)}<span>{counts[v]}</span></a>' for v in rest)
+            + "</div>"
+        )
+    for view in rest:
+        parts += section(view)
 
     parts += [FOOT, "</div>"]
     return page(

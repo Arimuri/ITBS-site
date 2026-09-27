@@ -168,28 +168,37 @@ FALLBACK_PROGS = {
     7: "I-IV-V-VIm",      # 偽終止を聴かせる
     9: "I-IV-V7-I",
     10: "I-VIm-IIm7-V",
-    11: "I-VIm-IV-IV/V",  # 4on5 を種明かしする回
-    12: "I-VIm-IV-V",
-    13: "I-VIm-IV-V",
+    12: "I-VIm-IV-IV/V",  # 4on5 を種明かしする回
+    13: "I-IV-♭VIM7-♭VII7",
     14: "I-VIm-IV-V",
+    15: "I-VIm-IV-V",
 }
 DEFAULT_PROG = "I-VIm-IV-V"
 
 # ピアノロールのコード進行プルダウンに出す候補。
-# 右の数字は「その進行を出してよい最初の回」。授業の解禁順に合わせてある。
+# 右の数字は「その進行を出してよい最初のドリル」。授業の解禁順に合わせてある。
 # 回をまとめたり順番を変えたりしたら、ここも合わせて直すこと。
 ROLL_PROG_CHOICES = [
+    ("IVM7-IIIm7-IIm7-I", 1),  # Phase 1 の進行（IIIm7 の上で1が♭6、2が7）
     ("I-IV-VIm-IV", 1),
     ("I-VIm-IIm7-IV", 1),
-    ("I-VIm-IV-V", 1),      # V はドリル1から使う（Vの上は1が11th、2が5th）
+    ("I-VIm-IV-V", 1),      # Phase 1 の代わりの候補（V入り。Vの上は1が11th、2が5th）
     ("I-IIIm-IV-V", 2),
     ("IIm7-V-I-I", 3),
     ("I-IV-V-I", 6),        # 機能を習う回から
     ("I-IV-V-VIm", 7),      # 偽終止
     ("I-VIm-IIm7-V", 7),
     ("IV-I-IV-V", 8),
+    ("IV-IVm7-I-I", 8),     # ここから tier表のダイアトニック外コード
     ("I-IV-V7-I", 9),
-    ("I-VIm-IV-IV/V", 11),  # 4on5 はドリル11で種明かしする
+    ("IV-V-III7-VIm", 9),
+    ("I-VI7-IIm7-V", 11),
+    ("I-#Idim7-IIm7-V", 11),
+    ("IV-V-#Vdim7-VIm", 11),
+    ("I-Vm7-I7-IV", 11),
+    ("I-VIm-IV-IV/V", 12),  # 4on5 はドリル12で種明かしする
+    ("IIm7-♭II7-I-I", 12),
+    ("I-IV-♭VIM7-♭VII7", 13),
 ]
 
 
@@ -203,7 +212,7 @@ def roll_prog_choices(no, raw):
     return out
 
 _NUM = r"(?:VII|VI|V|IV|III|II|I)"   # 長いものから並べないと IV が I+V に割れる
-_CHORD = rf"{_NUM}(?:maj7|m7|m|7|sus4)?(?:/{_NUM})?"
+_CHORD = rf"[#♭]?{_NUM}(?:maj7|M7|m7|m|dim7|7|sus4|aug)?(?:/[#♭]?{_NUM})?"
 _RUN = re.compile(rf"{_CHORD}(?:-{_CHORD})+")
 
 
@@ -214,6 +223,12 @@ def roll_prog(no, raw):
     if not found:
         found = FALLBACK_PROGS.get(no, DEFAULT_PROG).split("-")
     return [found[i % len(found)] for i in range(4)]
+
+
+def new_chords(ls):
+    """「新コード」の行から、コード名だけ（最初の（ や 。の手前まで）を取り出す。"""
+    text = dict(ls["items"]).get("新コード", "")
+    return re.split(r"[（。]", text)[0].strip()
 
 
 def degree_chips(deg, flat):
@@ -285,6 +300,7 @@ def load():
             "theme": row[col["テーマ"]],
             "sounds_raw": row[col["使える音"]],
             "prog": row[col["伴奏進行"]],
+            "session": row[col["授業"]] if "授業" in col else "",
             "deg": deg,
             "flat": flat,
             "items": [],
@@ -453,6 +469,8 @@ a.card{display:block;background:var(--surface);border:1px solid var(--ring);bord
   padding:14px 16px;color:inherit;text-decoration:none}
 a.card:hover{border-color:var(--acc)}
 .card .no{font-size:10.5px;letter-spacing:.13em;color:var(--muted)}
+.card .sess{margin-left:.8em;letter-spacing:.06em}
+.card .sub.new{color:var(--acc-ink);font-weight:700}
 .card .th{font-size:15px;font-weight:700;margin:3px 0 9px;line-height:1.45}
 .card .sub{font-size:11.5px;color:var(--ink2);margin:8px 0 0}
 /* 解禁音チップ */
@@ -590,6 +608,17 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
 .cw-chip.hit .to{color:#fff}
 .cw-chip .to.hit{color:var(--acc-ink);font-weight:700}
 .iv-status{font-size:13px;color:var(--ink2);margin:6px 0 0;min-height:1.6em}
+.dg-chords{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;margin:0 0 12px}
+.dg-chip{font:inherit;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;cursor:pointer;
+  border:1px solid var(--ring);border-radius:10px;background:var(--surface);color:var(--ink)}
+.dg-chip:hover{border-color:var(--acc)}
+.dg-num{font-size:15px;font-weight:800}
+.dg-name{font-size:12.5px;color:var(--ink2)}
+.dg-chip.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.dg-chip.on .dg-name{color:#fff}
+.iv-key.w.lit,.iv-key.b.lit{background:var(--acc);border-color:var(--acc);color:#fff}
+.iv-key.w.croot,.iv-key.b.croot{background:var(--acc-ink);border-color:var(--acc-ink)}
+@media (max-width:560px){.dg-chords{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .tablebox tr.iv-hl td{background:var(--acc-soft)}
 .roll-note{font-size:12px;color:var(--ink2);margin:10px 0 0}
 .roll-warn{font-size:12.5px;color:var(--ng-ink);font-weight:700;margin:10px 0 0}
@@ -634,8 +663,10 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
 
 VOICING_JS = r"""/* 和音のボイシング（composition-src/build.py が生成）
    サイトで鳴る和音は全部ここを通す（コードtier・ピアノロール・スケール鍵盤・1度当て）。
-   ・ベースはルート（分数コードは分母）を C2〜C3 に置く
-   ・上の3声は密集の転回形で F3〜A4 に収める。4和音はルートをベースに任せ、上は3・5・7
+   ・ベースはルート（分数コードは分母）を C2〜D#3 に置く。鳴らす側でオクターブ上も半分の音量で重ねる
+     （正弦波の低音は小さいスピーカーでほぼ聞こえず、ルート抜きの4和音が別のコードに聞こえるため）
+   ・上の3声は密集の転回形で F3〜A#4 に収める。4和音はルートをベースに任せ、上は3・5・7
+   ・上の一番下はベースから5度以上離す。重ねたオクターブと半音でぶつかる配置も選ばない（maj7 の7thがベースの長7度上に来る形など）
    ・進行は、ループの継ぎ目も含めて上の声部とベースの動きが一番小さくなる組み合わせを選ぶ */
 (function () {
   'use strict';
@@ -647,7 +678,7 @@ VOICING_JS = r"""/* 和音のボイシング（composition-src/build.py が生�
     'sus4': [0, 5, 7], 'aug': [0, 4, 8]
   };
   // lo〜hi：上の声部の音域／center：単独で鳴らすときに寄せる高さ／blo〜bhi・bcenter：ベース
-  const RANGE = { lo: 53, hi: 69, center: 61, blo: 36, bhi: 48, bcenter: 41 };
+  const RANGE = { lo: 53, hi: 70, center: 61, blo: 36, bhi: 51, bcenter: 41 };
   const W_CENTER = 0.35, W_BCENTER = 0.3;
 
   const stepOf = m => (((DEG[m[2]] + (m[1] === '#' ? 1 : m[1] === '♭' ? -1 : 0)) % 12) + 12) % 12;
@@ -725,10 +756,15 @@ VOICING_JS = r"""/* 和音のボイシング（composition-src/build.py が生�
     const r = Object.assign({}, RANGE, opt || {});
     const loop = r.loop !== false;
     const chords = names.map(nm => parse(nm) || parse('I'));
-    const ups = best(chords.map(ch => uppers(upperPcs(ch, tonicPc), r)),
-      v => W_CENTER * Math.abs(mean(v) - r.center), move, loop);
-    const bs = best(chords.map(ch => basses((tonicPc + ch.bass) % 12, r)),
+    // 上の一番下はベースから5度以上離す（近いと 1-3-5 の積み上げになって濁る）。ベースのオクターブ上と半音でもぶつけない
+    const fits = (v, b) => v[0] - b >= 7 && v.every(u => Math.abs(u - (b + 12)) !== 1);
+    const ucand = chords.map(ch => uppers(upperPcs(ch, tonicPc), r));
+    const keep = (list, ok) => { const k = list.filter(ok); return k.length ? k : list; };
+    // ベースは、上の3声がきれいに収まる高さだけを候補にしてから選ぶ
+    const bs = best(chords.map((ch, i) => keep(basses((tonicPc + ch.bass) % 12, r), b => ucand[i].some(v => fits(v, b)))),
       b => W_BCENTER * Math.abs(b - r.bcenter), (a, b) => Math.abs(a - b), loop);
+    const ups = best(ucand.map((list, i) => keep(list, v => fits(v, bs[i]))),
+      v => W_CENTER * Math.abs(mean(v) - r.center), move, loop);
     return chords.map((ch, i) => ({ bass: bs[i], upper: ups[i] }));
   }
   window.Voicing = { parse: parse, voice: voice };
@@ -954,6 +990,7 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
         const dur = STEPS * stepSec() * 0.96;
         v.upper.forEach(m => tone(m, rel, dur, 0.075, out));
         tone(v.bass, rel, dur, 0.13, out);
+        tone(v.bass + 12, rel, dur, 0.065, out);
       }
       for (let m = LOW; m <= HIGH; m++) {
         if (!notes.has(m + ',' + col)) continue;
@@ -1164,7 +1201,7 @@ KEYBOARD_JS = r"""/* 鍵盤ウィジェット（composition-src/build.py が生�
     const state = { tonicPc: 0 };
     const hl = i => { for (let r = 0; r < rows.length; r++) rows[r].classList.toggle('iv-hl', r === i); };
     const flash = el => { el.classList.add('hit'); setTimeout(() => el.classList.remove('hit'), 200); };
-    return { top, sel, kb, keys, status, rows, state, hl, flash, tonic: () => LOW + state.tonicPc };
+    return { top, sel, scroll, kb, keys, status, rows, state, hl, flash, tonic: () => LOW + state.tonicPc };
   }
 
   // 段階2：インターバル
@@ -1234,9 +1271,11 @@ KEYBOARD_JS = r"""/* 鍵盤ウィジェット（composition-src/build.py が生�
       const m = +el.dataset.midi, d = degOf(m);
       if (d < 0) return;
       e.preventDefault();
-      const v = window.Voicing.voice(['I'], w.state.tonicPc)[0];      // 主和音を鳴らしてから、その音
-      tone(v.bass, 0, 1.4, 0.1);
-      v.upper.forEach(n => tone(n, 0, 1.4, 0.06));
+      // 主和音（C2｜E3 G3 C4 をキーの分だけ上げる）を鳴らしてから、その音。
+      // キーごとに組み直すと、度数と和音の当たり方がキーで変わる（Cキーだと4が3とぶつからない）
+      const s = w.state.tonicPc, I0 = window.Voicing.voice(['I'], 0, { lo: 50, hi: 62, center: 56 })[0];
+      tone(I0.bass + s, 0, 1.4, 0.1);
+      I0.upper.forEach(n => tone(n + s, 0, 1.4, 0.06));
       tone(m, 0.15, 1.1, 0.22);
       w.flash(el);
       mark(d);
@@ -1272,8 +1311,71 @@ KEYBOARD_JS = r"""/* 鍵盤ウィジェット（composition-src/build.py が生�
     chordBus = bus;
     const v = window.Voicing.voice([name], tonicPc)[0];
     tone(v.bass, at, dur, 0.13, bus);
+    tone(v.bass + 12, at, dur, 0.065, bus);
     v.upper.forEach(m => tone(m, at, dur, 0.08, bus));
   }
+  // 段階4：ダイアトニックコード（4和音）。キーを選ぶとボタンの下に実音のコード名。押すと鳴って、鍵盤のコードトーンが光る
+  const DIATONIC = [['IM7', 'M7'], ['IIm7', 'm7'], ['IIIm7', 'm7'], ['IVM7', 'M7'], ['V7', '7'], ['VIm7', 'm7'], ['VIIm7-5', 'm7-5']];
+  const LETTERS = 'CDEFGAB', NAT = [0, 2, 4, 5, 7, 9, 11];
+  // キーの i 番目（0＝1度）の音名。キー名の文字から順に数えるので、E♭キーの4は A♭、Bキーの7は A#
+  function noteName(k, i) {
+    const li = (LETTERS.indexOf(KEYS[k][0]) + i) % 7;
+    const d = (((k + MAJOR[i] - NAT[li]) % 12) + 18) % 12 - 6;
+    return LETTERS[li] + (d > 0 ? '#'.repeat(d) : '♭'.repeat(-d));
+  }
+  function setupDiatonic(root) {
+    const w = build(root);
+    const box = document.createElement('div');
+    box.className = 'dg-chords';
+    root.insertBefore(box, w.scroll);
+    let cur = null;                                   // 押されているコード（0〜6）
+    const chips = DIATONIC.map((dc, i) => {
+      const b = document.createElement('button');
+      b.className = 'dg-chip';
+      const num = document.createElement('span'); num.className = 'dg-num'; num.textContent = dc[0];
+      const name = document.createElement('span'); name.className = 'dg-name';
+      b.appendChild(num); b.appendChild(name);
+      b.addEventListener('click', () => {
+        cur = i;
+        playChord(dc[0], w.state.tonicPc, 0, 1.4);
+        light();
+      });
+      box.appendChild(b);
+      return { b, name };
+    });
+    function paint() {
+      const k = w.state.tonicPc;
+      w.keys.forEach(el => {
+        const d = MAJOR.indexOf((((+el.dataset.midi - k) % 12) + 12) % 12);
+        el.textContent = d >= 0 ? String(d + 1) : '';
+        el.classList.toggle('out', d < 0);
+      });
+      chips.forEach((c, i) => { c.name.textContent = noteName(k, i) + DIATONIC[i][1]; });
+    }
+    // コードトーンは、ルートを下のオクターブに置いて積む（どのキーでも鍵盤に収まる）
+    function light() {
+      const k = w.state.tonicPc;
+      const lit = {};
+      let rootM = -1;
+      if (cur !== null) {
+        rootM = LOW + (k + MAJOR[cur]) % 12;
+        [0, 2, 4, 6].forEach(s => { lit[rootM + MAJOR[(cur + s) % 7] - MAJOR[cur] + (cur + s >= 7 ? 12 : 0)] = true; });
+      }
+      w.keys.forEach(el => {
+        const m = +el.dataset.midi;
+        el.classList.toggle('lit', !!lit[m]);
+        el.classList.toggle('croot', m === rootM);
+      });
+      chips.forEach((c, i) => c.b.classList.toggle('on', i === cur));
+      if (cur === null) { w.status.textContent = ''; return; }
+      const idx = [0, 2, 4, 6].map(s => (cur + s) % 7);
+      w.status.textContent = chips[cur].name.textContent + '＝' + idx.map(i => noteName(k, i)).join(' ') +
+        '（' + idx.map(i => i + 1).join('・') + '）';
+    }
+    w.sel.addEventListener('change', () => { w.state.tonicPc = +w.sel.value; paint(); light(); });
+    paint();
+  }
+
   // コツ：覚えるべきコード。直後の表（tier | コード）を読んで、押すとそのコードだけが鳴るボタンに組み直す
   // セルの書き方：「I　IIm　IIIm」＝空白区切り。「／」でまとまりを分ける。「引っ張る：VI7」＝ラベル：コード
   // data-groups="I IIIm VIm|IIm IV|V" があれば、そのグループごとに色を分ける
@@ -1336,6 +1438,7 @@ KEYBOARD_JS = r"""/* 鍵盤ウィジェット（composition-src/build.py が生�
     if (kind === 'interval') setupInterval(els[i]);
     else if (kind === 'scale') setupScale(els[i]);
     else if (kind === 'chords') setupChords(els[i]);
+    else if (kind === 'diatonic') setupDiatonic(els[i]);
   }
 })();
 """
@@ -1437,7 +1540,9 @@ def build_index(d):
             ls = d["lessons"][no]
             cards.append(
                 f'<a class="card" href="{no:02d}/">'
-                f'<div class="no">ドリル{no}</div>'
+                f'<div class="no">ドリル{no}'
+                + (f'<span class="sess">授業{ls["session"]}回目</span>' if ls.get("session") else "")
+                + '</div>'
                 f'<div class="th">{inline(ls["title"])}</div>'
                 f'{degree_chips(ls["deg"], ls["flat"])}'
                 + (
@@ -1445,6 +1550,7 @@ def build_index(d):
                     if ls["prog"].strip() not in ("", "—", "-")
                     else ""
                 )
+                + (f'<div class="sub new">新コード：{inline(new_chords(ls))}</div>' if new_chords(ls) else "")
                 + "</a>"
             )
         parts.append(f'<div class="cards">{"".join(cards)}</div>')
@@ -1485,7 +1591,9 @@ def build_lesson(d, no):
     parts = [
         '<div class="wrap narrow">',
         nav(1),
-        f'<p class="eyebrow">{inline(ls["phase_title"])}</p>',
+        f'<p class="eyebrow">{inline(ls["phase_title"])}'
+        + (f'｜授業{ls["session"]}回目' if ls.get("session") else "")
+        + '</p>',
         f'<h1>ドリル{no}　{inline(ls["title"])}</h1>',
         # PCでは左に講義と課題、右にピアノロール
         '<div class="lesson-grid">',
@@ -1536,7 +1644,7 @@ def build_lesson(d, no):
     parts.append("</div>")          # lesson-grid
 
     prev_l = f'<a href="../{no-1:02d}/">← ドリル{no-1}</a>' if no > 1 else ""
-    next_l = f'<a href="../{no+1:02d}/">ドリル{no+1} →</a>' if no < 14 else ""
+    next_l = f'<a href="../{no+1:02d}/">ドリル{no+1} →</a>' if no < max(d["lessons"]) else ""
     parts.append(f'<div class="pager">{prev_l}<div class="sp"></div>{next_l}</div>')
     parts.append(FOOT)
     parts.append("</div>")

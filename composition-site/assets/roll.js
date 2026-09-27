@@ -217,6 +217,7 @@
         const dur = STEPS * stepSec() * 0.96;
         v.upper.forEach(m => tone(m, rel, dur, 0.075, out));
         tone(v.bass, rel, dur, 0.13, out);
+        tone(v.bass + 12, rel, dur, 0.065, out);
       }
       for (let m = LOW; m <= HIGH; m++) {
         if (!notes.has(m + ',' + col)) continue;

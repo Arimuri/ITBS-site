@@ -42,6 +42,8 @@ a.card{display:block;background:var(--surface);border:1px solid var(--ring);bord
   padding:14px 16px;color:inherit;text-decoration:none}
 a.card:hover{border-color:var(--acc)}
 .card .no{font-size:10.5px;letter-spacing:.13em;color:var(--muted)}
+.card .sess{margin-left:.8em;letter-spacing:.06em}
+.card .sub.new{color:var(--acc-ink);font-weight:700}
 .card .th{font-size:15px;font-weight:700;margin:3px 0 9px;line-height:1.45}
 .card .sub{font-size:11.5px;color:var(--ink2);margin:8px 0 0}
 /* 解禁音チップ */
@@ -179,6 +181,17 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
 .cw-chip.hit .to{color:#fff}
 .cw-chip .to.hit{color:var(--acc-ink);font-weight:700}
 .iv-status{font-size:13px;color:var(--ink2);margin:6px 0 0;min-height:1.6em}
+.dg-chords{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;margin:0 0 12px}
+.dg-chip{font:inherit;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;cursor:pointer;
+  border:1px solid var(--ring);border-radius:10px;background:var(--surface);color:var(--ink)}
+.dg-chip:hover{border-color:var(--acc)}
+.dg-num{font-size:15px;font-weight:800}
+.dg-name{font-size:12.5px;color:var(--ink2)}
+.dg-chip.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.dg-chip.on .dg-name{color:#fff}
+.iv-key.w.lit,.iv-key.b.lit{background:var(--acc);border-color:var(--acc);color:#fff}
+.iv-key.w.croot,.iv-key.b.croot{background:var(--acc-ink);border-color:var(--acc-ink)}
+@media (max-width:560px){.dg-chords{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .tablebox tr.iv-hl td{background:var(--acc-soft)}
 .roll-note{font-size:12px;color:var(--ink2);margin:10px 0 0}
 .roll-warn{font-size:12.5px;color:var(--ng-ink);font-weight:700;margin:10px 0 0}

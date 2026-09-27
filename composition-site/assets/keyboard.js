@@ -84,7 +84,7 @@
     const state = { tonicPc: 0 };
     const hl = i => { for (let r = 0; r < rows.length; r++) rows[r].classList.toggle('iv-hl', r === i); };
     const flash = el => { el.classList.add('hit'); setTimeout(() => el.classList.remove('hit'), 200); };
-    return { top, sel, kb, keys, status, rows, state, hl, flash, tonic: () => LOW + state.tonicPc };
+    return { top, sel, scroll, kb, keys, status, rows, state, hl, flash, tonic: () => LOW + state.tonicPc };
   }
 
   // 段階2：インターバル
@@ -154,9 +154,11 @@
       const m = +el.dataset.midi, d = degOf(m);
       if (d < 0) return;
       e.preventDefault();
-      const v = window.Voicing.voice(['I'], w.state.tonicPc)[0];      // 主和音を鳴らしてから、その音
-      tone(v.bass, 0, 1.4, 0.1);
-      v.upper.forEach(n => tone(n, 0, 1.4, 0.06));
+      // 主和音（C2｜E3 G3 C4 をキーの分だけ上げる）を鳴らしてから、その音。
+      // キーごとに組み直すと、度数と和音の当たり方がキーで変わる（Cキーだと4が3とぶつからない）
+      const s = w.state.tonicPc, I0 = window.Voicing.voice(['I'], 0, { lo: 50, hi: 62, center: 56 })[0];
+      tone(I0.bass + s, 0, 1.4, 0.1);
+      I0.upper.forEach(n => tone(n + s, 0, 1.4, 0.06));
       tone(m, 0.15, 1.1, 0.22);
       w.flash(el);
       mark(d);
@@ -192,8 +194,71 @@
     chordBus = bus;
     const v = window.Voicing.voice([name], tonicPc)[0];
     tone(v.bass, at, dur, 0.13, bus);
+    tone(v.bass + 12, at, dur, 0.065, bus);
     v.upper.forEach(m => tone(m, at, dur, 0.08, bus));
   }
+  // 段階4：ダイアトニックコード（4和音）。キーを選ぶとボタンの下に実音のコード名。押すと鳴って、鍵盤のコードトーンが光る
+  const DIATONIC = [['IM7', 'M7'], ['IIm7', 'm7'], ['IIIm7', 'm7'], ['IVM7', 'M7'], ['V7', '7'], ['VIm7', 'm7'], ['VIIm7-5', 'm7-5']];
+  const LETTERS = 'CDEFGAB', NAT = [0, 2, 4, 5, 7, 9, 11];
+  // キーの i 番目（0＝1度）の音名。キー名の文字から順に数えるので、E♭キーの4は A♭、Bキーの7は A#
+  function noteName(k, i) {
+    const li = (LETTERS.indexOf(KEYS[k][0]) + i) % 7;
+    const d = (((k + MAJOR[i] - NAT[li]) % 12) + 18) % 12 - 6;
+    return LETTERS[li] + (d > 0 ? '#'.repeat(d) : '♭'.repeat(-d));
+  }
+  function setupDiatonic(root) {
+    const w = build(root);
+    const box = document.createElement('div');
+    box.className = 'dg-chords';
+    root.insertBefore(box, w.scroll);
+    let cur = null;                                   // 押されているコード（0〜6）
+    const chips = DIATONIC.map((dc, i) => {
+      const b = document.createElement('button');
+      b.className = 'dg-chip';
+      const num = document.createElement('span'); num.className = 'dg-num'; num.textContent = dc[0];
+      const name = document.createElement('span'); name.className = 'dg-name';
+      b.appendChild(num); b.appendChild(name);
+      b.addEventListener('click', () => {
+        cur = i;
+        playChord(dc[0], w.state.tonicPc, 0, 1.4);
+        light();
+      });
+      box.appendChild(b);
+      return { b, name };
+    });
+    function paint() {
+      const k = w.state.tonicPc;
+      w.keys.forEach(el => {
+        const d = MAJOR.indexOf((((+el.dataset.midi - k) % 12) + 12) % 12);
+        el.textContent = d >= 0 ? String(d + 1) : '';
+        el.classList.toggle('out', d < 0);
+      });
+      chips.forEach((c, i) => { c.name.textContent = noteName(k, i) + DIATONIC[i][1]; });
+    }
+    // コードトーンは、ルートを下のオクターブに置いて積む（どのキーでも鍵盤に収まる）
+    function light() {
+      const k = w.state.tonicPc;
+      const lit = {};
+      let rootM = -1;
+      if (cur !== null) {
+        rootM = LOW + (k + MAJOR[cur]) % 12;
+        [0, 2, 4, 6].forEach(s => { lit[rootM + MAJOR[(cur + s) % 7] - MAJOR[cur] + (cur + s >= 7 ? 12 : 0)] = true; });
+      }
+      w.keys.forEach(el => {
+        const m = +el.dataset.midi;
+        el.classList.toggle('lit', !!lit[m]);
+        el.classList.toggle('croot', m === rootM);
+      });
+      chips.forEach((c, i) => c.b.classList.toggle('on', i === cur));
+      if (cur === null) { w.status.textContent = ''; return; }
+      const idx = [0, 2, 4, 6].map(s => (cur + s) % 7);
+      w.status.textContent = chips[cur].name.textContent + '＝' + idx.map(i => noteName(k, i)).join(' ') +
+        '（' + idx.map(i => i + 1).join('・') + '）';
+    }
+    w.sel.addEventListener('change', () => { w.state.tonicPc = +w.sel.value; paint(); light(); });
+    paint();
+  }
+
   // コツ：覚えるべきコード。直後の表（tier | コード）を読んで、押すとそのコードだけが鳴るボタンに組み直す
   // セルの書き方：「I　IIm　IIIm」＝空白区切り。「／」でまとまりを分ける。「引っ張る：VI7」＝ラベル：コード
   // data-groups="I IIIm VIm|IIm IV|V" があれば、そのグループごとに色を分ける
@@ -256,5 +321,6 @@
     if (kind === 'interval') setupInterval(els[i]);
     else if (kind === 'scale') setupScale(els[i]);
     else if (kind === 'chords') setupChords(els[i]);
+    else if (kind === 'diatonic') setupDiatonic(els[i]);
   }
 })();

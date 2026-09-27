@@ -234,7 +234,10 @@
     findStatus('解除した。');
   };
   document.getElementById('play-tonic').onclick = () => tone(tonic, 0, 1.1);
-  document.getElementById('play-triad').onclick = () => chord([0, 4, 7].map(i => tonic + i), 0, 1.4, 0.18);
+  document.getElementById('play-triad').onclick = () => {
+    const v = window.Voicing.voice(['I'], ((tonic % 12) + 12) % 12)[0];   // 和音は ../assets/voicing.js で組む
+    tone(v.bass, 0, 1.4, 0.19); tone(v.bass + 12, 0, 1.4, 0.095); chord(v.upper, 0, 1.4, 0.14);
+  };
   document.getElementById('play-scale').onclick = () => [...MAJOR, 12].forEach((iv, i) => tone(tonic + iv, i * 0.34, 0.5));
 
   // ---- ② クイズ -----------------------------------------------------------
@@ -285,6 +288,7 @@
         voiced.forEach((v, i) => {
           chord(v.upper, base + i * BEAT, BEAT * 0.95, 0.14, bus);
           tone(v.bass, base + i * BEAT, BEAT * 0.95, 0.19, bus);   // ベース
+          tone(v.bass + 12, base + i * BEAT, BEAT * 0.95, 0.095, bus);   // ベースのオクターブ上
         });
         nextAt += cycle;
       }

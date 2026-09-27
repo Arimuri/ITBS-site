@@ -1,7 +1,9 @@
 /* 和音のボイシング（composition-src/build.py が生成）
    サイトで鳴る和音は全部ここを通す（コードtier・ピアノロール・スケール鍵盤・1度当て）。
-   ・ベースはルート（分数コードは分母）を C2〜C3 に置く
-   ・上の3声は密集の転回形で F3〜A4 に収める。4和音はルートをベースに任せ、上は3・5・7
+   ・ベースはルート（分数コードは分母）を C2〜D#3 に置く。鳴らす側でオクターブ上も半分の音量で重ねる
+     （正弦波の低音は小さいスピーカーでほぼ聞こえず、ルート抜きの4和音が別のコードに聞こえるため）
+   ・上の3声は密集の転回形で F3〜A#4 に収める。4和音はルートをベースに任せ、上は3・5・7
+   ・上の一番下はベースから5度以上離す。重ねたオクターブと半音でぶつかる配置も選ばない（maj7 の7thがベースの長7度上に来る形など）
    ・進行は、ループの継ぎ目も含めて上の声部とベースの動きが一番小さくなる組み合わせを選ぶ */
 (function () {
   'use strict';
@@ -13,7 +15,7 @@
     'sus4': [0, 5, 7], 'aug': [0, 4, 8]
   };
   // lo〜hi：上の声部の音域／center：単独で鳴らすときに寄せる高さ／blo〜bhi・bcenter：ベース
-  const RANGE = { lo: 53, hi: 69, center: 61, blo: 36, bhi: 48, bcenter: 41 };
+  const RANGE = { lo: 53, hi: 70, center: 61, blo: 36, bhi: 51, bcenter: 41 };
   const W_CENTER = 0.35, W_BCENTER = 0.3;
 
   const stepOf = m => (((DEG[m[2]] + (m[1] === '#' ? 1 : m[1] === '♭' ? -1 : 0)) % 12) + 12) % 12;
@@ -91,10 +93,15 @@
     const r = Object.assign({}, RANGE, opt || {});
     const loop = r.loop !== false;
     const chords = names.map(nm => parse(nm) || parse('I'));
-    const ups = best(chords.map(ch => uppers(upperPcs(ch, tonicPc), r)),
-      v => W_CENTER * Math.abs(mean(v) - r.center), move, loop);
-    const bs = best(chords.map(ch => basses((tonicPc + ch.bass) % 12, r)),
+    // 上の一番下はベースから5度以上離す（近いと 1-3-5 の積み上げになって濁る）。ベースのオクターブ上と半音でもぶつけない
+    const fits = (v, b) => v[0] - b >= 7 && v.every(u => Math.abs(u - (b + 12)) !== 1);
+    const ucand = chords.map(ch => uppers(upperPcs(ch, tonicPc), r));
+    const keep = (list, ok) => { const k = list.filter(ok); return k.length ? k : list; };
+    // ベースは、上の3声がきれいに収まる高さだけを候補にしてから選ぶ
+    const bs = best(chords.map((ch, i) => keep(basses((tonicPc + ch.bass) % 12, r), b => ucand[i].some(v => fits(v, b)))),
       b => W_BCENTER * Math.abs(b - r.bcenter), (a, b) => Math.abs(a - b), loop);
+    const ups = best(ucand.map((list, i) => keep(list, v => fits(v, bs[i]))),
+      v => W_CENTER * Math.abs(mean(v) - r.center), move, loop);
     return chords.map((ch, i) => ({ bass: bs[i], upper: ups[i] }));
   }
   window.Voicing = { parse: parse, voice: voice };

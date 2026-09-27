@@ -566,6 +566,7 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
   background:var(--surface);color:var(--ink);cursor:pointer}
 .iv-scroll{overflow-x:auto;padding:2px 0 6px}
 .iv-kb{position:relative;height:150px;min-width:560px;user-select:none;touch-action:manipulation}
+.iv-kb.wide{min-width:780px}
 .iv-whites{display:flex;height:100%}
 .iv-key{display:flex;align-items:flex-end;justify-content:center;cursor:pointer;font-weight:700}
 .iv-key.w{flex:1;background:#fbfdff;border:1px solid #b9cddd;border-top:none;border-radius:0 0 7px 7px;
@@ -1153,7 +1154,8 @@ KEYBOARD_JS = r"""/* 鍵盤ウィジェット（composition-src/build.py が生�
   }
 
   // キーのプルダウン・鍵盤・表示欄を組み、同じ段階の表の行を探しておく
-  function build(root) {
+  // lo〜hi：鍵盤の範囲（既定は C3〜B4。段階4はベースまで見せるので C2 から）
+  function build(root, lo = LOW, hi = HIGH) {
     const mk = (tag, cls) => { const el = document.createElement(tag); if (cls) el.className = cls; return el; };
     const top = mk('div', 'iv-top');
     const sel = mk('select', 'iv-sel');
@@ -1173,10 +1175,10 @@ KEYBOARD_JS = r"""/* 鍵盤ウィジェット（composition-src/build.py が生�
 
     const keys = [];
     let nWhite = 0;
-    for (let m = LOW; m <= HIGH; m++) if (WHITE.indexOf(m % 12) >= 0) nWhite++;
+    for (let m = lo; m <= hi; m++) if (WHITE.indexOf(m % 12) >= 0) nWhite++;
     const w = 100 / nWhite;
     let wi = 0;
-    for (let m = LOW; m <= HIGH; m++) {
+    for (let m = lo; m <= hi; m++) {
       const white = WHITE.indexOf(m % 12) >= 0;
       const el = mk('div', 'iv-key ' + (white ? 'w' : 'b'));
       el.dataset.midi = String(m);
@@ -1324,7 +1326,8 @@ KEYBOARD_JS = r"""/* 鍵盤ウィジェット（composition-src/build.py が生�
     return LETTERS[li] + (d > 0 ? '#'.repeat(d) : '♭'.repeat(-d));
   }
   function setupDiatonic(root) {
-    const w = build(root);
+    const w = build(root, 36, HIGH);
+    w.kb.classList.add('wide');
     const box = document.createElement('div');
     box.className = 'dg-chords';
     root.insertBefore(box, w.scroll);
@@ -1352,19 +1355,20 @@ KEYBOARD_JS = r"""/* 鍵盤ウィジェット（composition-src/build.py が生�
       });
       chips.forEach((c, i) => { c.name.textContent = noteName(k, i) + DIATONIC[i][1]; });
     }
-    // コードトーンは、ルートを下のオクターブに置いて積む（どのキーでも鍵盤に収まる）
+    // 光らせるのは、実際に鳴らす音そのもの（playChord と同じボイシング：ベース・そのオクターブ上・上の3声）
     function light() {
       const k = w.state.tonicPc;
       const lit = {};
-      let rootM = -1;
+      let rootPc = -1;
       if (cur !== null) {
-        rootM = LOW + (k + MAJOR[cur]) % 12;
-        [0, 2, 4, 6].forEach(s => { lit[rootM + MAJOR[(cur + s) % 7] - MAJOR[cur] + (cur + s >= 7 ? 12 : 0)] = true; });
+        const v = window.Voicing.voice([DIATONIC[cur][0]], k)[0];
+        [v.bass, v.bass + 12].concat(v.upper).forEach(m => { lit[m] = true; });
+        rootPc = (k + MAJOR[cur]) % 12;
       }
       w.keys.forEach(el => {
         const m = +el.dataset.midi;
         el.classList.toggle('lit', !!lit[m]);
-        el.classList.toggle('croot', m === rootM);
+        el.classList.toggle('croot', !!lit[m] && m % 12 === rootPc);
       });
       chips.forEach((c, i) => c.b.classList.toggle('on', i === cur));
       if (cur === null) { w.status.textContent = ''; return; }

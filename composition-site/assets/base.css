@@ -139,6 +139,7 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
   background:var(--surface);color:var(--ink);cursor:pointer}
 .iv-scroll{overflow-x:auto;padding:2px 0 6px}
 .iv-kb{position:relative;height:150px;min-width:560px;user-select:none;touch-action:manipulation}
+.iv-kb.wide{min-width:780px}
 .iv-whites{display:flex;height:100%}
 .iv-key{display:flex;align-items:flex-end;justify-content:center;cursor:pointer;font-weight:700}
 .iv-key.w{flex:1;background:#fbfdff;border:1px solid #b9cddd;border-top:none;border-radius:0 0 7px 7px;

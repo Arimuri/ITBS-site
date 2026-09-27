@@ -169,7 +169,9 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
 .cw-chip{font:inherit;font-size:15px;font-weight:700;border-radius:10px;padding:7px 13px;cursor:pointer;
   border:1px solid var(--ring);background:var(--surface);color:var(--ink);line-height:1.3}
 .cw-chip .to{font-weight:400;font-size:12.5px;color:var(--ink2);margin-left:6px}
-.cw-chip.t1{background:var(--acc-soft);border-color:var(--acc-soft);color:var(--acc-ink)}
+.cw-chip.g1{background:#d4e8f8;border-color:#d4e8f8;color:#175a9f}
+.cw-chip.g2{background:#d6f0de;border-color:#d6f0de;color:#1d6a3a}
+.cw-chip.g3{background:#fbe2d4;border-color:#fbe2d4;color:#9a3a12}
 .cw-chip.t2{border-color:var(--acc);color:var(--acc-ink)}
 .cw-chip:hover{border-color:var(--acc)}
 .cw-chip.hit{background:var(--acc);border-color:var(--acc);color:#fff}

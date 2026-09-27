@@ -190,6 +190,9 @@
     tone(36 + pc, at, dur, 0.13);                                  // ベース（C2〜B2）
     ch.ivs.forEach(iv => tone(48 + pc + iv, at, dur, 0.08));       // 和音（ルートは C3〜B3）
   }
+  // コツ：覚えるべきコード。直後の表（tier | コード）を読んで、押すとそのコードだけが鳴るボタンに組み直す
+  // セルの書き方：「I　IIm　IIIm」＝空白区切り。「／」でまとまりを分ける。「引っ張る：VI7」＝ラベル：コード
+  // data-groups="I IIIm VIm|IIm IV|V" があれば、そのグループごとに色を分ける
   function setupChords(root) {
     let box = null;
     for (let el = root.nextElementSibling; el; el = el.nextElementSibling) {
@@ -198,6 +201,8 @@
     }
     if (!box) return;
     const rows = box.table.tBodies && box.table.tBodies[0] ? box.table.tBodies[0].rows : [];
+    const groupOf = {};
+    (root.dataset.groups || '').split('|').forEach((g, gi) => g.split(/[\s　]+/).filter(Boolean).forEach(n => { groupOf[n] = gi + 1; }));
     const mk = (tag, cls, text) => { const el = document.createElement(tag); if (cls) el.className = cls; if (text !== undefined) el.textContent = text; return el; };
     let tonicPc = 0;
     const top = mk('div', 'cw-top');
@@ -219,21 +224,13 @@
         const groupEl = mk('div', 'cw-group' + (label ? ' labeled' : ''));
         if (label) groupEl.appendChild(mk('span', 'cw-glabel', label));
         text.split(/[\s　]+/).filter(Boolean).forEach(tok => {
-          const parts = tok.split('→'), from = parseChord(parts[0]), to = parts[1] ? parseChord(parts[1]) : null;
-          const chip = mk('button', 'cw-chip t' + level);
-          chip.appendChild(mk('span', 'name', parts[0]));
-          const toEl = parts[1] ? mk('span', 'to', '→' + parts[1]) : null;
-          if (toEl) chip.appendChild(toEl);
+          const name = tok.split('→')[0], ch = parseChord(name);
+          const chip = mk('button', 'cw-chip t' + level + (groupOf[name] ? ' g' + groupOf[name] : ''), name);
           chip.addEventListener('click', () => {
-            if (!from) return;
-            playChord(from, tonicPc, 0, 0.9);
+            if (!ch) return;
+            playChord(ch, tonicPc, 0, 1.1);
             chip.classList.add('hit');
-            setTimeout(() => chip.classList.remove('hit'), to ? 950 : 600);
-            if (to) {
-              playChord(to, tonicPc, 0.95, 1.1);
-              setTimeout(() => { toEl.classList.add('hit'); }, 950);
-              setTimeout(() => { toEl.classList.remove('hit'); }, 1900);
-            }
+            setTimeout(() => chip.classList.remove('hit'), 500);
           });
           groupEl.appendChild(chip);
         });

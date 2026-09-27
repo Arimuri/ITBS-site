@@ -1,4 +1,4 @@
-/* 作曲基礎 特設サイト 共通スタイル（composition-src/build.py が生成） */
+/* 応用実習1,2：作曲 特設サイト 共通スタイル（composition-src/build.py が生成） */
 /* 授業で投影するので、OSのダークモードでも反転させず常に薄い水色で出す */
 :root{
   --page:#e6f4fc;--surface:#f9fcff;--ink:#0c1522;--ink2:#46596c;--muted:#596b7d;

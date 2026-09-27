@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""作曲基礎 特設サイト（intheblueshirt.com/composition/）のジェネレータ。
+"""応用実習1,2：作曲 特設サイト（intheblueshirt.com/composition/）のジェネレータ。
 
 curriculum.md を唯一の原稿として読み、composition-site/ に静的HTMLを書き出す。
 手書きページ（ear/ と .htaccess）には触らない。
@@ -15,8 +15,8 @@ from pathlib import Path
 SRC = Path(__file__).resolve().parent
 OUT = SRC.parent / "composition-site"
 BASE = "https://intheblueshirt.com/composition/"
-SITE_TITLE = "作曲基礎"
-SITE_DESC = "京都精華大学メディア表現学部「作曲基礎」全14回のカリキュラム。メロディの全ての音を移動ドの「キー度数/コード度数」で捉えて作曲する。"
+SITE_TITLE = "応用実習1,2：作曲"
+SITE_DESC = "京都精華大学メディア表現学部「応用実習1,2：作曲」（火曜・有村担当）全14回のカリキュラム。メロディの全ての音を移動ドの「キー度数/コード度数」で捉えて作曲する。"
 
 # ---------------------------------------------------------------- markdown 周り
 
@@ -24,6 +24,7 @@ def inline(s):
     """インライン記法だけを HTML に変換する。"""
     s = html.escape(s, quote=False)
     s = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", s)
+    s = re.sub(r"(https?://[^\s<（）()、。]+)", r'<a href="\1">\1</a>', s)
     return s
 
 
@@ -304,15 +305,21 @@ def load():
     data["roadmap_lead"] = lead
     data["roadmap_intro"] = render_blocks(rest[:head_at])
     data["roadmap"] = []
-    for head, bullets in split_sections(rest[head_at:], "### "):
-        items = []
+    for idx, (head, bullets) in enumerate(split_sections(rest[head_at:], "### ")):
+        items, others = [], []
         for ln in bullets:
             m = re.match(r"^- \*\*(.+?)\*\*：(.*)$", ln.strip())
             if m:
                 items.append((m.group(1), m.group(2).strip()))
-        num = re.match(r"段階(\d+)", head)
+            else:
+                others.append(ln)
         data["roadmap"].append(
-            {"title": head, "slug": f"s{num.group(1)}" if num else head, "items": items}
+            {
+                "title": head,
+                "slug": f"s{idx + 1}",
+                "items": items,
+                "extra": render_blocks(others),   # 表などは行の後ろにまとめて出す
+            }
         )
 
     # ポップスのコツ
@@ -348,7 +355,7 @@ def load():
 
 # ------------------------------------------------------------------------- CSS
 
-CSS = """/* 作曲基礎 特設サイト 共通スタイル（composition-src/build.py が生成） */
+CSS = """/* 応用実習1,2：作曲 特設サイト 共通スタイル（composition-src/build.py が生成） */
 /* 授業で投影するので、OSのダークモードでも反転させず常に薄い水色で出す */
 :root{
   --page:#e6f4fc;--surface:#f9fcff;--ink:#0c1522;--ink2:#46596c;--muted:#596b7d;
@@ -863,7 +870,7 @@ def page(title, desc, url, body, css_extra="", depth=1):
 
 
 FOOT = (
-    '<p class="foot">京都精華大学 メディア表現学部「作曲基礎」（全14回・各3時間＝90分×2コマ）<br>'
+    '<p class="foot">京都精華大学 メディア表現学部「応用実習1,2：作曲」（火曜・全14回／各3時間＝90分×2コマ）<br>'
     '担当：有村崚（<a href="https://intheblueshirt.com/">in the blue shirt</a>）</p>'
 )
 
@@ -871,7 +878,7 @@ FOOT = (
 def nav(depth, current=""):
     up = "../" * depth
     links = [
-        (f"{up}", "← 作曲基礎 トップ"),
+        (f"{up}", "← 授業トップ"),
         (f"{up}roadmap/", "理論ロードマップ"),
         (f"{up}tips/", "ポップスのコツ"),
         (f"{up}ear/", "1度当て練習"),
@@ -890,8 +897,8 @@ def build_index(d):
     parts = [
         '<div class="wrap">',
         '<p class="eyebrow">京都精華大学 メディア表現学部</p>',
-        "<h1>作曲基礎</h1>",
-        '<p class="meta">全14回・各3時間（90分×2コマ）｜担当：有村崚（in the blue shirt）</p>',
+        "<h1>応用実習1,2：作曲</h1>",
+        '<p class="meta">火曜・全14回／各3時間（90分×2コマ）｜担当：有村崚（in the blue shirt）</p>',
         f'<p class="lead">{inline(d["lead"])}</p>',
         '<div class="chips">'
         '<a href="#lessons">全14回</a>'
@@ -1033,7 +1040,7 @@ def build_tips(d):
     parts = [
         '<div class="wrap narrow">',
         nav(1, "ポップスのコツ"),
-        '<p class="eyebrow">作曲基礎 資料</p>',
+        '<p class="eyebrow">応用実習1,2：作曲</p>',
         "<h1>ポップスのコツ</h1>",
         f'<p class="lead">{inline(d["tips_note"])}</p>',
     ]
@@ -1076,7 +1083,7 @@ def build_roadmap(d):
     parts = [
         '<div class="wrap narrow">',
         nav(1, "理論ロードマップ"),
-        '<p class="eyebrow">作曲基礎 資料</p>',
+        '<p class="eyebrow">応用実習1,2：作曲</p>',
         "<h1>何もわからない人のための音楽理論ロードマップ</h1>",
         f'<p class="lead">{inline(d["roadmap_lead"])}</p>',
         '<div class="index">'
@@ -1102,12 +1109,14 @@ def build_roadmap(d):
                 f'<p class="val">{inline(text)}</p></div>'
             )
         parts.append(f'<div class="rows tight">{"".join(rows)}</div>')
+        if st.get("extra"):
+            parts.append(st["extra"])
         if src:
             parts.append(src)
     parts += [FOOT, "</div>"]
     return page(
         "何もわからない人のための音楽理論ロードマップ｜" + SITE_TITLE,
-        "音楽理論を何も知らない状態から作曲までを8段階に分けた資料。音名を使わず、移動ドの度数だけで進む。各段階に「やってみること」と「できた合図」つき。",
+        "音楽理論＝いいかんじの音楽あるある。中心からの距離で安定/不安定をコントロールする体系として、何も知らない状態からダイアトニックコードまでを4段階で辿る資料。",
         f"{BASE}roadmap/",
         "\n".join(parts),
     )

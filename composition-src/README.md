@@ -1,4 +1,4 @@
-# 作曲基礎 特設サイト（composition-site）
+# 応用実習1,2：作曲 特設サイト（composition-site）
 
 公開URL：https://intheblueshirt.com/composition/
 

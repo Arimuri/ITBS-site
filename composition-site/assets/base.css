@@ -153,6 +153,25 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
 .iv-key.b.out{background:#46525f}
 .iv-top .iv-play{font:inherit;font-size:13px;border:1px solid var(--acc);border-radius:9px;padding:7px 14px;
   background:var(--acc);color:#fff;font-weight:700;cursor:pointer}
+/* 覚えるべきコード（鳴らせる tier 表） */
+.cw-top{margin:6px 0 14px}
+.cw-top select{font:inherit;font-size:13px;border:1px solid var(--ring);border-radius:9px;padding:7px 12px;
+  background:var(--surface);color:var(--ink);cursor:pointer}
+.cw-grid{display:grid;grid-template-columns:64px 1fr;gap:14px 18px;align-items:start}
+.cw-tier{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.06em;padding-top:10px}
+.cw-groups{display:flex;flex-wrap:wrap;gap:10px 26px}
+.cw-group{display:flex;flex-wrap:wrap;align-items:center;gap:7px}
+.cw-group.labeled{flex-basis:100%}
+.cw-glabel{font-size:11.5px;color:var(--muted);min-width:4.5em}
+.cw-chip{font:inherit;font-size:15px;font-weight:700;border-radius:10px;padding:7px 13px;cursor:pointer;
+  border:1px solid var(--ring);background:var(--surface);color:var(--ink);line-height:1.3}
+.cw-chip .to{font-weight:400;font-size:12.5px;color:var(--ink2);margin-left:6px}
+.cw-chip.t1{background:var(--acc-soft);border-color:var(--acc-soft);color:var(--acc-ink)}
+.cw-chip.t2{border-color:var(--acc);color:var(--acc-ink)}
+.cw-chip:hover{border-color:var(--acc)}
+.cw-chip.hit{background:var(--acc);border-color:var(--acc);color:#fff}
+.cw-chip.hit .to{color:#fff}
+.cw-chip .to.hit{color:var(--acc-ink);font-weight:700}
 .iv-status{font-size:13px;color:var(--ink2);margin:6px 0 0;min-height:1.6em}
 .tablebox tr.iv-hl td{background:var(--acc-soft)}
 .roll-note{font-size:12px;color:var(--ink2);margin:10px 0 0}

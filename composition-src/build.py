@@ -564,6 +564,25 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
 .iv-key.b.out{background:#46525f}
 .iv-top .iv-play{font:inherit;font-size:13px;border:1px solid var(--acc);border-radius:9px;padding:7px 14px;
   background:var(--acc);color:#fff;font-weight:700;cursor:pointer}
+/* 覚えるべきコード（鳴らせる tier 表） */
+.cw-top{margin:6px 0 14px}
+.cw-top select{font:inherit;font-size:13px;border:1px solid var(--ring);border-radius:9px;padding:7px 12px;
+  background:var(--surface);color:var(--ink);cursor:pointer}
+.cw-grid{display:grid;grid-template-columns:64px 1fr;gap:14px 18px;align-items:start}
+.cw-tier{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.06em;padding-top:10px}
+.cw-groups{display:flex;flex-wrap:wrap;gap:10px 26px}
+.cw-group{display:flex;flex-wrap:wrap;align-items:center;gap:7px}
+.cw-group.labeled{flex-basis:100%}
+.cw-glabel{font-size:11.5px;color:var(--muted);min-width:4.5em}
+.cw-chip{font:inherit;font-size:15px;font-weight:700;border-radius:10px;padding:7px 13px;cursor:pointer;
+  border:1px solid var(--ring);background:var(--surface);color:var(--ink);line-height:1.3}
+.cw-chip .to{font-weight:400;font-size:12.5px;color:var(--ink2);margin-left:6px}
+.cw-chip.t1{background:var(--acc-soft);border-color:var(--acc-soft);color:var(--acc-ink)}
+.cw-chip.t2{border-color:var(--acc);color:var(--acc-ink)}
+.cw-chip:hover{border-color:var(--acc)}
+.cw-chip.hit{background:var(--acc);border-color:var(--acc);color:#fff}
+.cw-chip.hit .to{color:#fff}
+.cw-chip .to.hit{color:var(--acc-ink);font-weight:700}
 .iv-status{font-size:13px;color:var(--ink2);margin:6px 0 0;min-height:1.6em}
 .tablebox tr.iv-hl td{background:var(--acc-soft)}
 .roll-note{font-size:12px;color:var(--ink2);margin:10px 0 0}
@@ -1119,11 +1138,87 @@ KEYBOARD_JS = r"""/* 鍵盤ウィジェット（composition-src/build.py が生�
     paint();
   }
 
+  // コツ：覚えるべきコード。直後の表（tier | コード）を読んで、押すと鳴るボタンに組み直す
+  // セルの書き方：「I　IIIm　VIm　／　IIm　IV」＝グループを／で区切る。「引っ張る：VI7→IIm」＝ラベル：コード→行き先
+  const NUMERAL = /^([#♭]?)(VII|VI|V|IV|III|II|I)(.*)$/;
+  const DEG = { I: 0, II: 2, III: 4, IV: 5, V: 7, VI: 9, VII: 11 };
+  const QUALITY = {
+    '': [0, 4, 7], 'm': [0, 3, 7], '7': [0, 4, 7, 10], 'M7': [0, 4, 7, 11], 'm7': [0, 3, 7, 10],
+    'm7-5': [0, 3, 6, 10], 'm-5': [0, 3, 6], 'dim': [0, 3, 6, 9], 'sus4': [0, 5, 7], 'aug': [0, 4, 8]
+  };
+  function parseChord(name) {
+    const m = NUMERAL.exec(name.trim());
+    if (!m || !(m[3] in QUALITY)) return null;
+    const root = DEG[m[2]] + (m[1] === '#' ? 1 : m[1] === '♭' ? -1 : 0);
+    return { root: ((root % 12) + 12) % 12, ivs: QUALITY[m[3]] };
+  }
+  function playChord(ch, tonicPc, at, dur) {
+    const pc = (tonicPc + ch.root) % 12;
+    tone(36 + pc, at, dur, 0.13);                                  // ベース（C2〜B2）
+    ch.ivs.forEach(iv => tone(48 + pc + iv, at, dur, 0.08));       // 和音（ルートは C3〜B3）
+  }
+  function setupChords(root) {
+    let box = null;
+    for (let el = root.nextElementSibling; el; el = el.nextElementSibling) {
+      const t = el.tagName === 'TABLE' ? el : (el.querySelector ? el.querySelector('table') : null);
+      if (t) { box = { wrap: el, table: t }; break; }
+    }
+    if (!box) return;
+    const rows = box.table.tBodies && box.table.tBodies[0] ? box.table.tBodies[0].rows : [];
+    const mk = (tag, cls, text) => { const el = document.createElement(tag); if (cls) el.className = cls; if (text !== undefined) el.textContent = text; return el; };
+    let tonicPc = 0;
+    const top = mk('div', 'cw-top');
+    const sel = mk('select', 'cw-sel');
+    sel.setAttribute('aria-label', 'キー');
+    for (let k = 0; k < 12; k++) { const o = mk('option', '', KEYS[k] + ' キー'); o.value = String(k); sel.appendChild(o); }
+    sel.addEventListener('change', () => { tonicPc = +sel.value; });
+    top.appendChild(sel);
+    const grid = mk('div', 'cw-grid');
+    for (let r = 0; r < rows.length; r++) {
+      const cells = rows[r].cells;
+      const tier = cells[0].textContent.trim(), level = (tier.match(/\d+/) || ['3'])[0];
+      grid.appendChild(mk('div', 'cw-tier', tier));
+      const groupsEl = mk('div', 'cw-groups');
+      cells[1].textContent.split('／').forEach(g => {
+        let text = g.trim(), label = '';
+        const lm = /^([^：]+)：(.*)$/.exec(text);
+        if (lm) { label = lm[1].trim(); text = lm[2]; }
+        const groupEl = mk('div', 'cw-group' + (label ? ' labeled' : ''));
+        if (label) groupEl.appendChild(mk('span', 'cw-glabel', label));
+        text.split(/[\s　]+/).filter(Boolean).forEach(tok => {
+          const parts = tok.split('→'), from = parseChord(parts[0]), to = parts[1] ? parseChord(parts[1]) : null;
+          const chip = mk('button', 'cw-chip t' + level);
+          chip.appendChild(mk('span', 'name', parts[0]));
+          const toEl = parts[1] ? mk('span', 'to', '→' + parts[1]) : null;
+          if (toEl) chip.appendChild(toEl);
+          chip.addEventListener('click', () => {
+            if (!from) return;
+            playChord(from, tonicPc, 0, 0.9);
+            chip.classList.add('hit');
+            setTimeout(() => chip.classList.remove('hit'), to ? 950 : 600);
+            if (to) {
+              playChord(to, tonicPc, 0.95, 1.1);
+              setTimeout(() => { toEl.classList.add('hit'); }, 950);
+              setTimeout(() => { toEl.classList.remove('hit'); }, 1900);
+            }
+          });
+          groupEl.appendChild(chip);
+        });
+        groupsEl.appendChild(groupEl);
+      });
+      grid.appendChild(groupsEl);
+    }
+    root.appendChild(top);
+    root.appendChild(grid);
+    box.wrap.style.display = 'none';            // 元の表はスクリプトが動かないとき用に残し、隠す
+  }
+
   const els = document.querySelectorAll('[data-widget]');
   for (let i = 0; i < els.length; i++) {
     const kind = els[i].dataset.widget;
     if (kind === 'interval') setupInterval(els[i]);
     else if (kind === 'scale') setupScale(els[i]);
+    else if (kind === 'chords') setupChords(els[i]);
   }
 })();
 """
@@ -1394,6 +1489,7 @@ def build_tips(d):
     for view in rest:
         parts += section(view)
 
+    parts.append('<script src="../assets/keyboard.js" defer></script>')
     parts += [FOOT, "</div>"]
     return page(
         f"ポップスのコツ｜{SITE_TITLE}",

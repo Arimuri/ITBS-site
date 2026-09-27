@@ -273,11 +273,13 @@ Sep 27, 2026 · @Ryo Arimura
 
 **コード：覚えるべきコード**
 
+{{chords}}
+
 | tier | コード |
 | --- | --- |
-| tier1 | ダイアトニックコード　sus4 |
-| tier2 | III7　IVm |
-| tier3 | VI7　II7　I7　Vm7　#IVm7-5　#Idim　#Vdim　♭II7　／　♭VIM7　♭VII7 |
+| tier1 | I　IIIm　VIm　／　IIm　IV　／　V　／　Vsus4→V |
+| tier2 | III7→VIm　IVm→I |
+| tier3 | 引っ張る：VI7→IIm　II7→V　I7→IV　Vm7→I7　#IVm7-5→VII7　#Idim→IIm　#Vdim→VIm　♭II7→I　／　借りる：♭VIM7→♭VII7　♭VII7→I |
 
 | 観点 | コツ | 例・理由 | 導入回 |
 | --- | --- | --- | --- |

@@ -105,6 +105,7 @@
 <p class="foot">京都精華大学 メディア表現学部「応用実習1,2：作曲」（火曜・全14回／各3時間＝90分×2コマ）<br>担当：有村崚（<a href="https://intheblueshirt.com/">in the blue shirt</a>）</p>
 </div>
 
+<script src="../assets/voicing.js"></script>
 <script>
 (() => {
   'use strict';
@@ -237,7 +238,6 @@
   document.getElementById('play-scale').onclick = () => [...MAJOR, 12].forEach((iv, i) => tone(tonic + iv, i * 0.34, 0.5));
 
   // ---- ② クイズ -----------------------------------------------------------
-  const CHORDS = { I: [0, 4, 7], IIm7: [2, 5, 9, 12], IIIm: [4, 7, 11], IV: [5, 9, 12], V: [7, 11, 14], VIm: [9, 12, 16] };
   const PROGS = [['I', 'IV', 'VIm', 'IV'], ['I', 'VIm', 'IIm7', 'IV'], ['I', 'VIm', 'IV', 'V'], ['I', 'IIIm', 'IV', 'V'], ['IIm7', 'V', 'I', 'I']];
   let quizProg = null, rounds = 0, hit = 0, streak = 0;
   const quizStatus = html => document.getElementById('quiz-status').innerHTML = html;
@@ -276,15 +276,15 @@
     bus.connect(c.destination);
     loopBus = bus;
     const cycle = BEAT * quizProg.length;
+    const voiced = window.Voicing.voice(quizProg, quizTonic % 12);   // 和音は ../assets/voicing.js で組む
     let nextAt = c.currentTime + 0.08;
     (function tick() {
       if (loopBus !== bus) return;              // 既に止められている
       while (nextAt < c.currentTime + LOOKAHEAD) {
         const base = nextAt - c.currentTime;
-        quizProg.forEach((name, i) => {
-          const off = CHORDS[name];
-          chord(off.map(iv => quizTonic + iv), base + i * BEAT, BEAT * 0.95, 0.14, bus);
-          tone(quizTonic + off[0] - 12, base + i * BEAT, BEAT * 0.95, 0.19, bus);   // ベース
+        voiced.forEach((v, i) => {
+          chord(v.upper, base + i * BEAT, BEAT * 0.95, 0.14, bus);
+          tone(v.bass, base + i * BEAT, BEAT * 0.95, 0.19, bus);   // ベース
         });
         nextAt += cycle;
       }

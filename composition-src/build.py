@@ -632,6 +632,109 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
 }
 """
 
+VOICING_JS = r"""/* 和音のボイシング（composition-src/build.py が生成）
+   サイトで鳴る和音は全部ここを通す（コードtier・ピアノロール・スケール鍵盤・1度当て）。
+   ・ベースはルート（分数コードは分母）を C2〜C3 に置く
+   ・上の3声は密集の転回形で F3〜A4 に収める。4和音はルートをベースに任せ、上は3・5・7
+   ・進行は、ループの継ぎ目も含めて上の声部とベースの動きが一番小さくなる組み合わせを選ぶ */
+(function () {
+  'use strict';
+  const NUMERAL = /^([#♭]?)(VII|VI|V|IV|III|II|I)(.*)$/;
+  const DEG = { I: 0, II: 2, III: 4, IV: 5, V: 7, VI: 9, VII: 11 };
+  const QUALITY = {
+    '': [0, 4, 7], 'm': [0, 3, 7], '7': [0, 4, 7, 10], 'M7': [0, 4, 7, 11], 'maj7': [0, 4, 7, 11],
+    'm7': [0, 3, 7, 10], 'm7-5': [0, 3, 6, 10], 'm-5': [0, 3, 6], 'dim': [0, 3, 6, 9], 'dim7': [0, 3, 6, 9],
+    'sus4': [0, 5, 7], 'aug': [0, 4, 8]
+  };
+  // lo〜hi：上の声部の音域／center：単独で鳴らすときに寄せる高さ／blo〜bhi・bcenter：ベース
+  const RANGE = { lo: 53, hi: 69, center: 61, blo: 36, bhi: 48, bcenter: 41 };
+  const W_CENTER = 0.35, W_BCENTER = 0.3;
+
+  const stepOf = m => (((DEG[m[2]] + (m[1] === '#' ? 1 : m[1] === '♭' ? -1 : 0)) % 12) + 12) % 12;
+  // 「IIm7」「IV/V」「♭VIM7」などを { root, bass, ivs }（root・bass はキーの1度からの半音）にする
+  function parse(name) {
+    const parts = String(name).trim().split('/');
+    const m = NUMERAL.exec(parts[0]);
+    if (!m || !(m[3] in QUALITY) || parts.length > 2) return null;
+    const root = stepOf(m);
+    let bass = root;
+    if (parts.length === 2) {
+      const b = NUMERAL.exec(parts[1]);
+      if (!b || b[3]) return null;
+      bass = stepOf(b);
+    }
+    return { root: root, bass: bass, ivs: QUALITY[m[3]] };
+  }
+  function upperPcs(ch, tonicPc) {
+    const drop = ch.ivs.length >= 4 && ch.bass === ch.root;   // 4和音：ルートはベースに任せる
+    return (drop ? ch.ivs.slice(1) : ch.ivs).map(iv => (tonicPc + ch.root + iv) % 12);
+  }
+  // 上の声部の候補：どれか1音を一番下に置き、残りをその上に密集で積む。音域に収まるものを全部
+  function uppers(pcs, r) {
+    const out = [];
+    for (let n = r.lo; n <= r.hi; n++) {
+      if (pcs.indexOf(n % 12) < 0) continue;
+      const v = [n];
+      pcs.forEach(p => { if (p !== n % 12) v.push(n + (((p - n) % 12) + 12) % 12); });
+      v.sort((a, b) => a - b);
+      if (v[v.length - 1] <= r.hi) out.push(v);
+    }
+    return out;
+  }
+  function basses(pc, r) {
+    const out = [];
+    for (let n = r.blo; n <= r.bhi; n++) if (n % 12 === pc) out.push(n);
+    return out;
+  }
+  const mean = v => v.reduce((s, x) => s + x, 0) / v.length;
+  function move(a, b) {
+    if (a.length === b.length) return a.reduce((s, x, i) => s + Math.abs(x - b[i]), 0);
+    const near = (x, v) => Math.min.apply(null, v.map(y => Math.abs(x - y)));
+    return a.reduce((s, x) => s + near(x, b), 0) + b.reduce((s, y) => s + near(y, a), 0);
+  }
+  // 候補の並びから、点（single）とつなぎ（link）の合計が最小になる選び方を返す。loop なら最後→最初も数える
+  function best(cands, single, link, loop) {
+    const n = cands.length;
+    let top = Infinity, path = null;
+    const starts = loop && n > 1 ? cands[0].map((_, k) => k) : [-1];
+    starts.forEach(k0 => {
+      let row = cands[0].map((c, k) => (k0 < 0 || k === k0 ? { s: single(c), p: [k] } : null));
+      for (let i = 1; i < n; i++) {
+        const prev = row;
+        row = cands[i].map((c, k) => {
+          let b = null;
+          prev.forEach((q, j) => {
+            if (!q) return;
+            const s = q.s + link(cands[i - 1][j], c);
+            if (!b || s < b.s) b = { s: s, p: q.p };
+          });
+          return b && { s: b.s + single(c), p: b.p.concat(k) };
+        });
+      }
+      row.forEach((q, k) => {
+        if (!q) return;
+        const s = q.s + (k0 >= 0 ? link(cands[n - 1][k], cands[0][k0]) : 0);
+        if (s < top) { top = s; path = q.p; }
+      });
+    });
+    return path.map((k, i) => cands[i][k]);
+  }
+  // names：コード名の配列（1つなら単独で鳴らす和音）。tonicPc：キーの1度（0=C）
+  // 返り値：[{ bass: midi, upper: [midi, midi, midi] }, ...]
+  function voice(names, tonicPc, opt) {
+    const r = Object.assign({}, RANGE, opt || {});
+    const loop = r.loop !== false;
+    const chords = names.map(nm => parse(nm) || parse('I'));
+    const ups = best(chords.map(ch => uppers(upperPcs(ch, tonicPc), r)),
+      v => W_CENTER * Math.abs(mean(v) - r.center), move, loop);
+    const bs = best(chords.map(ch => basses((tonicPc + ch.bass) % 12, r)),
+      b => W_BCENTER * Math.abs(b - r.bcenter), (a, b) => Math.abs(a - b), loop);
+    return chords.map((ch, i) => ({ bass: bs[i], upper: ups[i] }));
+  }
+  window.Voicing = { parse: parse, voice: voice };
+})();
+"""
+
 ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成）
    各回のページの <div class="roll" data-prog data-degrees data-lesson> を中身で埋める。
    ・行は半音ごと。選んだキーのメジャースケールの行だけ色を濃くし、1〜7の番号を振る
@@ -643,12 +746,6 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
   const BARS = 4, STEPS = 8, COLS = BARS * STEPS;
   const MAJOR = [0, 2, 4, 5, 7, 9, 11];
   const KEYS = ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'];
-  const CHORDS = {
-    'I': [0, 4, 7], 'IIm': [2, 5, 9], 'IIm7': [2, 5, 9, 12], 'IIIm': [4, 7, 11],
-    'IV': [5, 9, 12], 'V': [7, 11, 14], 'V7': [7, 11, 14, 17], 'VIm': [9, 12, 16],
-    'VIIm-5': [11, 14, 17], 'IV/V': [5, 9, 12], 'Isus4': [0, 5, 7]
-  };
-  const BASS = { 'IV/V': 7 };
   const BPMS = [70, 80, 90, 100, 110, 120, 130, 140], DEFAULT_BPM = 100;
   // 1周ぶんをまとめて予約すると、置いた音が次の周まで鳴らない。
   // 8分音符ごとに SCHED_AHEAD 秒だけ先を予約することで、置いた音がその周のうちに鳴る。
@@ -768,7 +865,6 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
     // どのキーにしてもメロとコードの上下関係（＝コード度数の聴こえ方）が変わらない。
     // LOW + tonicPc（0〜+11）だと、伴奏だけが最大1オクターブ上がってメロが埋もれる。
     const keyOffset = pc => ((pc + 6) % 12) - 6;
-    const tonicMidi = () => LOW + keyOffset(tonicPc);
 
     function paint() {
       for (let r = 0; r < ROWS; r++) {
@@ -835,18 +931,29 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
     }
 
     // ---- 再生（止めるまでループ） ----
+    // 伴奏のボイシングは、進行かキーが変わったときだけ組み直す。
+    // Cキーで組んだものをメロと同じ量（keyOffset）だけ平行移動する。
+    // キーごとに組み直すと転回形が変わり、「数字は同じで高さだけ変わる」が音で崩れる
+    let voiced = null, voicedFor = '';
+    function voicing() {
+      const key = prog.join('-') + '@' + tonicPc;
+      if (key !== voicedFor) {
+        const o = keyOffset(tonicPc);
+        voiced = window.Voicing.voice(prog, 0).map(v => ({ bass: v.bass + o, upper: v.upper.map(m => m + o) }));
+        voicedFor = key;
+      }
+      return voiced;
+    }
     // 通し番号 n のステップ（8分音符1つ）を、時刻 at に予約する。
     // 予約の直前に notes を見るので、その時点で置いてある音がそのまま鳴る。
     function scheduleStep(n, at, out) {
       const c = audio(), rel = at - c.currentTime;
       const col = ((n % COLS) + COLS) % COLS;
       if (col % STEPS === 0) {                       // 小節のあたま：コードとベース
-        const name = prog[(col / STEPS) % prog.length];
-        const off = CHORDS[name] || CHORDS.I;
+        const v = voicing()[(col / STEPS) % prog.length];
         const dur = STEPS * stepSec() * 0.96;
-        off.forEach(iv => tone(tonicMidi() + iv, rel, dur, 0.075, out));
-        const rootIv = BASS[name] !== undefined ? BASS[name] : off[0];
-        tone(tonicMidi() + rootIv - 12, rel, dur, 0.13, out);
+        v.upper.forEach(m => tone(m, rel, dur, 0.075, out));
+        tone(v.bass, rel, dur, 0.13, out);
       }
       for (let m = LOW; m <= HIGH; m++) {
         if (!notes.has(m + ',' + col)) continue;
@@ -992,7 +1099,7 @@ KEYBOARD_JS = r"""/* 鍵盤ウィジェット（composition-src/build.py が生�
     if (ac.state === 'suspended') ac.resume();
     return ac;
   }
-  function tone(midi, at, dur, vol) {
+  function tone(midi, at, dur, vol, out) {
     const c = audio(), t0 = c.currentTime + at, f = 440 * Math.pow(2, (midi - 69) / 12);
     const g = c.createGain(), lp = c.createBiquadFilter();
     lp.type = 'lowpass'; lp.frequency.value = 2600;
@@ -1005,7 +1112,7 @@ KEYBOARD_JS = r"""/* 鍵盤ウィジェット（composition-src/build.py が生�
       o.type = pair[0]; o.frequency.value = f; og.gain.value = pair[1];
       o.connect(og).connect(g); o.start(t0); o.stop(t0 + dur + 0.05);
     });
-    g.connect(lp).connect(c.destination);
+    g.connect(lp).connect(out || c.destination);
   }
 
   // キーのプルダウン・鍵盤・表示欄を組み、同じ段階の表の行を探しておく
@@ -1127,7 +1234,9 @@ KEYBOARD_JS = r"""/* 鍵盤ウィジェット（composition-src/build.py が生�
       const m = +el.dataset.midi, d = degOf(m);
       if (d < 0) return;
       e.preventDefault();
-      [0, 4, 7].forEach(iv => tone(w.tonic() - 12 + iv, 0, 1.4, 0.09));
+      const v = window.Voicing.voice(['I'], w.state.tonicPc)[0];      // 主和音を鳴らしてから、その音
+      tone(v.bass, 0, 1.4, 0.1);
+      v.upper.forEach(n => tone(n, 0, 1.4, 0.06));
       tone(m, 0.15, 1.1, 0.22);
       w.flash(el);
       mark(d);
@@ -1144,24 +1253,26 @@ KEYBOARD_JS = r"""/* 鍵盤ウィジェット（composition-src/build.py が生�
     paint();
   }
 
-  // コツ：覚えるべきコード。直後の表（tier | コード）を読んで、押すと鳴るボタンに組み直す
-  // セルの書き方：「I　IIIm　VIm　／　IIm　IV」＝グループを／で区切る。「引っ張る：VI7→IIm」＝ラベル：コード→行き先
-  const NUMERAL = /^([#♭]?)(VII|VI|V|IV|III|II|I)(.*)$/;
-  const DEG = { I: 0, II: 2, III: 4, IV: 5, V: 7, VI: 9, VII: 11 };
-  const QUALITY = {
-    '': [0, 4, 7], 'm': [0, 3, 7], '7': [0, 4, 7, 10], 'M7': [0, 4, 7, 11], 'm7': [0, 3, 7, 10],
-    'm7-5': [0, 3, 6, 10], 'm-5': [0, 3, 6], 'dim': [0, 3, 6, 9], 'dim7': [0, 3, 6, 9], 'sus4': [0, 5, 7], 'aug': [0, 4, 8]
-  };
-  function parseChord(name) {
-    const m = NUMERAL.exec(name.trim());
-    if (!m || !(m[3] in QUALITY)) return null;
-    const root = DEG[m[2]] + (m[1] === '#' ? 1 : m[1] === '♭' ? -1 : 0);
-    return { root: ((root % 12) + 12) % 12, ivs: QUALITY[m[3]] };
-  }
-  function playChord(ch, tonicPc, at, dur) {
-    const pc = (tonicPc + ch.root) % 12;
-    tone(36 + pc, at, dur, 0.13);                                  // ベース（C2〜B2）
-    ch.ivs.forEach(iv => tone(48 + pc + iv, at, dur, 0.08));       // 和音（ルートは C3〜B3）
+  // 和音は同時に1つだけ。次を押したら、前の和音はすぐ（30ms で）消す
+  let chordBus = null;
+  function playChord(name, tonicPc, at, dur) {
+    const c = audio();
+    if (chordBus) {
+      const old = chordBus;
+      try {
+        old.gain.cancelScheduledValues(c.currentTime);
+        old.gain.setValueAtTime(old.gain.value, c.currentTime);
+        old.gain.linearRampToValueAtTime(0, c.currentTime + 0.03);
+      } catch (err) {}
+      setTimeout(() => { try { old.disconnect(); } catch (err) {} }, 80);
+    }
+    const bus = c.createGain();
+    bus.gain.value = 1;
+    bus.connect(c.destination);
+    chordBus = bus;
+    const v = window.Voicing.voice([name], tonicPc)[0];
+    tone(v.bass, at, dur, 0.13, bus);
+    v.upper.forEach(m => tone(m, at, dur, 0.08, bus));
   }
   // コツ：覚えるべきコード。直後の表（tier | コード）を読んで、押すとそのコードだけが鳴るボタンに組み直す
   // セルの書き方：「I　IIm　IIIm」＝空白区切り。「／」でまとまりを分ける。「引っ張る：VI7」＝ラベル：コード
@@ -1197,14 +1308,14 @@ KEYBOARD_JS = r"""/* 鍵盤ウィジェット（composition-src/build.py が生�
         const groupEl = mk('div', 'cw-group' + (label ? ' labeled' : ''));
         if (label) groupEl.appendChild(mk('span', 'cw-glabel', label));
         text.split(/[\s　]+/).filter(Boolean).forEach(tok => {
-          const name = tok.split('→')[0], ch = parseChord(name);
+          const name = tok.split('→')[0], ch = window.Voicing.parse(name);
           // 色分けは tier1 のダイアトニックだけ。IM7→I、IIm7→IIm、VIIm7-5→VIIm-5 のように7thを外して照らす
           const triad = name.replace(/m7-5$|M7$|7$/, s => (s === 'm7-5' ? 'm-5' : ''));
           const g = level === '1' && name.indexOf('sus') < 0 ? groupOf[triad] : 0;
           const chip = mk('button', 'cw-chip t' + level + (g ? ' g' + g : ''), name);
           chip.addEventListener('click', () => {
             if (!ch) return;
-            playChord(ch, tonicPc, 0, 1.1);
+            playChord(name, tonicPc, 0, 1.1);
             chip.classList.add('hit');
             setTimeout(() => chip.classList.remove('hit'), 500);
           });
@@ -1429,6 +1540,7 @@ def build_lesson(d, no):
     parts.append(f'<div class="pager">{prev_l}<div class="sp"></div>{next_l}</div>')
     parts.append(FOOT)
     parts.append("</div>")
+    parts.append('<script src="../assets/voicing.js" defer></script>')
     parts.append('<script src="../assets/roll.js" defer></script>')
 
     desc = f'ドリル{no}「{ls["title"]}」。使える音は{ls["sounds_raw"]}、伴奏は{ls["prog"]}。'
@@ -1510,6 +1622,7 @@ def build_tips(d):
     for view in rest:
         parts += section(view)
 
+    parts.append('<script src="../assets/voicing.js" defer></script>')
     parts.append('<script src="../assets/keyboard.js" defer></script>')
     parts += [FOOT, "</div>"]
     return page(
@@ -1559,6 +1672,7 @@ def build_roadmap(d):
         if src:
             parts.append(src)
         parts.append("</section>")
+    parts.append('<script src="../assets/voicing.js" defer></script>')
     parts.append('<script src="../assets/keyboard.js" defer></script>')
     parts += [FOOT, "</div>"]
     return page(
@@ -1581,6 +1695,7 @@ def main():
         written.append(rel)
 
     write("assets/base.css", CSS)
+    write("assets/voicing.js", VOICING_JS)
     write("assets/roll.js", ROLL_JS)
     write("assets/keyboard.js", KEYBOARD_JS)
     write("index.html", build_index(d))

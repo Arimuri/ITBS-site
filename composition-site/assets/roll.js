@@ -9,12 +9,6 @@
   const BARS = 4, STEPS = 8, COLS = BARS * STEPS;
   const MAJOR = [0, 2, 4, 5, 7, 9, 11];
   const KEYS = ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'];
-  const CHORDS = {
-    'I': [0, 4, 7], 'IIm': [2, 5, 9], 'IIm7': [2, 5, 9, 12], 'IIIm': [4, 7, 11],
-    'IV': [5, 9, 12], 'V': [7, 11, 14], 'V7': [7, 11, 14, 17], 'VIm': [9, 12, 16],
-    'VIIm-5': [11, 14, 17], 'IV/V': [5, 9, 12], 'Isus4': [0, 5, 7]
-  };
-  const BASS = { 'IV/V': 7 };
   const BPMS = [70, 80, 90, 100, 110, 120, 130, 140], DEFAULT_BPM = 100;
   // 1周ぶんをまとめて予約すると、置いた音が次の周まで鳴らない。
   // 8分音符ごとに SCHED_AHEAD 秒だけ先を予約することで、置いた音がその周のうちに鳴る。
@@ -134,7 +128,6 @@
     // どのキーにしてもメロとコードの上下関係（＝コード度数の聴こえ方）が変わらない。
     // LOW + tonicPc（0〜+11）だと、伴奏だけが最大1オクターブ上がってメロが埋もれる。
     const keyOffset = pc => ((pc + 6) % 12) - 6;
-    const tonicMidi = () => LOW + keyOffset(tonicPc);
 
     function paint() {
       for (let r = 0; r < ROWS; r++) {
@@ -201,18 +194,29 @@
     }
 
     // ---- 再生（止めるまでループ） ----
+    // 伴奏のボイシングは、進行かキーが変わったときだけ組み直す。
+    // Cキーで組んだものをメロと同じ量（keyOffset）だけ平行移動する。
+    // キーごとに組み直すと転回形が変わり、「数字は同じで高さだけ変わる」が音で崩れる
+    let voiced = null, voicedFor = '';
+    function voicing() {
+      const key = prog.join('-') + '@' + tonicPc;
+      if (key !== voicedFor) {
+        const o = keyOffset(tonicPc);
+        voiced = window.Voicing.voice(prog, 0).map(v => ({ bass: v.bass + o, upper: v.upper.map(m => m + o) }));
+        voicedFor = key;
+      }
+      return voiced;
+    }
     // 通し番号 n のステップ（8分音符1つ）を、時刻 at に予約する。
     // 予約の直前に notes を見るので、その時点で置いてある音がそのまま鳴る。
     function scheduleStep(n, at, out) {
       const c = audio(), rel = at - c.currentTime;
       const col = ((n % COLS) + COLS) % COLS;
       if (col % STEPS === 0) {                       // 小節のあたま：コードとベース
-        const name = prog[(col / STEPS) % prog.length];
-        const off = CHORDS[name] || CHORDS.I;
+        const v = voicing()[(col / STEPS) % prog.length];
         const dur = STEPS * stepSec() * 0.96;
-        off.forEach(iv => tone(tonicMidi() + iv, rel, dur, 0.075, out));
-        const rootIv = BASS[name] !== undefined ? BASS[name] : off[0];
-        tone(tonicMidi() + rootIv - 12, rel, dur, 0.13, out);
+        v.upper.forEach(m => tone(m, rel, dur, 0.075, out));
+        tone(v.bass, rel, dur, 0.13, out);
       }
       for (let m = LOW; m <= HIGH; m++) {
         if (!notes.has(m + ',' + col)) continue;

@@ -19,7 +19,7 @@
     if (ac.state === 'suspended') ac.resume();
     return ac;
   }
-  function tone(midi, at, dur, vol) {
+  function tone(midi, at, dur, vol, out) {
     const c = audio(), t0 = c.currentTime + at, f = 440 * Math.pow(2, (midi - 69) / 12);
     const g = c.createGain(), lp = c.createBiquadFilter();
     lp.type = 'lowpass'; lp.frequency.value = 2600;
@@ -32,7 +32,7 @@
       o.type = pair[0]; o.frequency.value = f; og.gain.value = pair[1];
       o.connect(og).connect(g); o.start(t0); o.stop(t0 + dur + 0.05);
     });
-    g.connect(lp).connect(c.destination);
+    g.connect(lp).connect(out || c.destination);
   }
 
   // キーのプルダウン・鍵盤・表示欄を組み、同じ段階の表の行を探しておく
@@ -154,7 +154,9 @@
       const m = +el.dataset.midi, d = degOf(m);
       if (d < 0) return;
       e.preventDefault();
-      [0, 4, 7].forEach(iv => tone(w.tonic() - 12 + iv, 0, 1.4, 0.09));
+      const v = window.Voicing.voice(['I'], w.state.tonicPc)[0];      // 主和音を鳴らしてから、その音
+      tone(v.bass, 0, 1.4, 0.1);
+      v.upper.forEach(n => tone(n, 0, 1.4, 0.06));
       tone(m, 0.15, 1.1, 0.22);
       w.flash(el);
       mark(d);
@@ -171,24 +173,26 @@
     paint();
   }
 
-  // コツ：覚えるべきコード。直後の表（tier | コード）を読んで、押すと鳴るボタンに組み直す
-  // セルの書き方：「I　IIIm　VIm　／　IIm　IV」＝グループを／で区切る。「引っ張る：VI7→IIm」＝ラベル：コード→行き先
-  const NUMERAL = /^([#♭]?)(VII|VI|V|IV|III|II|I)(.*)$/;
-  const DEG = { I: 0, II: 2, III: 4, IV: 5, V: 7, VI: 9, VII: 11 };
-  const QUALITY = {
-    '': [0, 4, 7], 'm': [0, 3, 7], '7': [0, 4, 7, 10], 'M7': [0, 4, 7, 11], 'm7': [0, 3, 7, 10],
-    'm7-5': [0, 3, 6, 10], 'm-5': [0, 3, 6], 'dim': [0, 3, 6, 9], 'dim7': [0, 3, 6, 9], 'sus4': [0, 5, 7], 'aug': [0, 4, 8]
-  };
-  function parseChord(name) {
-    const m = NUMERAL.exec(name.trim());
-    if (!m || !(m[3] in QUALITY)) return null;
-    const root = DEG[m[2]] + (m[1] === '#' ? 1 : m[1] === '♭' ? -1 : 0);
-    return { root: ((root % 12) + 12) % 12, ivs: QUALITY[m[3]] };
-  }
-  function playChord(ch, tonicPc, at, dur) {
-    const pc = (tonicPc + ch.root) % 12;
-    tone(36 + pc, at, dur, 0.13);                                  // ベース（C2〜B2）
-    ch.ivs.forEach(iv => tone(48 + pc + iv, at, dur, 0.08));       // 和音（ルートは C3〜B3）
+  // 和音は同時に1つだけ。次を押したら、前の和音はすぐ（30ms で）消す
+  let chordBus = null;
+  function playChord(name, tonicPc, at, dur) {
+    const c = audio();
+    if (chordBus) {
+      const old = chordBus;
+      try {
+        old.gain.cancelScheduledValues(c.currentTime);
+        old.gain.setValueAtTime(old.gain.value, c.currentTime);
+        old.gain.linearRampToValueAtTime(0, c.currentTime + 0.03);
+      } catch (err) {}
+      setTimeout(() => { try { old.disconnect(); } catch (err) {} }, 80);
+    }
+    const bus = c.createGain();
+    bus.gain.value = 1;
+    bus.connect(c.destination);
+    chordBus = bus;
+    const v = window.Voicing.voice([name], tonicPc)[0];
+    tone(v.bass, at, dur, 0.13, bus);
+    v.upper.forEach(m => tone(m, at, dur, 0.08, bus));
   }
   // コツ：覚えるべきコード。直後の表（tier | コード）を読んで、押すとそのコードだけが鳴るボタンに組み直す
   // セルの書き方：「I　IIm　IIIm」＝空白区切り。「／」でまとまりを分ける。「引っ張る：VI7」＝ラベル：コード
@@ -224,14 +228,14 @@
         const groupEl = mk('div', 'cw-group' + (label ? ' labeled' : ''));
         if (label) groupEl.appendChild(mk('span', 'cw-glabel', label));
         text.split(/[\s　]+/).filter(Boolean).forEach(tok => {
-          const name = tok.split('→')[0], ch = parseChord(name);
+          const name = tok.split('→')[0], ch = window.Voicing.parse(name);
           // 色分けは tier1 のダイアトニックだけ。IM7→I、IIm7→IIm、VIIm7-5→VIIm-5 のように7thを外して照らす
           const triad = name.replace(/m7-5$|M7$|7$/, s => (s === 'm7-5' ? 'm-5' : ''));
           const g = level === '1' && name.indexOf('sus') < 0 ? groupOf[triad] : 0;
           const chip = mk('button', 'cw-chip t' + level + (g ? ' g' + g : ''), name);
           chip.addEventListener('click', () => {
             if (!ch) return;
-            playChord(ch, tonicPc, 0, 1.1);
+            playChord(name, tonicPc, 0, 1.1);
             chip.classList.add('hit');
             setTimeout(() => chip.classList.remove('hit'), 500);
           });

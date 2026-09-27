@@ -1,0 +1,7 @@
+# WordPressのリライトを無効化し、静的ファイルを直接配信
+DirectoryIndex index.html
+RewriteEngine Off
+
+# 日本語を含むCSS/JSが化けないよう文字コードを明示する
+AddDefaultCharset UTF-8
+AddCharset UTF-8 .html .css .js

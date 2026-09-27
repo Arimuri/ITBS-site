@@ -41,10 +41,13 @@ jobs:
           ssh-keyscan -H arimuri.sakura.ne.jp >> ~/.ssh/known_hosts
 
       - name: Deploy main site
-        run: rsync -avz --delete --exclude='/c4p/' --exclude='/otoviva/' --exclude='/kammerkonzert/' ./dist/ arimuri@arimuri.sakura.ne.jp:/home/arimuri/www/
+        run: rsync -avz --delete --exclude='/c4p/' --exclude='/otoviva/' --exclude='/kammerkonzert/' --exclude='/composition/' ./dist/ arimuri@arimuri.sakura.ne.jp:/home/arimuri/www/
 
       - name: Deploy c4p subdomain
         run: rsync -avz --delete ./c4p-site/ arimuri@arimuri.sakura.ne.jp:/home/arimuri/www/c4p/
 
       - name: Deploy kammerkonzert page
         run: rsync -avz --delete ./kammerkonzert-site/ arimuri@arimuri.sakura.ne.jp:/home/arimuri/www/kammerkonzert/
+
+      - name: Deploy composition page
+        run: rsync -avz --delete ./composition-site/ arimuri@arimuri.sakura.ne.jp:/home/arimuri/www/composition/

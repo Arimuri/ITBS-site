@@ -1,0 +1,140 @@
+/* 作曲基礎 特設サイト 共通スタイル（composition-src/build.py が生成） */
+/* 授業で投影するので、OSのダークモードでも反転させず常に薄い水色で出す */
+:root{
+  --page:#e6f4fc;--surface:#f9fcff;--ink:#0c1522;--ink2:#46596c;--muted:#596b7d;
+  --grid:#c6dff0;--ring:rgba(12,21,34,.12);--acc:#1f6fc4;--acc-soft:#d4e8f8;
+  --acc-ink:#175a9f; /* --acc-soft のような色地に文字を載せるとき用 */
+  --ng-ink:#ad3a28;  /* 誤答など、否定を表す文字色 */
+  --row-scale:#dcecf8;--row-open:#c9e2f5; /* ピアノロールの行（スケール／解禁済み） */
+}
+html{background:var(--page);color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);
+  font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
+  line-height:1.8;font-size:15px;-webkit-text-size-adjust:100%}
+.wrap{max-width:860px;margin:0 auto;padding:40px 16px 72px}
+.wrap.narrow{max-width:720px}
+a{color:var(--acc)}
+h1{font-size:clamp(23px,4.6vw,32px);line-height:1.34;letter-spacing:-.01em;margin:0 0 8px;text-wrap:balance}
+h2{font-size:18px;margin:44px 0 12px;letter-spacing:-.01em;padding-bottom:7px;border-bottom:1px solid var(--grid)}
+h3{font-size:14px;margin:26px 0 8px;color:var(--ink2);letter-spacing:.01em}
+p{margin:9px 0}
+ul{margin:9px 0;padding-left:1.35em}
+li{margin:4px 0}
+ul ul{margin:3px 0}
+.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--muted);margin:0 0 9px}
+.meta{color:var(--ink2);font-size:13.5px;margin:0 0 6px}
+.lead{color:var(--ink2);font-size:14.5px;margin:18px 0 0}
+.foot{color:var(--muted);font-size:11.5px;margin:56px 0 0;padding-top:18px;border-top:1px solid var(--grid)}
+/* ナビ */
+.topnav{font-size:12.5px;margin:0 0 24px;display:flex;flex-wrap:wrap;gap:6px 14px}
+.topnav a{color:var(--ink2);text-decoration:none}
+.topnav a:hover{color:var(--acc)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:22px 0 0}
+.chips a{display:inline-block;background:var(--surface);border:1px solid var(--ring);
+  border-radius:999px;padding:7px 15px;font-size:13px;text-decoration:none;color:var(--ink)}
+.chips a:hover{border-color:var(--acc);color:var(--acc)}
+/* カード */
+.cards{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));margin:14px 0 0}
+a.card{display:block;background:var(--surface);border:1px solid var(--ring);border-radius:13px;
+  padding:14px 16px;color:inherit;text-decoration:none}
+a.card:hover{border-color:var(--acc)}
+.card .no{font-size:10.5px;letter-spacing:.13em;color:var(--muted)}
+.card .th{font-size:15px;font-weight:700;margin:3px 0 9px;line-height:1.45}
+.card .sub{font-size:11.5px;color:var(--ink2);margin:8px 0 0}
+/* 解禁音チップ */
+.degs{display:flex;gap:5px;flex-wrap:wrap}
+/* .degs の内側に限定する。限定しないと ear/ のピアノ鍵盤が付ける同名クラスに当たり、
+   1度を決めた瞬間に白鍵の高さが30pxに潰れる */
+.degs .deg{min-width:30px;height:30px;padding:0 4px;border-radius:8px;display:grid;place-items:center;
+  font-weight:700;font-size:14px;border:1px solid var(--ring);background:var(--page);color:var(--muted)}
+.degs .deg.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.degs .deg.flat{font-size:12px;padding:0 8px}
+.degs.lg .deg{min-width:38px;height:38px;font-size:16px;border-radius:10px}
+/* パネル */
+.panel{background:var(--surface);border:1px solid var(--ring);border-radius:14px;padding:16px 18px;margin:20px 0}
+.panel .k{font-size:10.5px;letter-spacing:.14em;color:var(--muted);margin:0 0 9px}
+.panel .v{font-size:15px;margin:0}
+.panel .v code{font-size:14px}
+.panel .note{font-size:11.5px;color:var(--ink2);margin:9px 0 0}
+.grid2{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+@media (max-width:560px){.grid2{grid-template-columns:1fr}}
+/* 定義行 */
+.rows{margin:24px 0 0}
+.row{display:grid;grid-template-columns:78px 1fr;gap:16px;padding:13px 0;border-top:1px solid var(--grid)}
+.row:last-child{border-bottom:1px solid var(--grid)}
+.row .lbl{font-size:12px;font-weight:700;color:var(--acc);letter-spacing:.02em;padding-top:4px}
+.row .val{margin:0}
+.why{color:var(--ink2);font-size:13.5px}
+/* ポップスのコツ：授業と切り離して読める資料として、コツ本文を主役にする */
+.tips{counter-reset:tip;list-style:none;margin:14px 0 0;padding:0;display:grid;gap:10px}
+.tip{position:relative;background:var(--surface);border:1px solid var(--ring);border-radius:13px;
+  padding:15px 17px 14px 54px}
+.tip::before{counter-increment:tip;content:counter(tip);position:absolute;left:16px;top:16px;
+  width:26px;height:26px;border-radius:8px;background:var(--acc-soft);color:var(--acc-ink);
+  font-size:12.5px;font-weight:700;display:grid;place-items:center}
+.tip .t{margin:0;font-size:16px;font-weight:700;line-height:1.5;letter-spacing:-.01em}
+.tip .d{margin:7px 0 0;font-size:13.5px;color:var(--ink2)}
+.tip .src{margin:10px 0 0;font-size:11.5px;color:var(--muted)}
+.tip .src a{color:var(--muted)}
+.index{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0}
+.index a{display:inline-block;background:var(--surface);border:1px solid var(--ring);border-radius:999px;
+  padding:6px 14px;font-size:12.5px;text-decoration:none;color:var(--ink)}
+.index a:hover{border-color:var(--acc);color:var(--acc)}
+.index a span{color:var(--muted);margin-left:5px}
+.tight{margin-top:8px}
+.more{font-size:12.5px}
+.stage-src{font-size:11.5px;color:var(--muted);margin:10px 0 0}
+.stage-src a{color:var(--muted)}
+@media (max-width:520px){.row{grid-template-columns:1fr;gap:3px}.row .lbl{padding-top:0}}
+/* 表 */
+.tablebox{overflow-x:auto;margin:12px 0}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:7px 10px;text-align:left;border-bottom:1px solid var(--grid);vertical-align:top}
+th{font-size:10.5px;color:var(--muted);letter-spacing:.07em;white-space:nowrap}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
+/* ページ送り */
+.pager{display:flex;justify-content:space-between;gap:10px;margin:40px 0 0;font-size:13px}
+.pager a{display:inline-block;background:var(--surface);border:1px solid var(--ring);border-radius:10px;
+  padding:9px 14px;text-decoration:none;color:var(--ink)}
+.pager a:hover{border-color:var(--acc);color:var(--acc)}
+.pager .sp{flex:1}
+/* 4小節ピアノロール。中身は assets/roll.js が作る */
+.roll{margin:16px 0 0}
+.roll-top{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px}
+.roll-top select,.roll-top button{font:inherit;font-size:13px;border:1px solid var(--ring);
+  border-radius:9px;padding:7px 12px;background:var(--surface);color:var(--ink);cursor:pointer}
+.roll-top button:hover{border-color:var(--acc);color:var(--acc)}
+.roll-top button.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:700}
+.roll-top button.pri:hover{color:#fff;opacity:.9}
+.roll-top label{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink2);cursor:pointer}
+.roll-scroll{overflow-x:auto;border:1px solid var(--ring);border-radius:12px;background:var(--surface)}
+.roll-grid{--rh:15px;min-width:600px;display:grid;grid-template-columns:34px 1fr;grid-template-rows:auto 1fr}
+.roll-corner{border-bottom:1px solid var(--grid);border-right:1px solid var(--grid)}
+.roll-bars{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--grid)}
+.roll-bar{padding:7px 0;text-align:center;font-size:12.5px;font-weight:700;color:var(--acc-ink);
+  border-right:1px solid var(--grid)}
+.roll-bar:last-child{border-right:none}
+.roll-bar.now{background:var(--acc-soft)}
+.roll-gutter{display:grid;grid-auto-rows:var(--rh);border-right:1px solid var(--grid)}
+.roll-deg{display:grid;place-items:center;font-size:10px;line-height:1;color:transparent}
+.roll-deg.scale{color:var(--ink2)}
+.roll-deg.open{color:var(--acc-ink);font-weight:700}
+.roll-cells{display:grid;grid-template-columns:repeat(32,1fr);grid-auto-rows:var(--rh);
+  touch-action:none;user-select:none}
+.rc{border-right:1px solid var(--grid);cursor:pointer}
+.rc.scale{background:var(--row-scale)}
+.rc.open{background:var(--row-open)}
+.rc.oct{border-bottom:1px solid var(--grid)}
+.rc.barstart{border-left:2px solid var(--muted)}
+.rc.now{background-image:linear-gradient(rgba(31,111,196,.14),rgba(31,111,196,.14))}
+.rc.on{background:var(--acc);border-right-color:var(--acc)}
+.roll-note{font-size:12px;color:var(--ink2);margin:10px 0 0}
+.roll-warn{font-size:12.5px;color:var(--ng-ink);font-weight:700;margin:10px 0 0}
+.roll-warn:empty{display:none}
+@media print{
+  :root{--page:#fff;--surface:#fff;--ink:#000;--ink2:#333;--muted:#666;--grid:#bbb;--ring:#bbb;--acc:#0a4a8a}
+  .topnav,.pager,.chips,.roll-top{display:none}
+  .wrap{padding:0;max-width:none}
+  a{text-decoration:none}
+}

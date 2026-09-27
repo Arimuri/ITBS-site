@@ -148,6 +148,11 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
 .iv-key.w.root,.iv-key.b.root{background:var(--acc);border-color:var(--acc);color:#fff}
 .iv-key.w.hit{background:var(--acc-soft)}
 .iv-key.b.hit{background:#31506f}
+.iv-key.out{cursor:default}
+.iv-key.w.out{background:#e9eef3;color:transparent}
+.iv-key.b.out{background:#46525f}
+.iv-top .iv-play{font:inherit;font-size:13px;border:1px solid var(--acc);border-radius:9px;padding:7px 14px;
+  background:var(--acc);color:#fff;font-weight:700;cursor:pointer}
 .iv-status{font-size:13px;color:var(--ink2);margin:6px 0 0;min-height:1.6em}
 .tablebox tr.iv-hl td{background:var(--acc-soft)}
 .roll-note{font-size:12px;color:var(--ink2);margin:10px 0 0}

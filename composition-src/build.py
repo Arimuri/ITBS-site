@@ -16,7 +16,7 @@ SRC = Path(__file__).resolve().parent
 OUT = SRC.parent / "composition-site"
 BASE = "https://intheblueshirt.com/composition/"
 SITE_TITLE = "応用実習1,2：作曲"
-SITE_DESC = "京都精華大学メディア表現学部「応用実習1,2：作曲」（火曜・有村担当）全14回のカリキュラム。メロディの全ての音を移動ドの「キー度数/コード度数」で捉えて作曲する。"
+SITE_DESC = "京都精華大学メディア表現学部「応用実習1,2：作曲」（火曜・有村担当）全14回。メロの音は全部、移動ドの「キー度数/コード度数」で捉える。"
 
 # ---------------------------------------------------------------- markdown 周り
 
@@ -327,7 +327,26 @@ def load():
     data["tips_note"] = next(
         (l.strip() for l in body if l.strip() and not l.startswith("|")), ""
     )
-    header, rows = parse_table([l for l in body if l.startswith("|")])
+    # 最初の表だけがコツの一覧。その後ろに「**観点：見出し**」で始まる塊があれば、
+    # その観点の節の下に出す（例：コードの tier 表）
+    # コツの一覧は「| 観点」で始まる表。冒頭文とその表の間にあるもの（tier 表など）はページの一番上に出す
+    ni = next(i for i, l in enumerate(body) if l.strip() and not l.startswith("|"))
+    t0 = next(i for i, l in enumerate(body) if l.startswith("| 観点"))
+    data["tips_top"] = render_blocks(body[ni + 1 : t0])
+    t1 = t0
+    while t1 < len(body) and body[t1].startswith("|"):
+        t1 += 1
+    header, rows = parse_table(body[t0:t1])
+    extra, cur, buf = {}, None, []
+    for ln in body[t1:] + ["**__end__：__end__**"]:
+        m = re.fullmatch(r"\*\*(.+?)：(.+?)\*\*", ln.strip())
+        if m:
+            if cur:
+                extra.setdefault(cur[0], []).append((cur[1], render_blocks(buf)))
+            cur, buf = (m.group(1), m.group(2)), []
+        elif cur:
+            buf.append(ln)
+    data["tips_extra"] = extra
     col = {name: idx for idx, name in enumerate(header)}
     tips = []
     for row in rows:
@@ -576,7 +595,7 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
     trBox.type = 'checkbox';
     trBox.checked = true;
     trLabel.appendChild(trBox);
-    trLabel.appendChild(mk('span', '', ' キーを変えたらメロも移調'));
+    trLabel.appendChild(mk('span', '', ' メロも移調'));
     [progSel, sel, bpmSel, playBtn, clearBtn, trLabel].forEach(el => top.appendChild(el));
 
     const scroll = mk('div', 'roll-scroll');
@@ -652,12 +671,7 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
         }
       }
       warnEl.textContent = warn;
-      const total = open.size ? open.size : 7;
-      noteEl.textContent =
-        '色の濃い行が ' + KEYS[tonicPc] + ' キーのメジャースケール。' +
-        '番号が濃い行がこの回までに解禁された ' + total +
-        'つの音。マスを押すと音が置け、横になぞると伸びる。' +
-        '横1マスが8分音符、太い線が小節の切れ目。';
+      noteEl.textContent = '濃い行＝スケール、番号が濃い行＝解禁音。横1マス＝8分音符、太線＝小節。';
     }
 
     // ---- 打ち込み ----
@@ -806,7 +820,7 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
           if (lo + cands[i] >= LOW && hi + cands[i] <= HIGH) { d = cands[i]; break; }
         }
         if (d === null) {
-          warn = 'このメロは音域が広すぎて、このキーには収まらない。音域を狭めるか、移調のチェックを外す。';
+          warn = '音域が広すぎてこのキーに収まらない。狭めるか「メロも移調」を外す。';
         } else {
           const moved = [];
           notes.forEach(k => { const q = k.split(','); moved.push((+q[0] + d) + ',' + q[1]); });
@@ -871,7 +885,7 @@ def page(title, desc, url, body, css_extra="", depth=1):
 
 
 FOOT = (
-    '<p class="foot">京都精華大学 メディア表現学部「応用実習1,2：作曲」（火曜・全14回／各3時間＝90分×2コマ）<br>'
+    '<p class="foot">京都精華大学 メディア表現学部「応用実習1,2：作曲」（火曜・全14回・90分×2コマ）<br>'
     '担当：有村崚（<a href="https://intheblueshirt.com/">in the blue shirt</a>）</p>'
 )
 
@@ -899,7 +913,7 @@ def build_index(d):
         '<div class="wrap">',
         '<p class="eyebrow">京都精華大学 メディア表現学部</p>',
         "<h1>応用実習1,2：作曲</h1>",
-        '<p class="meta">火曜・全14回／各3時間（90分×2コマ）｜担当：有村崚（in the blue shirt）</p>',
+        '<p class="meta">火曜・全14回・90分×2コマ｜担当：有村崚（in the blue shirt）</p>',
         f'<p class="lead">{inline(d["lead"])}</p>',
         '<div class="chips">'
         '<a href="#lessons">全14回</a>'
@@ -910,7 +924,7 @@ def build_index(d):
         '<a href="#eval">評価と提出物</a>'
         "</div>",
         '<h2 id="lessons">全14回</h2>',
-        f'<p>{inline(d["lessons_note"])}</p>',
+        f'<p>{inline(d["lessons_note"])}</p>' if d["lessons_note"] else "",
     ]
     for phase in d["phases"]:
         parts.append(f'<h3>{inline(phase["title"])}</h3>')
@@ -933,7 +947,7 @@ def build_index(d):
     parts += [
         f'<h2 id="flow">{inline(d["flow_title"])}</h2>',
         d["flow_html"],
-        "<h2>授業の狙いと表記ルール</h2>",
+        "<h2>ゴールと表記ルール</h2>",
         d["about_html"],
         f'<h2 id="eval">{inline(d["eval_title"])}</h2>',
         d["eval_html"],
@@ -974,7 +988,7 @@ def build_lesson(d, no):
         parts += [
             '<div class="grid2">',
             sounds,
-            '<div class="panel"><p class="k">伴奏進行</p>'
+            '<div class="panel"><p class="k">伴奏</p>'
             f'<p class="v"><code>{inline(chords)}</code></p></div>',
             "</div>",
         ]
@@ -990,24 +1004,22 @@ def build_lesson(d, no):
 
     degrees = ",".join(x for x in DEG_ALL if x in ls["deg"])
     parts += [
-        "<h2>4小節つくってみる</h2>",
-        "<p>マスを押してメロを置く。色の濃い行が、選んだキーのメジャースケール。"
-        "コード進行はプルダウンで差し替えられる（鳴らしたまま変えると次の小節から切り替わる）。"
-        "キーを変えると、メロごと移調して高さだけが変わる（数字は変わらない）。</p>",
+        "<h2>4小節つくる</h2>",
+        "<p>キーを変えても、数字は変わらない。</p>",
         f'<div class="roll" data-lesson="{no:02d}" '
         f'data-progs="{"|".join(roll_prog_choices(no, prog))}" '
         f'data-degrees="{degrees}"></div>',
     ]
 
     if tips:
-        parts.append("<h2>この回で教えるコツ</h2>")
+        parts.append("<h2>今回のコツ</h2>")
         items = "".join(
             f'<li><strong>{inline(t["tip"])}</strong>（{inline(t["view"])}）<br>'
             f'<span class="why">{inline(t["why"])}</span></li>'
             for t in tips
         )
         parts.append(f"<ul>{items}</ul>")
-        parts.append('<p class="more"><a href="../tips/">コツの一覧を見る →</a></p>')
+        parts.append('<p class="more"><a href="../tips/">コツ一覧 →</a></p>')
 
     prev_l = f'<a href="../{no-1:02d}/">← 第{no-1}回</a>' if no > 1 else ""
     next_l = f'<a href="../{no+1:02d}/">第{no+1}回 →</a>' if no < 14 else ""
@@ -1016,7 +1028,7 @@ def build_lesson(d, no):
     parts.append("</div>")
     parts.append('<script src="../assets/roll.js" defer></script>')
 
-    desc = f'第{no}回「{ls["title"]}」。使える音：{ls["sounds_raw"]}／伴奏進行：{ls["prog"]}。'
+    desc = f'第{no}回「{ls["title"]}」。使える音は{ls["sounds_raw"]}、伴奏は{ls["prog"]}。'
     aim = dict(ls["items"]).get("狙い", "")
     if aim:
         desc += aim
@@ -1045,6 +1057,8 @@ def build_tips(d):
         "<h1>ポップスのコツ</h1>",
         f'<p class="lead">{inline(d["tips_note"])}</p>',
     ]
+    if d.get("tips_top"):
+        parts.append(d["tips_top"].replace("<h3>", "<h2>").replace("</h3>", "</h2>"))
     counts = {v: sum(1 for t in d["tips"] if t["view"] == v) for v in views}
     parts.append(
         '<div class="index">'
@@ -1064,17 +1078,20 @@ def build_tips(d):
             src = ""
             if t["nos"]:
                 links = "・".join(f'<a href="../{n:02d}/">第{n}回</a>' for n in t["nos"])
-                src = f'<p class="src">授業では{links}で導入</p>'
+                src = f'<p class="src">{links}で習う</p>'
             items.append(
                 f'<li class="tip"><p class="t">{inline(t["tip"])}</p>'
                 f'<p class="d">{inline(t["why"])}</p>{src}</li>'
             )
         parts.append(f'<ol class="tips">{"".join(items)}</ol>')
+        for title, blocks in d.get("tips_extra", {}).get(view, []):
+            parts.append(f"<h3>{inline(title)}</h3>")
+            parts.append(blocks)
 
     parts += [FOOT, "</div>"]
     return page(
         f"ポップスのコツ｜{SITE_TITLE}",
-        "メロディを作るときの鉄則16個を、音選び・形・リズム・構成の4つの観点で整理した資料。",
+        f'ポップスの作曲コツ{len(d["tips"])}個（{"・".join(views)}）。あくまでコツであってルールではない。',
         f"{BASE}tips/",
         "\n".join(parts),
     )
@@ -1103,7 +1120,7 @@ def build_roadmap(d):
             if label == "対応回":
                 nos = [int(n) for n in re.findall(r"\d+", text)]
                 links = "・".join(f'<a href="../{n:02d}/">第{n}回</a>' for n in nos)
-                src = f'<p class="stage-src">授業では{links}で扱う</p>' if links else ""
+                src = f'<p class="stage-src">{links}で習う</p>' if links else ""
                 continue
             rows.append(
                 f'<div class="row"><div class="lbl">{inline(label)}</div>'
@@ -1118,7 +1135,7 @@ def build_roadmap(d):
     parts += [FOOT, "</div>"]
     return page(
         "何もわからない人のための音楽理論ロードマップ｜" + SITE_TITLE,
-        "音楽理論＝いいかんじの音楽あるある。中心からの距離で安定/不安定をコントロールする体系として、何も知らない状態からダイアトニックコードまでを4段階で辿る資料。",
+        "音楽理論＝いいかんじの音楽あるある。トーナリティ→インターバル→メジャースケール→ダイアトニックコードの4段階。",
         f"{BASE}roadmap/",
         "\n".join(parts),
     )

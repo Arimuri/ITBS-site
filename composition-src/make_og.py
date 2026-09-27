@@ -37,8 +37,8 @@ d.rectangle([0, 0, 14, H], fill=ACC)
 x = 92
 d.text((x, 96), "京都精華大学 メディア表現学部", font=font(26), fill=MUTED)
 d.text((x, 146), "応用実習1,2：作曲", font=font(86, bold=True), fill=INK)
-d.text((x, 316), "メロディの全ての音を、キー度数／コード度数で捉える", font=font(34), fill=INK2)
-d.text((x, 368), "火曜・全14回／各3時間（90分×2コマ）", font=font(30), fill=INK2)
+d.text((x, 316), "メロの音は全部、キー度数／コード度数で捉える", font=font(34), fill=INK2)
+d.text((x, 368), "火曜・全14回・90分×2コマ", font=font(30), fill=INK2)
 
 # 解禁音のモチーフ：1〜7 のチップ（1・3・5 を塗る）
 size, gap, top = 68, 14, 448

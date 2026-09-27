@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="icon" type="image/png" href="/favicon.png">
 <title>1度当て練習｜応用実習1,2：作曲</title>
-<meta name="description" content="授業の冒頭15分「1度当て」の練習ツール。鍵盤で音を探して1度を決め、移動ドの1〜7を確かめる。授業で使う進行を出題するクイズ付き。">
+<meta name="description" content="授業冒頭15分の「1度当て」練習。1度を決めて移動ドの1〜7を確かめる。クイズは第1〜5回の進行。">
 <link rel="canonical" href="https://intheblueshirt.com/composition/ear/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="in the blue shirt">
@@ -56,7 +56,7 @@
 <p class="topnav"><a href="../">← 授業トップ</a><a href="../roadmap/">理論ロードマップ</a><a href="../tips/">ポップスのコツ</a></p>
 <p class="eyebrow">応用実習1,2：作曲</p>
 <h1>1度当て練習</h1>
-<p class="lead">毎回の冒頭15分でやる「1度当て」の練習用。音名は出さない。鍵盤で音を探し、落ち着く音を1度に決めると、そこから数えた1〜7が鍵盤に出る。</p>
+<p class="lead">「1度当て」の練習用。</p>
 
 <div class="tabs" role="tablist">
   <button role="tab" id="tab-find" aria-selected="true" aria-controls="pane-find">① 曲に合わせて探す</button>
@@ -79,15 +79,14 @@
     <button id="play-triad" disabled>主和音（1-3-5）</button>
     <button id="clear-tonic" disabled>1度を解除</button>
   </div>
-  <p class="status" id="find-status">曲を流しながら、落ち着く音をハミング→鍵盤で探す。見つけたら「1度にする」。</p>
+  <p class="status" id="find-status">落ち着く音を鍵盤で探す。</p>
   <h2>使い方</h2>
   <ol>
-    <li>曲を流し、<strong>いちばん落ち着く音</strong>をハミングする</li>
-    <li>鍵盤を弾いて、ハミングした高さと同じ音を探す</li>
-    <li>見つけたら「いま押した音を1度にする」を押す</li>
-    <li>「スケールを上昇」で1〜7を鳴らし、曲に馴染むか確かめる。外れていたら1度を取り直す</li>
+    <li>曲を流し、<strong>いちばん落ち着く音</strong>をハミング</li>
+    <li>同じ高さの音を鍵盤で探して1度にする</li>
+    <li>スケールを鳴らし、曲に馴染むか確かめる</li>
   </ol>
-  <p class="why">馴染まないときは、多くの場合1度を5度や3度と取り違えている。5度を1度と間違えたときは、探した音より上に4度（完全5度下）を取り直すと合うことが多い。</p>
+  <p class="why">馴染まないときは、たいてい5度か3度を1度にしている。5度なら、その4度上（完全5度下）が1度。</p>
 </div>
 
 <div class="pane" id="pane-quiz" role="tabpanel" aria-labelledby="tab-quiz" hidden>
@@ -97,10 +96,10 @@
     <button id="quiz-reveal" disabled>答えを見る</button>
   </div>
   <div class="opts">
-    <label><input type="checkbox" id="opt-hard"> むずかしい（Iから始まらない進行にする）</label>
+    <label><input type="checkbox" id="opt-hard"> むずかしい（Iから始まらない）</label>
   </div>
-  <p class="status" id="quiz-status">「出題する」を押すと、授業で使う進行がランダムなキーでループする。1度だと思う鍵盤を押す。</p>
-  <p class="why">鍵盤はいくら押しても判定されない。答えが出るのは「答えを見る」を押したときだけで、そのとき最後に押していた鍵で判定する。オクターブ違いも正解。進行は第1〜5回で使う I-IV-VIm-IV／I-VIm-IIm7-IV／I-VIm-IV-V／I-IIIm-IV-V／IIm7-V-I から選ばれ、止めるまでループする。答え合わせのあとも鳴り続けるので、鍵盤を弾いて曲に馴染むか確かめられる。</p>
+  <p class="status" id="quiz-status">「出題する」でランダムなキーの進行が鳴る。</p>
+  <p class="why">「答えを見る」の直前に押した鍵盤が答え（オクターブ違いもOK）。進行は第1〜5回の I-IV-VIm-IV／I-VIm-IIm7-IV／I-VIm-IV-V／I-IIIm-IV-V／IIm7-V-I。</p>
 </div>
 
 <p class="foot">京都精華大学 メディア表現学部「応用実習1,2：作曲」（火曜・全14回／各3時間＝90分×2コマ）<br>担当：有村崚（<a href="https://intheblueshirt.com/">in the blue shirt</a>）</p>
@@ -185,16 +184,16 @@
     setTimeout(() => el.classList.remove('hit'), 180);
     if (mode === 'find') {
       document.getElementById('set-tonic').disabled = false;
-      findStatus('鍵盤を押した。この音が落ち着く音なら「1度にする」を押す。');
+      findStatus('落ち着く音なら「1度にする」。');
       return;
     }
     // クイズ中の打鍵は音を探しているだけ。ここでは答えを出さない
     pick = m;
     paint();
-    if (quizTonic === null) { quizStatus('まず「出題する」を押す。'); return; }
+    if (quizTonic === null) { quizStatus('「出題する」から。'); return; }
     quizStatus(answered
       ? '次は「出題する」。' + score()
-      : 'この音でよければ「答えを見る」。' + score());
+      : '決まったら「答えを見る」。' + score());
   }
   kb.addEventListener('pointerdown', e => {
     const el = e.target.closest('.key');
@@ -226,12 +225,12 @@
     if (last === null) return;
     tonic = last; revealed = false; paint();
     ['play-tonic', 'play-scale', 'play-triad', 'clear-tonic'].forEach(id => document.getElementById(id).disabled = false);
-    findStatus('この音を<b>1度</b>にした。「スケールを上昇」で1〜7を鳴らし、曲に馴染むか確かめる。');
+    findStatus('<b>1度</b>にした。次は「スケールを上昇」で確認。');
   };
   document.getElementById('clear-tonic').onclick = () => {
     tonic = null; paint();
     ['play-tonic', 'play-scale', 'play-triad', 'clear-tonic'].forEach(id => document.getElementById(id).disabled = true);
-    findStatus('1度を解除した。もう一度探す。');
+    findStatus('解除した。');
   };
   document.getElementById('play-tonic').onclick = () => tone(tonic, 0, 1.1);
   document.getElementById('play-triad').onclick = () => chord([0, 4, 7].map(i => tonic + i), 0, 1.4, 0.18);
@@ -304,7 +303,7 @@
     tonic = null; revealed = false; answered = false; pick = null;
     paint();
     document.getElementById('quiz-reveal').disabled = false;
-    quizStatus('ループしている進行の<b>1度</b>を鍵盤で探す。鍵盤は何度押してもよい。決まったら「答えを見る」。' + score());
+    quizStatus('<b>1度</b>を鍵盤で探す。' + score());
     startLoop();
   };
   document.getElementById('quiz-loop').onclick = () => (loopBus ? stopLoop() : startLoop());
@@ -317,18 +316,18 @@
     if (!first) { quizStatus('次は「出題する」。' + score()); return; }
     if (pick === null) {
       streak = 0;
-      quizStatus('点線が<b>1度</b>。鳴らしたまま鍵盤で確かめられる。' + score());
+      quizStatus('点線が<b>1度</b>。' + score());
       return;
     }
     rounds++;
     const iv = (((pick - quizTonic) % 12) + 12) % 12;
     if (iv === 0) {
       hit++; streak++;
-      quizStatus('<span class="ok">正解。</span>1〜7が鍵盤に出た。' + score());
+      quizStatus('<span class="ok">正解！</span>' + score());
     } else {
       streak = 0;
       const d = MAJOR.indexOf(iv);
-      const what = d >= 0 ? `押していたのは<b>${d + 1}度</b>` : '押していたのはスケールの外の音';
+      const what = d >= 0 ? `押していたのは<b>${d + 1}度</b>` : '押していたのはスケール外の音';
       quizStatus(`<span class="ng">ちがう。</span>${what}。点線が1度。` + score());
     }
   };

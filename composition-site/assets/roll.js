@@ -77,7 +77,7 @@
     trBox.type = 'checkbox';
     trBox.checked = true;
     trLabel.appendChild(trBox);
-    trLabel.appendChild(mk('span', '', ' キーを変えたらメロも移調'));
+    trLabel.appendChild(mk('span', '', ' メロも移調'));
     [progSel, sel, bpmSel, playBtn, clearBtn, trLabel].forEach(el => top.appendChild(el));
 
     const scroll = mk('div', 'roll-scroll');
@@ -153,12 +153,7 @@
         }
       }
       warnEl.textContent = warn;
-      const total = open.size ? open.size : 7;
-      noteEl.textContent =
-        '色の濃い行が ' + KEYS[tonicPc] + ' キーのメジャースケール。' +
-        '番号が濃い行がこの回までに解禁された ' + total +
-        'つの音。マスを押すと音が置け、横になぞると伸びる。' +
-        '横1マスが8分音符、太い線が小節の切れ目。';
+      noteEl.textContent = '濃い行＝スケール、番号が濃い行＝解禁音。横1マス＝8分音符、太線＝小節。';
     }
 
     // ---- 打ち込み ----
@@ -307,7 +302,7 @@
           if (lo + cands[i] >= LOW && hi + cands[i] <= HIGH) { d = cands[i]; break; }
         }
         if (d === null) {
-          warn = 'このメロは音域が広すぎて、このキーには収まらない。音域を狭めるか、移調のチェックを外す。';
+          warn = '音域が広すぎてこのキーに収まらない。狭めるか「メロも移調」を外す。';
         } else {
           const moved = [];
           notes.forEach(k => { const q = k.split(','); moved.push((+q[0] + d) + ',' + q[1]); });

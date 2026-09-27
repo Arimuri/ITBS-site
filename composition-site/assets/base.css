@@ -12,8 +12,9 @@ html{background:var(--page);color-scheme:light}
 body{margin:0;background:var(--page);color:var(--ink);
   font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
   line-height:1.8;font-size:15px;-webkit-text-size-adjust:100%}
-.wrap{max-width:860px;margin:0 auto;padding:40px 16px 72px}
-.wrap.narrow{max-width:720px}
+.wrap{max-width:1400px;margin:0 auto;padding:40px 16px 72px}
+.wrap.narrow{max-width:1400px}
+.wrap.tool{max-width:1100px}
 a{color:var(--acc)}
 h1{font-size:clamp(23px,4.6vw,32px);line-height:1.34;letter-spacing:-.01em;margin:0 0 8px;text-wrap:balance}
 h2{font-size:18px;margin:44px 0 12px;letter-spacing:-.01em;padding-bottom:7px;border-bottom:1px solid var(--grid)}
@@ -152,6 +153,36 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
 .roll-note{font-size:12px;color:var(--ink2);margin:10px 0 0}
 .roll-warn{font-size:12.5px;color:var(--ng-ink);font-weight:700;margin:10px 0 0}
 .roll-warn:empty{display:none}
+/* PC（16:9）前提の横長レイアウト。1100px 未満では1段に戻る */
+.lesson-main .grid2{display:flex;flex-wrap:wrap;gap:12px}
+.lesson-main .grid2 .panel{flex:1 1 auto;margin:0}
+.lesson-main .grid2 + .rows{margin-top:24px}
+@media (min-width:1100px){
+  body{font-size:17px}
+  .wrap{padding:44px 48px 80px}
+  h1{font-size:38px}
+  h2{font-size:21px}
+  .lead{font-size:17px}
+  .cards{grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+  .lesson-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:56px;align-items:start;margin-top:20px}
+  .lesson-side{position:sticky;top:24px}
+  .lesson-side h2:first-child{margin-top:0}
+  .lesson-main h2{margin-top:36px}
+  .cols{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:48px;align-items:start}
+  .stage-grid{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:48px;align-items:start}
+  .stage-grid .tablebox{margin-top:0}
+  .tips{grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}
+  .row{grid-template-columns:96px 1fr}
+  table{font-size:14.5px}
+  .roll-grid{--rh:18px}
+  .phases{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:18px;align-items:start}
+  .phases h3{font-size:13px;margin:6px 0 10px;min-height:3.1em;line-height:1.45}
+  .phases .cards{grid-template-columns:1fr;gap:10px;margin:0}
+  .phases a.card{padding:12px 14px}
+  .phases .card .th{font-size:14.5px}
+  .phases .degs{gap:4px}
+  .phases .degs .deg{min-width:24px;height:24px;font-size:12px;border-radius:6px;padding:0 3px}
+}
 @media print{
   :root{--page:#fff;--surface:#fff;--ink:#000;--ink2:#333;--muted:#666;--grid:#bbb;--ring:#bbb;--acc:#0a4a8a}
   .topnav,.pager,.chips,.roll-top{display:none}

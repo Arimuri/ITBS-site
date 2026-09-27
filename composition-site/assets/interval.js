@@ -74,9 +74,12 @@
       keys.push(el);
     }
 
-    // すぐ後ろ（同じ段階の中）にある表を探す。行 i が半音 i に対応する
+    // 同じ段階（section）の中の表を探す。行 i が半音 i に対応する
     let rows = [];
-    for (let el = root.nextElementSibling; el; el = el.nextElementSibling) {
+    const sec = root.closest ? root.closest('section') : null;
+    const secTable = sec && sec.querySelector ? sec.querySelector('table') : null;
+    if (secTable) rows = secTable.tBodies && secTable.tBodies[0] ? secTable.tBodies[0].rows : [];
+    else for (let el = root.nextElementSibling; el; el = el.nextElementSibling) {
       if (el.tagName === 'H2') break;
       const t = el.tagName === 'TABLE' ? el : (el.querySelector ? el.querySelector('table') : null);
       if (t) { rows = t.tBodies && t.tBodies[0] ? t.tBodies[0].rows : []; break; }

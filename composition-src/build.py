@@ -228,6 +228,19 @@ def degree_chips(deg, flat):
 
 # -------------------------------------------------------------------- 原稿を読む
 
+def _table_blocks(lines):
+    """表の行だけを、表ごとに空行で区切って取り出す。"""
+    out, prev = [], False
+    for l in lines:
+        is_t = l.startswith("|")
+        if is_t and not prev and out:
+            out.append("")
+        if is_t:
+            out.append(l)
+        prev = is_t
+    return out
+
+
 def load():
     md = (SRC / "curriculum.md").read_text(encoding="utf-8").splitlines()
     secs = dict(split_sections(md, "## "))
@@ -323,7 +336,8 @@ def load():
                 "title": head,
                 "slug": f"s{idx + 1}",
                 "items": items,
-                "extra": render_blocks(others),   # 表などは行の後ろにまとめて出す
+                "extra": render_blocks([l for l in others if not l.startswith("|")]),
+                "tables": render_blocks(_table_blocks(others)),   # PCでは右に並べる
             }
         )
 
@@ -409,8 +423,9 @@ html{background:var(--page);color-scheme:light}
 body{margin:0;background:var(--page);color:var(--ink);
   font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
   line-height:1.8;font-size:15px;-webkit-text-size-adjust:100%}
-.wrap{max-width:860px;margin:0 auto;padding:40px 16px 72px}
-.wrap.narrow{max-width:720px}
+.wrap{max-width:1400px;margin:0 auto;padding:40px 16px 72px}
+.wrap.narrow{max-width:1400px}
+.wrap.tool{max-width:1100px}
 a{color:var(--acc)}
 h1{font-size:clamp(23px,4.6vw,32px);line-height:1.34;letter-spacing:-.01em;margin:0 0 8px;text-wrap:balance}
 h2{font-size:18px;margin:44px 0 12px;letter-spacing:-.01em;padding-bottom:7px;border-bottom:1px solid var(--grid)}
@@ -549,6 +564,36 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
 .roll-note{font-size:12px;color:var(--ink2);margin:10px 0 0}
 .roll-warn{font-size:12.5px;color:var(--ng-ink);font-weight:700;margin:10px 0 0}
 .roll-warn:empty{display:none}
+/* PC（16:9）前提の横長レイアウト。1100px 未満では1段に戻る */
+.lesson-main .grid2{display:flex;flex-wrap:wrap;gap:12px}
+.lesson-main .grid2 .panel{flex:1 1 auto;margin:0}
+.lesson-main .grid2 + .rows{margin-top:24px}
+@media (min-width:1100px){
+  body{font-size:17px}
+  .wrap{padding:44px 48px 80px}
+  h1{font-size:38px}
+  h2{font-size:21px}
+  .lead{font-size:17px}
+  .cards{grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+  .lesson-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:56px;align-items:start;margin-top:20px}
+  .lesson-side{position:sticky;top:24px}
+  .lesson-side h2:first-child{margin-top:0}
+  .lesson-main h2{margin-top:36px}
+  .cols{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:48px;align-items:start}
+  .stage-grid{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:48px;align-items:start}
+  .stage-grid .tablebox{margin-top:0}
+  .tips{grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}
+  .row{grid-template-columns:96px 1fr}
+  table{font-size:14.5px}
+  .roll-grid{--rh:18px}
+  .phases{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:18px;align-items:start}
+  .phases h3{font-size:13px;margin:6px 0 10px;min-height:3.1em;line-height:1.45}
+  .phases .cards{grid-template-columns:1fr;gap:10px;margin:0}
+  .phases a.card{padding:12px 14px}
+  .phases .card .th{font-size:14.5px}
+  .phases .degs{gap:4px}
+  .phases .degs .deg{min-width:24px;height:24px;font-size:12px;border-radius:6px;padding:0 3px}
+}
 @media print{
   :root{--page:#fff;--surface:#fff;--ink:#000;--ink2:#333;--muted:#666;--grid:#bbb;--ring:#bbb;--acc:#0a4a8a}
   .topnav,.pager,.chips,.roll-top{display:none}
@@ -972,9 +1017,12 @@ INTERVAL_JS = r"""/* インターバル鍵盤（composition-src/build.py が生�
       keys.push(el);
     }
 
-    // すぐ後ろ（同じ段階の中）にある表を探す。行 i が半音 i に対応する
+    // 同じ段階（section）の中の表を探す。行 i が半音 i に対応する
     let rows = [];
-    for (let el = root.nextElementSibling; el; el = el.nextElementSibling) {
+    const sec = root.closest ? root.closest('section') : null;
+    const secTable = sec && sec.querySelector ? sec.querySelector('table') : null;
+    if (secTable) rows = secTable.tBodies && secTable.tBodies[0] ? secTable.tBodies[0].rows : [];
+    else for (let el = root.nextElementSibling; el; el = el.nextElementSibling) {
       if (el.tagName === 'H2') break;
       const t = el.tagName === 'TABLE' ? el : (el.querySelector ? el.querySelector('table') : null);
       if (t) { rows = t.tBodies && t.tBodies[0] ? t.tBodies[0].rows : []; break; }
@@ -1066,6 +1114,20 @@ def nav(depth, current=""):
 
 # ------------------------------------------------------------------- ページ生成
 
+def columns(blocks_html):
+    """<h3> ごとのまとまりを横に並べる（PCの横幅を使う）。前置きは上に、末尾の注記は下に出す。"""
+    parts = re.split(r"(?=<h3>)", blocks_html)
+    pre, groups = parts[0], [g for g in parts[1:] if g.strip()]
+    if len(groups) < 2:
+        return blocks_html
+    tail = ""
+    m = re.match(r"(.*?(?:</div>|</ul>))\s*((?:<p>.*?</p>\s*)+)$", groups[-1], re.S)
+    if m:
+        groups[-1], tail = m.group(1), m.group(2)
+    cols = "".join(f"<div>{g}</div>" for g in groups)
+    return f'{pre}<div class="cols" style="--n:{len(groups)}">{cols}</div>{tail}'
+
+
 def build_index(d):
     parts = [
         '<div class="wrap">',
@@ -1084,7 +1146,10 @@ def build_index(d):
         '<h2 id="lessons">全14回</h2>',
         f'<p>{inline(d["lessons_note"])}</p>' if d["lessons_note"] else "",
     ]
+    # PCでは Phase を横に5列並べ、各 Phase の回を縦に積む（全14回を1画面で見渡せる）
+    parts.append(f'<div class="phases" style="--n:{len(d["phases"])}">')
     for phase in d["phases"]:
+        parts.append('<div class="phase">')
         parts.append(f'<h3>{inline(phase["title"])}</h3>')
         cards = []
         for no in phase["nos"]:
@@ -1102,13 +1167,15 @@ def build_index(d):
                 + "</a>"
             )
         parts.append(f'<div class="cards">{"".join(cards)}</div>')
+        parts.append("</div>")  # phase
+    parts.append("</div>")  # phases
     parts += [
         f'<h2 id="flow">{inline(d["flow_title"])}</h2>',
-        d["flow_html"],
+        columns(d["flow_html"]),
         "<h2>ゴールと表記ルール</h2>",
-        d["about_html"],
+        columns(d["about_html"]),
         f'<h2 id="eval">{inline(d["eval_title"])}</h2>',
-        d["eval_html"],
+        columns(d["eval_html"]),
         FOOT,
         "</div>",
     ]
@@ -1139,6 +1206,9 @@ def build_lesson(d, no):
         nav(1),
         f'<p class="eyebrow">{inline(ls["phase_title"])}</p>',
         f'<h1>第{no}回　{inline(ls["title"])}</h1>',
+        # PCでは左に講義と課題、右にピアノロール
+        '<div class="lesson-grid">',
+        '<div class="lesson-main">',
     ]
     if prog in ("", "—", "-"):
         parts.append(sounds)
@@ -1161,12 +1231,14 @@ def build_lesson(d, no):
     parts.append(f'<div class="rows">{"".join(rows)}</div>')
 
     degrees = ",".join(x for x in DEG_ALL if x in ls["deg"])
-    parts += [
+    side = [
+        '<div class="lesson-side">',
         "<h2>4小節つくる</h2>",
         "<p>キーを変えても、数字は変わらない。</p>",
         f'<div class="roll" data-lesson="{no:02d}" '
         f'data-progs="{"|".join(roll_prog_choices(no, prog))}" '
         f'data-degrees="{degrees}"></div>',
+        "</div>",
     ]
 
     if tips:
@@ -1178,6 +1250,9 @@ def build_lesson(d, no):
         )
         parts.append(f"<ul>{items}</ul>")
         parts.append('<p class="more"><a href="../tips/">コツ一覧 →</a></p>')
+    parts.append("</div>")          # lesson-main
+    parts += side
+    parts.append("</div>")          # lesson-grid
 
     prev_l = f'<a href="../{no-1:02d}/">← 第{no-1}回</a>' if no > 1 else ""
     next_l = f'<a href="../{no+1:02d}/">第{no+1}回 →</a>' if no < 14 else ""
@@ -1278,6 +1353,7 @@ def build_roadmap(d):
         d["roadmap_intro"],
     ]
     for st in d["roadmap"]:
+        parts.append('<section class="stage">')
         parts.append(f'<h2 id="{st["slug"]}">{inline(st["title"])}</h2>')
         rows, src = [], ""
         for label, text in st["items"]:
@@ -1292,10 +1368,13 @@ def build_roadmap(d):
             )
         if rows:  # 地の文だけで書いた段階は行を出さない
             parts.append(f'<div class="rows tight">{"".join(rows)}</div>')
-        if st.get("extra"):
+        if st.get("tables"):
+            parts.append(f'<div class="stage-grid"><div>{st.get("extra", "")}</div><div>{st["tables"]}</div></div>')
+        elif st.get("extra"):
             parts.append(st["extra"])
         if src:
             parts.append(src)
+        parts.append("</section>")
     parts.append('<script src="../assets/interval.js" defer></script>')
     parts += [FOOT, "</div>"]
     return page(

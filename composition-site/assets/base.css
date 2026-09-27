@@ -23,6 +23,7 @@ p{margin:9px 0}
 ul{margin:9px 0;padding-left:1.35em}
 li{margin:4px 0}
 ul ul{margin:3px 0}
+.nw{white-space:nowrap}
 .eyebrow{font-size:11px;letter-spacing:.16em;color:var(--muted);margin:0 0 9px}
 .meta{color:var(--ink2);font-size:13.5px;margin:0 0 6px}
 .lead{color:var(--ink2);font-size:14.5px;margin:18px 0 0}

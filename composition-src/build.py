@@ -181,7 +181,7 @@ DEFAULT_PROG = "I-VIm-IV-V"
 ROLL_PROG_CHOICES = [
     ("I-IV-VIm-IV", 1),
     ("I-VIm-IIm7-IV", 1),
-    ("I-VIm-IV-V", 1),      # V は第1回から使う（Vの上は1が11th、2が5th）
+    ("I-VIm-IV-V", 1),      # V はドリル1から使う（Vの上は1が11th、2が5th）
     ("I-IIIm-IV-V", 2),
     ("IIm7-V-I-I", 3),
     ("I-IV-V-I", 6),        # 機能を習う回から
@@ -189,7 +189,7 @@ ROLL_PROG_CHOICES = [
     ("I-VIm-IIm7-V", 7),
     ("IV-I-IV-V", 8),
     ("I-IV-V7-I", 9),
-    ("I-VIm-IV-IV/V", 11),  # 4on5 は第11回で種明かしする
+    ("I-VIm-IV-IV/V", 11),  # 4on5 はドリル11で種明かしする
 ]
 
 
@@ -276,7 +276,7 @@ def load():
     col = {name: idx for idx, name in enumerate(header)}
     lessons, prev_deg, prev_flat = {}, set(), set()
     for row in rows:
-        no = int(row[col["回"]])
+        no = int(row[col["ドリル"]])
         deg, flat = degree_set(row[col["使える音"]], prev_deg, prev_flat)
         prev_deg, prev_flat = deg, flat
         lessons[no] = {
@@ -292,13 +292,13 @@ def load():
     data["lessons_note"] = note
     data["lessons"] = lessons
 
-    # 各回の詳細：Phase ごと → 第N回 ごと
+    # 各回の詳細：Phase ごと → ドリルN ごと
     _, body = find("各回の詳細")
     data["phases"] = []
     for phase_title, phase_body in split_sections(body, "### "):
         nos = []
         for head, bullets in split_sections(phase_body, "#### "):
-            m = re.match(r"第(\d+)回[　\s]*(.*)", head)
+            m = re.match(r"ドリル(\d+)[　\s]*(.*)", head)
             if not m:
                 continue
             no = int(m.group(1))
@@ -385,7 +385,7 @@ def load():
     col = {name: idx for idx, name in enumerate(header)}
     tips = []
     for row in rows:
-        intro = row[col["導入回"]]
+        intro = row[col["導入ドリル"]]
         tips.append(
             {
                 "view": row[col["観点"]],
@@ -434,6 +434,7 @@ p{margin:9px 0}
 ul{margin:9px 0;padding-left:1.35em}
 li{margin:4px 0}
 ul ul{margin:3px 0}
+.nw{white-space:nowrap}
 .eyebrow{font-size:11px;letter-spacing:.16em;color:var(--muted);margin:0 0 9px}
 .meta{color:var(--ink2);font-size:13.5px;margin:0 0 6px}
 .lead{color:var(--ink2);font-size:14.5px;margin:18px 0 0}
@@ -1317,13 +1318,15 @@ def build_index(d):
     parts.append(f'<div class="phases" style="--n:{len(d["phases"])}">')
     for phase in d["phases"]:
         parts.append('<div class="phase">')
-        parts.append(f'<h3>{inline(phase["title"])}</h3>')
+        # 末尾の「（ドリル3〜5）」は途中で折り返さない
+        head = re.sub(r"（[^（）]*）$", lambda m: f'<span class="nw">{m.group(0)}</span>', inline(phase["title"]))
+        parts.append(f'<h3>{head}</h3>')
         cards = []
         for no in phase["nos"]:
             ls = d["lessons"][no]
             cards.append(
                 f'<a class="card" href="{no:02d}/">'
-                f'<div class="no">第{no}回</div>'
+                f'<div class="no">ドリル{no}</div>'
                 f'<div class="th">{inline(ls["title"])}</div>'
                 f'{degree_chips(ls["deg"], ls["flat"])}'
                 + (
@@ -1372,7 +1375,7 @@ def build_lesson(d, no):
         '<div class="wrap narrow">',
         nav(1),
         f'<p class="eyebrow">{inline(ls["phase_title"])}</p>',
-        f'<h1>第{no}回　{inline(ls["title"])}</h1>',
+        f'<h1>ドリル{no}　{inline(ls["title"])}</h1>',
         # PCでは左に講義と課題、右にピアノロール
         '<div class="lesson-grid">',
         '<div class="lesson-main">',
@@ -1421,19 +1424,19 @@ def build_lesson(d, no):
     parts += side
     parts.append("</div>")          # lesson-grid
 
-    prev_l = f'<a href="../{no-1:02d}/">← 第{no-1}回</a>' if no > 1 else ""
-    next_l = f'<a href="../{no+1:02d}/">第{no+1}回 →</a>' if no < 14 else ""
+    prev_l = f'<a href="../{no-1:02d}/">← ドリル{no-1}</a>' if no > 1 else ""
+    next_l = f'<a href="../{no+1:02d}/">ドリル{no+1} →</a>' if no < 14 else ""
     parts.append(f'<div class="pager">{prev_l}<div class="sp"></div>{next_l}</div>')
     parts.append(FOOT)
     parts.append("</div>")
     parts.append('<script src="../assets/roll.js" defer></script>')
 
-    desc = f'第{no}回「{ls["title"]}」。使える音は{ls["sounds_raw"]}、伴奏は{ls["prog"]}。'
+    desc = f'ドリル{no}「{ls["title"]}」。使える音は{ls["sounds_raw"]}、伴奏は{ls["prog"]}。'
     aim = dict(ls["items"]).get("狙い", "")
     if aim:
         desc += aim
     return page(
-        f'第{no}回 {ls["title"]}｜{SITE_TITLE}',
+        f'ドリル{no} {ls["title"]}｜{SITE_TITLE}',
         desc[:140],
         f"{BASE}{no:02d}/",
         "\n".join(parts),
@@ -1465,7 +1468,7 @@ def build_tips(d):
             # 授業との対応はおまけなので、小さく末尾に添えるだけにする
             src = ""
             if t["nos"]:
-                links = "・".join(f'<a href="../{n:02d}/">第{n}回</a>' for n in t["nos"])
+                links = "・".join(f'<a href="../{n:02d}/">ドリル{n}</a>' for n in t["nos"])
                 src = f'<p class="src">{links}で習う</p>'
             items.append(
                 f'<li class="tip"><p class="t">{inline(t["tip"])}</p>'
@@ -1538,9 +1541,9 @@ def build_roadmap(d):
         parts.append(f'<h2 id="{st["slug"]}">{inline(st["title"])}</h2>')
         rows, src = [], ""
         for label, text in st["items"]:
-            if label == "対応回":
+            if label == "対応ドリル":
                 nos = [int(n) for n in re.findall(r"\d+", text)]
-                links = "・".join(f'<a href="../{n:02d}/">第{n}回</a>' for n in nos)
+                links = "・".join(f'<a href="../{n:02d}/">ドリル{n}</a>' for n in nos)
                 src = f'<p class="stage-src">{links}で習う</p>' if links else ""
                 continue
             rows.append(

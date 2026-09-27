@@ -154,6 +154,9 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
 .iv-top .iv-play{font:inherit;font-size:13px;border:1px solid var(--acc);border-radius:9px;padding:7px 14px;
   background:var(--acc);color:#fff;font-weight:700;cursor:pointer}
 /* 覚えるべきコード（鳴らせる tier 表） */
+/* 観点の鉄則（コツのページ）。でかく出す */
+.motto{margin:4px 0 18px;padding:20px 24px;border-left:6px solid var(--acc);border-radius:10px;background:var(--surface)}
+.motto p{margin:0;font-size:clamp(20px,2.3vw,30px);font-weight:800;line-height:1.45;letter-spacing:-.01em;color:var(--ink)}
 .cw-top{margin:6px 0 14px}
 .cw-top select{font:inherit;font-size:13px;border:1px solid var(--ring);border-radius:9px;padding:7px 12px;
   background:var(--surface);color:var(--ink);cursor:pointer}

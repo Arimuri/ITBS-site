@@ -47,6 +47,7 @@ a.card:hover{border-color:var(--acc)}
 .tablebox tr.tbd td{color:var(--muted)}
 .tablebox tr.qh td{font-weight:800;color:var(--acc-ink);background:var(--acc-soft)}
 .tablebox tr.qend td{background:var(--surface)}
+.tablebox tr.off td{color:var(--muted);font-size:.9em}
 .card .th{font-size:15px;font-weight:700;margin:3px 0 9px;line-height:1.45}
 .card .sub{font-size:11.5px;color:var(--ink2);margin:8px 0 0}
 /* 解禁音チップ */

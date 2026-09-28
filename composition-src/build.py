@@ -229,15 +229,20 @@ TOTAL_SESSIONS = 14   # 授業の回数。ドリルを割り当てていない�
 QUARTERS = [("3Q", 1, 7), ("4Q", 8, 14)]   # 1クオーター7コマ
 
 
-def session_event(d, ls):
-    """そのドリルをやる回が課題日なら「・4Q末課題」を返す。"""
+def session_label(d, ls):
+    """カードとドリルのページ上部に出す「授業1回目 10/6」（課題日なら「・3Q末課題」も）。"""
     m = re.match(r"\d+", ls.get("session") or "")
-    ev = d.get("events", {}).get(int(m.group(0))) if m else None
-    return f"・{inline(ev)}" if ev else ""
+    if not m:
+        return ""
+    n = int(m.group(0))
+    date = next((dt for s, dt, _ in d.get("schedule", []) if s == n and dt), "")
+    ev = d.get("events", {}).get(n)
+    return f"授業{n}回目" + (f" {date}" if date else "") + (f"・{inline(ev)}" if ev else "")
 
 
 def session_table(d):
-    """カードの下に出す、授業の回ごとの表（授業｜ドリル｜Phase｜テーマ｜新コード）。一覧表の「授業」列から組む。"""
+    """カードの下に出す、授業の回ごとの表（授業｜日付｜ドリル｜Phase｜テーマ｜新コード）。
+    一覧表の「授業」列と、その下の「授業｜日付｜予定」の表から組む。授業のない火曜も日付順に1行で出す。"""
     by = {}
     for no in sorted(d["lessons"]):
         ls = d["lessons"][no]
@@ -246,17 +251,26 @@ def session_table(d):
             by.setdefault(int(m.group(0)), []).append(ls)
     if not by:
         return ""
+    last = max(TOTAL_SESSIONS, max(by))
+    sched = list(d.get("schedule") or [])
+    have = {s for s, _, _ in sched if s}
+    sched += [(s, "", "") for s in range(1, last + 1) if s not in have]
+    dates = {s: dt for s, dt, _ in sched if s and dt}
     rows = []
-    events = d.get("events", {})
-    for s in range(1, max(TOTAL_SESSIONS, max(by)) + 1):
+    for s, dt, label in sched:
+        if not s:                       # 授業のない日
+            rows.append(f'<tr class="off"><td></td><td>{inline(dt)}</td><td></td><td></td><td>{inline(label)}</td><td></td></tr>')
+            continue
         for q, a, z in QUARTERS:
             if s == a:
-                rows.append(f'<tr class="qh"><td colspan="5">{q}（授業{a}〜{z}）</td></tr>')
+                span = f"・{dates[a]}〜{dates[z]}" if a in dates and z in dates else ""
+                rows.append(f'<tr class="qh"><td colspan="6">{q}（授業{a}〜{z}{span}）</td></tr>')
         lss = by.get(s)
-        ev = f'<b>{inline(events[s])}</b>' if s in events else ""
+        ev = f'<b>{inline(label)}</b>' if label else ""
+        date = inline(dt)
         if not lss:                     # ドリルを割り当てていない回（課題日か未定）
             cls = "qend" if ev else "tbd"
-            rows.append(f'<tr class="{cls}"><td>{s}</td><td>—</td><td></td><td>{ev or "未定"}</td><td>—</td></tr>')
+            rows.append(f'<tr class="{cls}"><td>{s}</td><td>{date}</td><td>—</td><td></td><td>{ev or "未定"}</td><td>—</td></tr>')
             continue
         drills = "・".join(f'<a href="{ls["no"]:02d}/">{ls["no"]}</a>' for ls in lss)
         phases = "・".join(dict.fromkeys(ls["phase"] for ls in lss))
@@ -265,10 +279,10 @@ def session_table(d):
             themes = f"{ev}　{themes}"
         news = "・".join(n for n in (new_chords(ls) for ls in lss) if n) or "—"
         tr = '<tr class="qend">' if ev else "<tr>"
-        rows.append(f"{tr}<td>{s}</td><td>{drills}</td><td>{inline(phases)}</td><td>{themes}</td><td>{inline(news)}</td></tr>")
+        rows.append(f"{tr}<td>{s}</td><td>{date}</td><td>{drills}</td><td>{inline(phases)}</td><td>{themes}</td><td>{inline(news)}</td></tr>")
     return (
-        f'<h2 id="plan">全{max(TOTAL_SESSIONS, max(by))}回の予定</h2>'
-        '<div class="tablebox"><table><thead><tr><th>授業</th><th>ドリル</th><th>Phase</th><th>テーマ</th><th>新コード</th></tr></thead>'
+        f'<h2 id="plan">全{last}回の予定</h2>'
+        '<div class="tablebox"><table><thead><tr><th>授業</th><th>日付</th><th>ドリル</th><th>Phase</th><th>テーマ</th><th>新コード</th></tr></thead>'
         f'<tbody>{"".join(rows)}</tbody></table></div>'
     )
 
@@ -349,13 +363,20 @@ def load():
         elif cur:
             tables.append(cur); cur = []
     tbl = next(t for t in tables if "ドリル" in t[0])
-    data["events"] = {}
+    # 授業の日程：授業｜日付｜予定。授業が「—」の行は授業のない日（補講日など）
+    data["events"], data["schedule"] = {}, []
     for t in tables:
         if "予定" in t[0]:
             eh, er = parse_table(t)
             ec = {name: idx for idx, name in enumerate(eh)}
             for r in er:
-                data["events"][int(re.match(r"\d+", r[ec["授業"]]).group(0))] = r[ec["予定"]]
+                m = re.match(r"\d+", r[ec["授業"]])
+                no = int(m.group(0)) if m else None
+                date = r[ec["日付"]] if "日付" in ec else ""
+                label = r[ec["予定"]]
+                data["schedule"].append((no, date, label))
+                if no and label:
+                    data["events"][no] = label
     header, rows = parse_table(tbl)
     col = {name: idx for idx, name in enumerate(header)}
     lessons, prev_deg, prev_flat = {}, set(), set()
@@ -543,6 +564,7 @@ a.card:hover{border-color:var(--acc)}
 .tablebox tr.tbd td{color:var(--muted)}
 .tablebox tr.qh td{font-weight:800;color:var(--acc-ink);background:var(--acc-soft)}
 .tablebox tr.qend td{background:var(--surface)}
+.tablebox tr.off td{color:var(--muted);font-size:.9em}
 .card .th{font-size:15px;font-weight:700;margin:3px 0 9px;line-height:1.45}
 .card .sub{font-size:11.5px;color:var(--ink2);margin:8px 0 0}
 /* 解禁音チップ */
@@ -1613,7 +1635,7 @@ def build_index(d):
             cards.append(
                 f'<a class="card" href="{no:02d}/">'
                 f'<div class="no">ドリル{no}'
-                + (f'<span class="sess">授業{ls["session"]}回目{session_event(d, ls)}</span>' if ls.get("session") else "")
+                + (f'<span class="sess">{session_label(d, ls)}</span>' if ls.get("session") else "")
                 + '</div>'
                 f'<div class="th">{inline(ls["title"])}</div>'
                 f'{degree_chips(ls["deg"], ls["flat"])}'
@@ -1665,7 +1687,7 @@ def build_lesson(d, no):
         '<div class="wrap narrow">',
         nav(1),
         f'<p class="eyebrow">{inline(ls["phase_title"])}'
-        + (f'｜授業{ls["session"]}回目{session_event(d, ls)}' if ls.get("session") else "")
+        + (f'｜{session_label(d, ls)}' if ls.get("session") else "")
         + '</p>',
         f'<h1>ドリル{no}　{inline(ls["title"])}</h1>',
         # PCでは左に講義と課題、右にピアノロール

@@ -225,6 +225,31 @@ def roll_prog(no, raw):
     return [found[i % len(found)] for i in range(4)]
 
 
+def session_table(d):
+    """カードの下に出す、授業の回ごとの表（授業｜ドリル｜Phase｜テーマ｜新コード）。一覧表の「授業」列から組む。"""
+    by = {}
+    for no in sorted(d["lessons"]):
+        ls = d["lessons"][no]
+        m = re.match(r"\d+", ls.get("session") or "")
+        if m:
+            by.setdefault(int(m.group(0)), []).append(ls)
+    if not by:
+        return ""
+    rows = []
+    for s in sorted(by):
+        lss = by[s]
+        drills = "・".join(f'<a href="{ls["no"]:02d}/">{ls["no"]}</a>' for ls in lss)
+        phases = "・".join(dict.fromkeys(ls["phase"] for ls in lss))
+        themes = "／".join(inline(ls["title"]) for ls in lss)
+        news = "・".join(n for n in (new_chords(ls) for ls in lss) if n) or "—"
+        rows.append(f"<tr><td>{s}</td><td>{drills}</td><td>{inline(phases)}</td><td>{themes}</td><td>{inline(news)}</td></tr>")
+    return (
+        f'<h2 id="plan">全{len(by)}回の予定</h2>'
+        '<div class="tablebox"><table><thead><tr><th>授業</th><th>ドリル</th><th>Phase</th><th>テーマ</th><th>新コード</th></tr></thead>'
+        f'<tbody>{"".join(rows)}</tbody></table></div>'
+    )
+
+
 def new_chords(ls):
     """「新コード」の行から、コード名だけ（最初の（ や 。の手前まで）を取り出す。"""
     text = dict(ls["items"]).get("新コード", "")
@@ -1568,6 +1593,7 @@ def build_index(d):
         parts.append(f'<div class="cards">{"".join(cards)}</div>')
         parts.append("</div>")  # phase
     parts.append("</div>")  # phases
+    parts.append(session_table(d))
     parts += [
         f'<h2 id="flow">{inline(d["flow_title"])}</h2>',
         columns(d["flow_html"]),

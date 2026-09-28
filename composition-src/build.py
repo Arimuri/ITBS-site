@@ -225,6 +225,9 @@ def roll_prog(no, raw):
     return [found[i % len(found)] for i in range(4)]
 
 
+TOTAL_SESSIONS = 14   # 授業の回数。ドリルを割り当てていない回は「未定」と出す
+
+
 def session_table(d):
     """カードの下に出す、授業の回ごとの表（授業｜ドリル｜Phase｜テーマ｜新コード）。一覧表の「授業」列から組む。"""
     by = {}
@@ -236,15 +239,18 @@ def session_table(d):
     if not by:
         return ""
     rows = []
-    for s in sorted(by):
-        lss = by[s]
+    for s in range(1, max(TOTAL_SESSIONS, max(by)) + 1):
+        lss = by.get(s)
+        if not lss:                     # ドリルを割り当てていない回
+            rows.append(f'<tr class="tbd"><td>{s}</td><td>—</td><td></td><td>未定</td><td>—</td></tr>')
+            continue
         drills = "・".join(f'<a href="{ls["no"]:02d}/">{ls["no"]}</a>' for ls in lss)
         phases = "・".join(dict.fromkeys(ls["phase"] for ls in lss))
         themes = "／".join(inline(ls["title"]) for ls in lss)
         news = "・".join(n for n in (new_chords(ls) for ls in lss) if n) or "—"
         rows.append(f"<tr><td>{s}</td><td>{drills}</td><td>{inline(phases)}</td><td>{themes}</td><td>{inline(news)}</td></tr>")
     return (
-        f'<h2 id="plan">全{len(by)}回の予定</h2>'
+        f'<h2 id="plan">全{max(TOTAL_SESSIONS, max(by))}回の予定</h2>'
         '<div class="tablebox"><table><thead><tr><th>授業</th><th>ドリル</th><th>Phase</th><th>テーマ</th><th>新コード</th></tr></thead>'
         f'<tbody>{"".join(rows)}</tbody></table></div>'
     )
@@ -503,6 +509,7 @@ a.card:hover{border-color:var(--acc)}
 .card .no{font-size:10.5px;letter-spacing:.13em;color:var(--muted)}
 .card .sess{margin-left:.8em;letter-spacing:.06em}
 .card .sub.new{color:var(--acc-ink);font-weight:700}
+.tablebox tr.tbd td{color:var(--muted)}
 .card .th{font-size:15px;font-weight:700;margin:3px 0 9px;line-height:1.45}
 .card .sub{font-size:11.5px;color:var(--ink2);margin:8px 0 0}
 /* 解禁音チップ */

@@ -226,6 +226,14 @@ def roll_prog(no, raw):
 
 
 TOTAL_SESSIONS = 14   # 授業の回数。ドリルを割り当てていない回は「未定」と出す
+QUARTERS = [("3Q", 1, 7), ("4Q", 8, 14)]   # 1クオーター7コマ
+
+
+def session_event(d, ls):
+    """そのドリルをやる回が課題日なら「・4Q末課題」を返す。"""
+    m = re.match(r"\d+", ls.get("session") or "")
+    ev = d.get("events", {}).get(int(m.group(0))) if m else None
+    return f"・{inline(ev)}" if ev else ""
 
 
 def session_table(d):
@@ -239,16 +247,25 @@ def session_table(d):
     if not by:
         return ""
     rows = []
+    events = d.get("events", {})
     for s in range(1, max(TOTAL_SESSIONS, max(by)) + 1):
+        for q, a, z in QUARTERS:
+            if s == a:
+                rows.append(f'<tr class="qh"><td colspan="5">{q}（授業{a}〜{z}）</td></tr>')
         lss = by.get(s)
-        if not lss:                     # ドリルを割り当てていない回
-            rows.append(f'<tr class="tbd"><td>{s}</td><td>—</td><td></td><td>未定</td><td>—</td></tr>')
+        ev = f'<b>{inline(events[s])}</b>' if s in events else ""
+        if not lss:                     # ドリルを割り当てていない回（課題日か未定）
+            cls = "qend" if ev else "tbd"
+            rows.append(f'<tr class="{cls}"><td>{s}</td><td>—</td><td></td><td>{ev or "未定"}</td><td>—</td></tr>')
             continue
         drills = "・".join(f'<a href="{ls["no"]:02d}/">{ls["no"]}</a>' for ls in lss)
         phases = "・".join(dict.fromkeys(ls["phase"] for ls in lss))
         themes = "／".join(inline(ls["title"]) for ls in lss)
+        if ev:
+            themes = f"{ev}　{themes}"
         news = "・".join(n for n in (new_chords(ls) for ls in lss) if n) or "—"
-        rows.append(f"<tr><td>{s}</td><td>{drills}</td><td>{inline(phases)}</td><td>{themes}</td><td>{inline(news)}</td></tr>")
+        tr = '<tr class="qend">' if ev else "<tr>"
+        rows.append(f"{tr}<td>{s}</td><td>{drills}</td><td>{inline(phases)}</td><td>{themes}</td><td>{inline(news)}</td></tr>")
     return (
         f'<h2 id="plan">全{max(TOTAL_SESSIONS, max(by))}回の予定</h2>'
         '<div class="tablebox"><table><thead><tr><th>授業</th><th>ドリル</th><th>Phase</th><th>テーマ</th><th>新コード</th></tr></thead>'
@@ -323,8 +340,22 @@ def load():
 
     # 全14回一覧
     _, body = find("全14回一覧")
-    note = next((l.strip() for l in body if l.strip() and not l.startswith("|")), "")
-    tbl = [l for l in body if l.startswith("|")]
+    note = next((l.strip() for l in body if l.strip() and not l.startswith("|") and not l.startswith("**")), "")
+    # 表は空行で分かれて2つある：ドリルの表（ドリル｜授業｜…）と、授業の予定の表（授業｜予定）
+    tables, cur = [], []
+    for l in body + [""]:
+        if l.startswith("|"):
+            cur.append(l)
+        elif cur:
+            tables.append(cur); cur = []
+    tbl = next(t for t in tables if "ドリル" in t[0])
+    data["events"] = {}
+    for t in tables:
+        if "予定" in t[0]:
+            eh, er = parse_table(t)
+            ec = {name: idx for idx, name in enumerate(eh)}
+            for r in er:
+                data["events"][int(re.match(r"\d+", r[ec["授業"]]).group(0))] = r[ec["予定"]]
     header, rows = parse_table(tbl)
     col = {name: idx for idx, name in enumerate(header)}
     lessons, prev_deg, prev_flat = {}, set(), set()
@@ -510,6 +541,8 @@ a.card:hover{border-color:var(--acc)}
 .card .sess{margin-left:.8em;letter-spacing:.06em}
 .card .sub.new{color:var(--acc-ink);font-weight:700}
 .tablebox tr.tbd td{color:var(--muted)}
+.tablebox tr.qh td{font-weight:800;color:var(--acc-ink);background:var(--acc-soft)}
+.tablebox tr.qend td{background:var(--surface)}
 .card .th{font-size:15px;font-weight:700;margin:3px 0 9px;line-height:1.45}
 .card .sub{font-size:11.5px;color:var(--ink2);margin:8px 0 0}
 /* 解禁音チップ */
@@ -1580,7 +1613,7 @@ def build_index(d):
             cards.append(
                 f'<a class="card" href="{no:02d}/">'
                 f'<div class="no">ドリル{no}'
-                + (f'<span class="sess">授業{ls["session"]}回目</span>' if ls.get("session") else "")
+                + (f'<span class="sess">授業{ls["session"]}回目{session_event(d, ls)}</span>' if ls.get("session") else "")
                 + '</div>'
                 f'<div class="th">{inline(ls["title"])}</div>'
                 f'{degree_chips(ls["deg"], ls["flat"])}'
@@ -1632,7 +1665,7 @@ def build_lesson(d, no):
         '<div class="wrap narrow">',
         nav(1),
         f'<p class="eyebrow">{inline(ls["phase_title"])}'
-        + (f'｜授業{ls["session"]}回目' if ls.get("session") else "")
+        + (f'｜授業{ls["session"]}回目{session_event(d, ls)}' if ls.get("session") else "")
         + '</p>',
         f'<h1>ドリル{no}　{inline(ls["title"])}</h1>',
         # PCでは左に講義と課題、右にピアノロール

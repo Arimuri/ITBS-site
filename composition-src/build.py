@@ -163,8 +163,8 @@ def degree_set(raw, prev_deg, prev_flat):
 # 「自由」など拾えない回だけ、この既定値を使う。授業に合わせて変えてよい。
 FALLBACK_PROGS = {
     4: "I-VIm-IV-V",
-    5: "I-VIm-IV-V",
-    6: "I-IV-V-I",        # T-S-D-T の型そのもの
+    5: "I-IV-V-I",        # T-S-D-T の型そのもの
+    6: "I-VIm-IV-V",
     7: "I-IV-V-VIm",      # 偽終止を聴かせる
     9: "I-IV-V7-I",
     10: "I-VIm-IIm7-V",
@@ -185,7 +185,7 @@ ROLL_PROG_CHOICES = [
     ("I-VIm-IV-V", 1),      # Phase 1 の代わりの候補（V入り。Vの上は1が11th、2が5th）
     ("I-IIIm-IV-V", 2),
     ("IIm7-V-I-I", 3),
-    ("I-IV-V-I", 6),        # 機能を習う回から
+    ("I-IV-V-I", 5),        # 機能を習うドリルから
     ("I-IV-V-VIm", 7),      # 偽終止
     ("I-VIm-IIm7-V", 7),
     ("IV-I-IV-V", 8),
@@ -1576,7 +1576,7 @@ def build_index(d):
     parts.append(f'<div class="phases" style="--n:{len(d["phases"])}">')
     for phase in d["phases"]:
         parts.append('<div class="phase">')
-        # 末尾の「（ドリル3〜5）」は途中で折り返さない
+        # 末尾の「（ドリル3〜4）」は途中で折り返さない
         head = re.sub(r"（[^（）]*）$", lambda m: f'<span class="nw">{m.group(0)}</span>', inline(phase["title"]))
         parts.append(f'<h3>{head}</h3>')
         cards = []

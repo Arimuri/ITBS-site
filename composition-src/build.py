@@ -702,7 +702,7 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
 """
 
 VOICING_JS = r"""/* 和音のボイシング（composition-src/build.py が生成）
-   サイトで鳴る和音は全部ここを通す（コードtier・ピアノロール・スケール鍵盤・1度当て）。
+   サイトで鳴る和音は全部ここを通す（コードtier・ピアノロール・段階4の鍵盤・1度当て）。
    ・ベースはルート（分数コードは分母）を C2〜D#3 に置く。鳴らす側でオクターブ上も半分の音量で重ねる
      （正弦波の低音は小さいスピーカーでほぼ聞こえず、ルート抜きの4和音が別のコードに聞こえるため）
    ・上の3声は密集の転回形で F3〜A#4 に収める。4和音はルートをベースに任せ、上は3・5・7
@@ -1158,7 +1158,7 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
 KEYBOARD_JS = r"""/* 鍵盤ウィジェット（composition-src/build.py が生成）
    原稿に書いた {{interval}} / {{scale}} の置き場（<div data-widget="…">）を中身で埋める。
    - interval（段階2）：選んだキーの1度からオク上までの13鍵に度数名。押すと1度→その音
-   - scale（段階3）：選んだキーのメジャースケール7音に番号。押すと主和音の上でその音
+   - scale（段階3）：選んだキーのメジャースケール7音に番号。押すとその音だけ
    どちらも、押すと同じ段階（section）の中の表の該当行に印を付ける */
 (() => {
   'use strict';
@@ -1305,19 +1305,14 @@ KEYBOARD_JS = r"""/* 鍵盤ウィジェット（composition-src/build.py が生�
       for (let i = 0; i < cells.length; i++) if (cells[i].textContent.trim()) parts.push(cells[i].textContent.trim());
       w.status.textContent = parts.join('　');
     }
-    // 中心（主和音）を鳴らしたまま、その音を重ねる。キャラは中心があって初めて聴こえる
+    // 押した音だけを鳴らす（主和音を重ねると、押した音が和音に混ざって別の和音に聞こえる）
     w.kb.addEventListener('pointerdown', e => {
       const el = e.target.closest('.iv-key');
       if (!el) return;
       const m = +el.dataset.midi, d = degOf(m);
       if (d < 0) return;
       e.preventDefault();
-      // 主和音（C2｜E3 G3 C4 をキーの分だけ上げる）を鳴らしてから、その音。
-      // キーごとに組み直すと、度数と和音の当たり方がキーで変わる（Cキーだと4が3とぶつからない）
-      const s = w.state.tonicPc, I0 = window.Voicing.voice(['I'], 0, { lo: 50, hi: 62, center: 56 })[0];
-      tone(I0.bass + s, 0, 1.4, 0.1);
-      I0.upper.forEach(n => tone(n + s, 0, 1.4, 0.06));
-      tone(m, 0.15, 1.1, 0.22);
+      tone(m, 0, 0.9, 0.22);
       w.flash(el);
       mark(d);
     });

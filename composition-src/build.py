@@ -277,6 +277,13 @@ def load():
             rest = rest[n + 1 :]
             break
     data["lead"] = lead
+    # 「**到達目標**」の塊だけ抜き出して、トップの一番上（リードの下）に出す
+    g0 = next((i for i, ln in enumerate(rest) if ln.strip() == "**到達目標**"), None)
+    goals = []
+    if g0 is not None:
+        g1 = next((i for i in range(g0 + 1, len(rest)) if re.fullmatch(r"\*\*[^*]+\*\*", rest[i].strip())), len(rest))
+        goals, rest = rest[g0 + 1 : g1], rest[:g0] + rest[g1:]
+    data["goals_html"] = render_blocks(goals)
     data["about_html"] = render_blocks(rest)
 
     title, body = find("標準の流れ")
@@ -1521,6 +1528,7 @@ def build_index(d):
         "<h1>応用実習1,2：作曲</h1>",
         '<p class="meta">火曜・全14回・90分×2コマ｜担当：有村崚（in the blue shirt）</p>',
         f'<p class="lead">{inline(d["lead"])}</p>',
+        (f'<h2 id="goals">到達目標</h2><div class="goals">{d["goals_html"]}</div>' if d.get("goals_html") else ""),
         '<div class="chips">'
         '<a href="#lessons">全14回</a>'
         '<a href="roadmap/">理論ロードマップ</a>'
@@ -1563,7 +1571,7 @@ def build_index(d):
     parts += [
         f'<h2 id="flow">{inline(d["flow_title"])}</h2>',
         columns(d["flow_html"]),
-        "<h2>ゴールと表記ルール</h2>",
+        "<h2>表記ルール</h2>" if "到達目標" not in d["about_html"] else "<h2>ゴールと表記ルール</h2>",
         columns(d["about_html"]),
         f'<h2 id="eval">{inline(d["eval_title"])}</h2>',
         columns(d["eval_html"]),

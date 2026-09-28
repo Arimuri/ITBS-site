@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="icon" type="image/png" href="/favicon.png">
 <title>1度当て練習｜応用実習1,2：作曲</title>
-<meta name="description" content="授業冒頭15分の「1度当て」練習。1度を決めて移動ドの1〜7を確かめる。クイズはドリル1〜5の進行。">
+<meta name="description" content="授業冒頭15分の「1度当て」練習。1度を決めて移動ドの1〜7を確かめる。クイズはJ-POP定番の進行。">
 <link rel="canonical" href="https://intheblueshirt.com/composition/ear/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="in the blue shirt">
@@ -100,7 +100,7 @@
     <label>進行 <select id="opt-prog" aria-label="コード進行"><option value="">ランダム</option></select></label>
   </div>
   <p class="status" id="quiz-status">「出題する」でランダムなキーの進行が鳴る。</p>
-  <p class="why">「答えを見る」の直前に押した鍵盤が答え（オクターブ違いもOK）。進行はドリル1〜5の I-IV-VIm-IV／I-VIm-IIm7-IV／I-VIm-IV-V／I-IIIm-IV-V／IIm7-V-I。</p>
+  <p class="why">「答えを見る」の直前に押した鍵盤が答え（オクターブ違いもOK）。進行はJ-POPの定番。</p>
 </div>
 
 <p class="foot">京都精華大学 メディア表現学部「応用実習1,2：作曲」（火曜・全14回／各3時間＝90分×2コマ）<br>担当：有村崚（<a href="https://intheblueshirt.com/">in the blue shirt</a>）</p>
@@ -242,12 +242,25 @@
   document.getElementById('play-scale').onclick = () => [...MAJOR, 12].forEach((iv, i) => tone(tonic + iv, i * 0.34, 0.5));
 
   // ---- ② クイズ -----------------------------------------------------------
-  const PROGS = [['I', 'IV', 'VIm', 'IV'], ['I', 'VIm', 'IIm7', 'IV'], ['I', 'VIm', 'IV', 'V'], ['I', 'IIIm', 'IV', 'V'], ['IIm7', 'V', 'I', 'I']];
+  // J-POP の定番進行。beats は各和音の長さ（1＝1和音ぶん。省略すると全部1）
+  const PROGS = [
+    { chords: ['I', 'IV', 'VIm', 'IV'] },
+    { chords: ['I', 'VIm', 'IIm7', 'IV'] },
+    { chords: ['I', 'VIm', 'IV', 'V'] },
+    { chords: ['I', 'IIIm', 'IV', 'V'] },
+    { chords: ['I', 'V', 'VIm', 'IV'] },
+    { chords: ['I', 'V', 'VIm', 'IIIm', 'IV', 'I', 'IV', 'V'], name: 'カノン進行' },
+    { chords: ['IVM7', 'V7', 'IIIm7', 'VIm7'], name: '王道進行' },
+    { chords: ['IVM7', 'III7', 'VIm7', 'Vm7', 'I7'], beats: [1, 1, 1, 0.5, 0.5], name: '丸サ進行' },
+    { chords: ['IVM7', 'IIIm7', 'IIm7', 'I'] },
+    { chords: ['VIm', 'IV', 'V', 'I'], name: '小室進行' },
+    { chords: ['IIm7', 'V', 'I', 'I'] }
+  ];
   // 進行のプルダウン：「ランダム」か、決まった進行か
   const progSel = document.getElementById('opt-prog');
   PROGS.forEach((p, i) => {
     const o = document.createElement('option');
-    o.value = String(i); o.textContent = p.join('-');
+    o.value = String(i); o.textContent = p.chords.join('-') + (p.name ? '（' + p.name + '）' : '');
     progSel.appendChild(o);
   });
   let quizProg = null, rounds = 0, hit = 0, streak = 0;
@@ -286,17 +299,22 @@
     bus.gain.value = 1;
     bus.connect(c.destination);
     loopBus = bus;
-    const cycle = BEAT * quizProg.length;
-    const voiced = window.Voicing.voice(quizProg, quizTonic % 12);   // 和音は ../assets/voicing.js で組む
+    const beats = quizProg.beats || quizProg.chords.map(() => 1);
+    const starts = [];
+    let len = 0;
+    beats.forEach(b => { starts.push(len); len += b; });
+    const cycle = BEAT * len;
+    const voiced = window.Voicing.voice(quizProg.chords, quizTonic % 12);   // 和音は ../assets/voicing.js で組む
     let nextAt = c.currentTime + 0.08;
     (function tick() {
       if (loopBus !== bus) return;              // 既に止められている
       while (nextAt < c.currentTime + LOOKAHEAD) {
         const base = nextAt - c.currentTime;
         voiced.forEach((v, i) => {
-          chord(v.upper, base + i * BEAT, BEAT * 0.95, 0.14, bus);
-          tone(v.bass, base + i * BEAT, BEAT * 0.95, 0.19, bus);   // ベース
-          tone(v.bass + 12, base + i * BEAT, BEAT * 0.95, 0.095, bus);   // ベースのオクターブ上
+          const at = base + starts[i] * BEAT, dur = beats[i] * BEAT * 0.95;
+          chord(v.upper, at, dur, 0.14, bus);
+          tone(v.bass, at, dur, 0.19, bus);          // ベース
+          tone(v.bass + 12, at, dur, 0.095, bus);    // ベースのオクターブ上
         });
         nextAt += cycle;
       }
@@ -308,7 +326,7 @@
     quizTonic = 48 + Math.floor(Math.random() * 12);
     const k = parseInt(progSel.value, 10);                     // 「ランダム」は空。数字ならその進行
     const pick0 = PROGS[k] ? k : Math.floor(Math.random() * PROGS.length);
-    quizProg = PROGS[pick0].slice();
+    quizProg = PROGS[pick0];
     tonic = null; revealed = false; answered = false; pick = null;
     paint();
     document.getElementById('quiz-reveal').disabled = false;

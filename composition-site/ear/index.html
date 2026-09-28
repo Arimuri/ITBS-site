@@ -48,6 +48,7 @@
 .status .ng{color:var(--ng-ink);font-weight:700}
 .opts{display:flex;flex-wrap:wrap;gap:14px;margin:14px 0 0;font-size:12.5px;color:var(--ink2)}
 .opts label{display:flex;align-items:center;gap:6px;cursor:pointer}
+.opts select{font:inherit;font-size:13px;border:1px solid var(--ring);border-radius:9px;padding:6px 10px;background:var(--surface);color:var(--ink)}
 .pane[hidden]{display:none}
 </style>
 </head>
@@ -96,7 +97,7 @@
     <button id="quiz-reveal" disabled>答えを見る</button>
   </div>
   <div class="opts">
-    <label><input type="checkbox" id="opt-hard"> むずかしい（Iから始まらない）</label>
+    <label>進行 <select id="opt-prog" aria-label="コード進行"><option value="">ランダム</option></select></label>
   </div>
   <p class="status" id="quiz-status">「出題する」でランダムなキーの進行が鳴る。</p>
   <p class="why">「答えを見る」の直前に押した鍵盤が答え（オクターブ違いもOK）。進行はドリル1〜5の I-IV-VIm-IV／I-VIm-IIm7-IV／I-VIm-IV-V／I-IIIm-IV-V／IIm7-V-I。</p>
@@ -242,6 +243,13 @@
 
   // ---- ② クイズ -----------------------------------------------------------
   const PROGS = [['I', 'IV', 'VIm', 'IV'], ['I', 'VIm', 'IIm7', 'IV'], ['I', 'VIm', 'IV', 'V'], ['I', 'IIIm', 'IV', 'V'], ['IIm7', 'V', 'I', 'I']];
+  // 進行のプルダウン：「ランダム」か、決まった進行か
+  const progSel = document.getElementById('opt-prog');
+  PROGS.forEach((p, i) => {
+    const o = document.createElement('option');
+    o.value = String(i); o.textContent = p.join('-');
+    progSel.appendChild(o);
+  });
   let quizProg = null, rounds = 0, hit = 0, streak = 0;
   const quizStatus = html => document.getElementById('quiz-status').innerHTML = html;
   const score = () => `　<span class="why">答え合わせ ${rounds}／正解 ${hit}／連続 ${streak}</span>`;
@@ -298,12 +306,9 @@
   }
   document.getElementById('quiz-new').onclick = () => {
     quizTonic = 48 + Math.floor(Math.random() * 12);
-    let p = PROGS[Math.floor(Math.random() * PROGS.length)].slice();
-    if (document.getElementById('opt-hard').checked) {
-      const r = 1 + Math.floor(Math.random() * 3);
-      p = p.slice(r).concat(p.slice(0, r));
-    }
-    quizProg = p;
+    const k = parseInt(progSel.value, 10);                     // 「ランダム」は空。数字ならその進行
+    const pick0 = PROGS[k] ? k : Math.floor(Math.random() * PROGS.length);
+    quizProg = PROGS[pick0].slice();
     tonic = null; revealed = false; answered = false; pick = null;
     paint();
     document.getElementById('quiz-reveal').disabled = false;

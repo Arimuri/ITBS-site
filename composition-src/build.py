@@ -1971,9 +1971,13 @@ def render_flow(d, no, flow, practice_roll, chords):
             if m.group(1) == "roll":
                 out.append(practice_roll)
             elif m.group(2):
+                # 「prog=I-I-I-V7」があればその伴奏、無ければそのドリルの伴奏
+                toks = m.group(2).split()
+                demo_prog = next((t[5:] for t in toks if t.startswith("prog=")), chords)
+                spec = " ".join(t for t in toks if not t.startswith("prog="))
                 out.append(
-                    f'<div class="roll" data-lesson="{no:02d}-demo" data-progs="{chords}" '
-                    f'data-degrees="" data-nosave="1" data-notes="{demo_notes(m.group(2))}"></div>'
+                    f'<div class="roll" data-lesson="{no:02d}-demo" data-progs="{html.escape(demo_prog)}" '
+                    f'data-degrees="" data-nosave="1" data-notes="{demo_notes(spec)}"></div>'
                 )
             elif m.group(3):
                 st = next((x for x in d["roadmap"] if x["title"].startswith(m.group(3).strip())), None)

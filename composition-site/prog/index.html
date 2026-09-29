@@ -40,12 +40,15 @@
 .half+.half{border-left:1px dashed var(--ring)}
 .half .x{position:absolute;top:-4px;right:0}
 .half .cw-chip{font-size:12.5px;padding:5px 6px}
-/* 4小節ピアノロール（各回ページのロールと同じ見た目・同じ32マス）。コード欄4小節の下に1本ずつ */
-.proll{margin:10px 0 26px}
-.proll .roll-grid{--rh:18px}
+/* 8小節ピアノロール（各回ページの4小節ロールと同じ見た目。列数と幅だけ違う） */
+.proll{margin:18px 0 0}
+.proll h2{margin-bottom:8px}
+.proll .roll-grid{--rh:18px;min-width:1320px;grid-template-columns:34px 1fr}
+.proll .roll-bars{grid-template-columns:repeat(8,1fr)}
 .proll .roll-bar{display:flex;padding:0}
 .proll .roll-bar span{flex:1;padding:7px 0}
 .proll .roll-bar span+span{border-left:1px dashed var(--grid)}
+.proll .roll-cells{grid-template-columns:repeat(64,1fr)}
 .proll .rc{position:relative;display:flex;align-items:center;padding-left:2px;font-size:9px;line-height:1;font-weight:700;
   color:#fff;white-space:nowrap;overflow:visible;z-index:0}
 .proll .rc.on{z-index:1}
@@ -73,9 +76,17 @@
   <div class="cw-grid" id="palette"></div>
 </div>
 
-<div id="lanes"></div>
-<p class="roll-warn" id="rwarn"></p>
-<p class="roll-note">マスを押すと音が置ける。横にドラッグで伸ばす。音の頭の数字＝キー度数/コード度数（例：1/3）。濃い行＝スケール、太線＝小節、点線＝コードの切り替わり。</p>
+<div class="bars" id="bars"></div>
+
+<div class="proll" id="proll">
+  <h2>メロ</h2>
+  <div class="roll-scroll"><div class="roll-grid">
+    <div class="roll-corner"></div><div class="roll-bars" id="rbars"></div>
+    <div class="roll-gutter" id="rgut"></div><div class="roll-cells" id="rcells"></div>
+  </div></div>
+  <p class="roll-warn" id="rwarn"></p>
+  <p class="roll-note">マスを押すと音が置ける。横にドラッグで伸ばす。音の頭の数字＝キー度数/コード度数（例：1/3）。濃い行＝スケール、太線＝小節、点線＝コードの切り替わり。</p>
+</div>
 
 <div class="btns">
   <button class="pri" id="play">鳴らす</button>
@@ -257,16 +268,8 @@
     palette.appendChild(groupsEl);
   });
 
-  // ---- レーン：コード欄4小節＋その4小節のピアノロール、を2段 ---------------------------
-  const LANE_BARS = 4, LANES = BARS / LANE_BARS, LANE_COLS = LANE_BARS * STEPS;
-  const lanesEl = document.getElementById('lanes');
-  const laneBars = [], laneRolls = [];
-  for (let L = 0; L < LANES; L++) {
-    const b = mk('div', 'bars'); lanesEl.appendChild(b); laneBars.push(b);
-    const pr = mk('div', 'proll'); lanesEl.appendChild(pr); laneRolls.push(pr);
-  }
-
   // ---- 8小節のスロット ---------------------------------------------------------
+  const bars = document.getElementById('bars');
   const slotEls = [];
   const cellEls = [];   // 小節ごとの発光対象（1コードならslot、2コードなら半分）
 
@@ -327,7 +330,7 @@
     });
     dropTarget(slot, i, 0);
     slotEls.push(slot);
-    laneBars[Math.floor(i / LANE_BARS)].appendChild(slot);
+    bars.appendChild(slot);
   }
 
   function render() {
@@ -389,29 +392,23 @@
   }
 
   // ---- ピアノロール --------------------------------------------------------------
-  // マスの番号（data-c）は8小節通しの 0〜63。保存・再生・MIDIは通し番号のまま扱う
+  const rbars = document.getElementById('rbars'), rgut = document.getElementById('rgut'), rcells = document.getElementById('rcells');
   const rwarn = document.getElementById('rwarn');
-  const barHeads = [], gut = [], cells = [], byCol = [], rollCells = [];
-  for (let r = 0; r < ROWS; r++) { gut.push([]); cells.push([]); }
+  const barHeads = [];
+  for (let b = 0; b < BARS; b++) { const d = mk('div', 'roll-bar'); rbars.appendChild(d); barHeads.push(d); }
+  const gut = [], cells = [], byCol = [];
   for (let c = 0; c < COLS; c++) byCol.push([]);
-  laneRolls.forEach((pr, L) => {
-    const scroll = mk('div', 'roll-scroll'), grid = mk('div', 'roll-grid');
-    const rb = mk('div', 'roll-bars'), rg = mk('div', 'roll-gutter'), rc = mk('div', 'roll-cells');
-    [mk('div', 'roll-corner'), rb, rg, rc].forEach(el => grid.appendChild(el));
-    scroll.appendChild(grid); pr.appendChild(scroll);
-    for (let b = 0; b < LANE_BARS; b++) { const d = mk('div', 'roll-bar'); rb.appendChild(d); barHeads.push(d); }
-    for (let r = 0; r < ROWS; r++) {
-      const g = mk('div', 'roll-deg');
-      rg.appendChild(g); gut[r].push(g);
-      for (let k = 0; k < LANE_COLS; k++) {
-        const c = L * LANE_COLS + k;
-        const el = mk('div', 'rc' + (k % STEPS === 0 && k ? ' barstart' : ''));
-        el.dataset.r = String(r); el.dataset.c = String(c);
-        rc.appendChild(el); cells[r][c] = el; byCol[c].push(el);
-      }
+  for (let r = 0; r < ROWS; r++) {
+    const g = mk('div', 'roll-deg');
+    rgut.appendChild(g); gut.push(g);
+    const row = [];
+    for (let c = 0; c < COLS; c++) {
+      const el = mk('div', 'rc' + (c % STEPS === 0 && c ? ' barstart' : ''));
+      el.dataset.r = String(r); el.dataset.c = String(c);
+      rcells.appendChild(el); row.push(el); byCol[c].push(el);
     }
-    rollCells.push(rc);
-  });
+    cells.push(row);
+  }
   const midiOf = r => HIGH - r;
   // キーの移動量は ±6 半音に正規化（各回ページのロールと同じ）。メロを動かす量に使う
   const keyOffset = pc => ((pc + 6) % 12) - 6;
@@ -428,10 +425,8 @@
       const iv = ((m - tonicPc) % 12 + 12) % 12;
       const d = MAJOR.indexOf(iv);
       const isScale = d >= 0;
-      gut[r].forEach(g => {
-        g.textContent = isScale ? String(d + 1) : '';
-        g.className = 'roll-deg' + (isScale ? ' scale open' : '');
-      });
+      gut[r].textContent = isScale ? String(d + 1) : '';
+      gut[r].className = 'roll-deg' + (isScale ? ' scale open' : '');
       for (let c = 0; c < COLS; c++) {
         const el = cells[r][c];
         el.classList.toggle('scale', isScale);
@@ -445,34 +440,32 @@
     }
   }
 
-  let dragging = null, drawMode = 'draw';   // dragging：なぞっている最中のロール（ドラッグは1本の中だけ）
+  let dragging = false, drawMode = 'draw';
   function applyCell(el) {
     const m = midiOf(+el.dataset.r), key = m + ',' + el.dataset.c;
     if (drawMode === 'draw') {
       if (!notes.has(key)) { notes.add(key); tone(m, 0, 0.35, 0.2); }
     } else notes.delete(key);
   }
-  rollCells.forEach(rc => {
-    rc.addEventListener('pointerdown', e => {
-      const el = e.target.closest('.rc');
-      if (!el) return;
-      e.preventDefault();
-      const m = midiOf(+el.dataset.r);
-      drawMode = notes.has(m + ',' + el.dataset.c) ? 'erase' : 'draw';
-      dragging = rc;
-      try { rc.setPointerCapture(e.pointerId); } catch (err) {}
-      applyCell(el); paint();
-    });
-    rc.addEventListener('pointermove', e => {
-      if (dragging !== rc) return;
-      const el = document.elementFromPoint(e.clientX, e.clientY);
-      const cell = el && el.closest && el.closest('.rc');
-      if (cell && rc.contains(cell)) { applyCell(cell); paint(); }
-    });
+  rcells.addEventListener('pointerdown', e => {
+    const el = e.target.closest('.rc');
+    if (!el) return;
+    e.preventDefault();
+    const m = midiOf(+el.dataset.r);
+    drawMode = notes.has(m + ',' + el.dataset.c) ? 'erase' : 'draw';
+    dragging = true;
+    try { rcells.setPointerCapture(e.pointerId); } catch (err) {}
+    applyCell(el); paint();
+  });
+  rcells.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const cell = el && el.closest && el.closest('.rc');
+    if (cell && rcells.contains(cell)) { applyCell(cell); paint(); }
   });
   window.addEventListener('pointerup', () => {
     if (!dragging) return;
-    dragging = null;
+    dragging = false;
     saveNotes();
     document.getElementById('dl').disabled = !(slots.some(b => b.length) || notes.size);
     document.getElementById('clearmel').disabled = !notes.size;

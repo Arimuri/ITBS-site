@@ -735,6 +735,7 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
 .rc.barstart{border-left:2px solid var(--muted)}
 .rc.now{background-image:linear-gradient(rgba(31,111,196,.14),rgba(31,111,196,.14))}
 .rc.on{background:var(--acc);border-right-color:var(--acc)}
+.rc.on.split{box-shadow:inset 2px 0 0 var(--surface)}   /* 同じ高さの音の切れ目 */
 /* インターバル鍵盤。中身は assets/interval.js が作る */
 .iv-top{display:flex;gap:8px;align-items:center;margin:14px 0 10px}
 .iv-top select{font:inherit;font-size:13px;border:1px solid var(--ring);border-radius:9px;padding:7px 12px;
@@ -1090,6 +1091,9 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
     // data-notes：最初から置いておく音（見本のメロ）。data-nosave：保存しない（開き直すと見本に戻る）
     const nosave = root.dataset.nosave === '1';
     (root.dataset.notes || '').split(/\s+/).filter(Boolean).forEach(k => notes.add(k));
+    // data-heads：同じ高さの音が続くとき、ここで音を切る（「ミミミー」を1本の長い音にしない）
+    const heads = new Set((root.dataset.heads || '').split(/\s+/).filter(Boolean));
+    const isHead = (m, c) => c > 0 && notes.has(m + ',' + (c - 1)) && heads.has(m + ',' + c);
     let tonicPc = 0, bpm = DEFAULT_BPM, dragging = false, drawMode = 'draw', warn = '';
     const stepSec = () => 60 / bpm / 2;           // 横1マス＝8分音符
     const cycleLen = () => COLS * stepSec();      // 4小節1周
@@ -1188,6 +1192,7 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
           el.classList.toggle('open', isOpen);
           el.classList.toggle('oct', iv === 0);
           el.classList.toggle('on', notes.has(m + ',' + c));
+          el.classList.toggle('split', notes.has(m + ',' + c) && isHead(m, c));
         }
       }
       warnEl.textContent = warn;
@@ -1199,7 +1204,7 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
       const m = midiOf(+el.dataset.r), key = m + ',' + el.dataset.c;
       if (drawMode === 'draw') {
         if (!notes.has(key)) { notes.add(key); el.classList.add('on'); tone(m, 0, 0.35, 0.2, null); }
-      } else if (notes.has(key)) { notes.delete(key); el.classList.remove('on'); }
+      } else if (notes.has(key)) { notes.delete(key); heads.delete(key); el.classList.remove('on'); }
       save();
     }
     cellsEl.addEventListener('pointerdown', e => {
@@ -1224,7 +1229,7 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
     function save() {
       if (nosave) return;
       try {
-        localStorage.setItem('roll:' + lesson, JSON.stringify({ k: tonicPc, b: bpm, p: prog.join('-'), n: Array.from(notes) }));
+        localStorage.setItem('roll:' + lesson, JSON.stringify({ k: tonicPc, b: bpm, p: prog.join('-'), n: Array.from(notes), h: Array.from(heads) }));
       } catch (err) {}
     }
     function load() {
@@ -1238,6 +1243,7 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
         if (BPMS.indexOf(o.b) >= 0) bpm = o.b;
         if (progs.indexOf(o.p) >= 0) prog = o.p.split('-');
         (o.n || []).forEach(k => notes.add(k));
+        heads.clear(); (o.h || []).forEach(k => heads.add(k));
       } catch (err) {}
     }
 
@@ -1269,9 +1275,9 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
       }
       for (let m = LOW; m <= HIGH; m++) {
         if (!notes.has(m + ',' + col)) continue;
-        if (col > 0 && notes.has(m + ',' + (col - 1))) continue;   // 伸ばしている途中なので鳴らし直さない
+        if (col > 0 && notes.has(m + ',' + (col - 1)) && !isHead(m, col)) continue;   // 伸ばしている途中なので鳴らし直さない
         let len = 1;
-        while (col + len < COLS && notes.has(m + ',' + (col + len))) len++;
+        while (col + len < COLS && notes.has(m + ',' + (col + len)) && !isHead(m, col + len)) len++;
         tone(m, rel, len * stepSec() * 0.95, 0.2, out);
       }
     }
@@ -1330,7 +1336,7 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
 
     playBtn.addEventListener('click', () => (bus ? stop() : play()));
     clearBtn.addEventListener('click', () => {
-      notes.clear(); paint(); save();
+      notes.clear(); heads.clear(); paint(); save();
     });
     sel.addEventListener('change', () => {
       const next = +sel.value;
@@ -1359,6 +1365,8 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
         } else {
           const moved = [];
           notes.forEach(k => { const q = k.split(','); moved.push((+q[0] + d) + ',' + q[1]); });
+          const movedHeads = Array.from(heads, k => { const q = k.split(','); return (+q[0] + d) + ',' + q[1]; });
+          heads.clear(); movedHeads.forEach(k => heads.add(k));
           notes.clear();
           moved.forEach(k => notes.add(k));
         }
@@ -1936,8 +1944,9 @@ NOTE_PC = {"C": 0, "D": 2, "E": 4, "F": 5, "G": 7, "A": 9, "B": 11}
 
 
 def demo_notes(spec):
-    """「C4:0-1 B3:2-3 D4:18」→ ロールの "midi,col" の並び。マスは8分音符・0始まり、範囲は両端を含む"""
-    out = []
+    """「C4:0-1 B3:2-3 D4:18」→（ロールの "midi,col" の並び, 各音の頭）。マスは8分音符・0始まり、範囲は両端を含む。
+    頭を渡すので、同じ高さの音を続けて書いても（E4:8-9 E4:10-11）別々の音として鳴る"""
+    out, heads = [], []
     for tok in spec.split():
         m = re.fullmatch(r"([A-G])([#b♭]?)(-?\d):(\d+)(?:-(\d+))?", tok)
         if not m:
@@ -1947,7 +1956,8 @@ def demo_notes(spec):
         a = int(m.group(4))
         b = int(m.group(5)) if m.group(5) else a
         out += [f"{midi},{c}" for c in range(a, b + 1)]
-    return " ".join(out)
+        heads.append(f"{midi},{a}")
+    return " ".join(out), " ".join(heads)
 
 
 def render_flow(d, no, flow, practice_roll, chords):
@@ -1975,9 +1985,10 @@ def render_flow(d, no, flow, practice_roll, chords):
                 toks = m.group(2).split()
                 demo_prog = next((t[5:] for t in toks if t.startswith("prog=")), chords)
                 spec = " ".join(t for t in toks if not t.startswith("prog="))
+                cells, heads = demo_notes(spec)
                 out.append(
                     f'<div class="roll" data-lesson="{no:02d}-demo" data-progs="{html.escape(demo_prog)}" '
-                    f'data-degrees="" data-nosave="1" data-notes="{demo_notes(spec)}"></div>'
+                    f'data-degrees="" data-nosave="1" data-notes="{cells}" data-heads="{heads}"></div>'
                 )
             elif m.group(3):
                 st = next((x for x in d["roadmap"] if x["title"].startswith(m.group(3).strip())), None)

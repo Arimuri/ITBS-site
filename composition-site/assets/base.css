@@ -164,6 +164,7 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
 .rc.barstart{border-left:2px solid var(--muted)}
 .rc.now{background-image:linear-gradient(rgba(31,111,196,.14),rgba(31,111,196,.14))}
 .rc.on{background:var(--acc);border-right-color:var(--acc)}
+.rc.on.split{box-shadow:inset 2px 0 0 var(--surface)}   /* 同じ高さの音の切れ目 */
 /* インターバル鍵盤。中身は assets/interval.js が作る */
 .iv-top{display:flex;gap:8px;align-items:center;margin:14px 0 10px}
 .iv-top select{font:inherit;font-size:13px;border:1px solid var(--ring);border-radius:9px;padding:7px 12px;

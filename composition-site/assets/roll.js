@@ -48,6 +48,9 @@
     // data-notes：最初から置いておく音（見本のメロ）。data-nosave：保存しない（開き直すと見本に戻る）
     const nosave = root.dataset.nosave === '1';
     (root.dataset.notes || '').split(/\s+/).filter(Boolean).forEach(k => notes.add(k));
+    // data-heads：同じ高さの音が続くとき、ここで音を切る（「ミミミー」を1本の長い音にしない）
+    const heads = new Set((root.dataset.heads || '').split(/\s+/).filter(Boolean));
+    const isHead = (m, c) => c > 0 && notes.has(m + ',' + (c - 1)) && heads.has(m + ',' + c);
     let tonicPc = 0, bpm = DEFAULT_BPM, dragging = false, drawMode = 'draw', warn = '';
     const stepSec = () => 60 / bpm / 2;           // 横1マス＝8分音符
     const cycleLen = () => COLS * stepSec();      // 4小節1周
@@ -146,6 +149,7 @@
           el.classList.toggle('open', isOpen);
           el.classList.toggle('oct', iv === 0);
           el.classList.toggle('on', notes.has(m + ',' + c));
+          el.classList.toggle('split', notes.has(m + ',' + c) && isHead(m, c));
         }
       }
       warnEl.textContent = warn;
@@ -157,7 +161,7 @@
       const m = midiOf(+el.dataset.r), key = m + ',' + el.dataset.c;
       if (drawMode === 'draw') {
         if (!notes.has(key)) { notes.add(key); el.classList.add('on'); tone(m, 0, 0.35, 0.2, null); }
-      } else if (notes.has(key)) { notes.delete(key); el.classList.remove('on'); }
+      } else if (notes.has(key)) { notes.delete(key); heads.delete(key); el.classList.remove('on'); }
       save();
     }
     cellsEl.addEventListener('pointerdown', e => {
@@ -182,7 +186,7 @@
     function save() {
       if (nosave) return;
       try {
-        localStorage.setItem('roll:' + lesson, JSON.stringify({ k: tonicPc, b: bpm, p: prog.join('-'), n: Array.from(notes) }));
+        localStorage.setItem('roll:' + lesson, JSON.stringify({ k: tonicPc, b: bpm, p: prog.join('-'), n: Array.from(notes), h: Array.from(heads) }));
       } catch (err) {}
     }
     function load() {
@@ -196,6 +200,7 @@
         if (BPMS.indexOf(o.b) >= 0) bpm = o.b;
         if (progs.indexOf(o.p) >= 0) prog = o.p.split('-');
         (o.n || []).forEach(k => notes.add(k));
+        heads.clear(); (o.h || []).forEach(k => heads.add(k));
       } catch (err) {}
     }
 
@@ -227,9 +232,9 @@
       }
       for (let m = LOW; m <= HIGH; m++) {
         if (!notes.has(m + ',' + col)) continue;
-        if (col > 0 && notes.has(m + ',' + (col - 1))) continue;   // 伸ばしている途中なので鳴らし直さない
+        if (col > 0 && notes.has(m + ',' + (col - 1)) && !isHead(m, col)) continue;   // 伸ばしている途中なので鳴らし直さない
         let len = 1;
-        while (col + len < COLS && notes.has(m + ',' + (col + len))) len++;
+        while (col + len < COLS && notes.has(m + ',' + (col + len)) && !isHead(m, col + len)) len++;
         tone(m, rel, len * stepSec() * 0.95, 0.2, out);
       }
     }
@@ -288,7 +293,7 @@
 
     playBtn.addEventListener('click', () => (bus ? stop() : play()));
     clearBtn.addEventListener('click', () => {
-      notes.clear(); paint(); save();
+      notes.clear(); heads.clear(); paint(); save();
     });
     sel.addEventListener('change', () => {
       const next = +sel.value;
@@ -317,6 +322,8 @@
         } else {
           const moved = [];
           notes.forEach(k => { const q = k.split(','); moved.push((+q[0] + d) + ',' + q[1]); });
+          const movedHeads = Array.from(heads, k => { const q = k.split(','); return (+q[0] + d) + ',' + q[1]; });
+          heads.clear(); movedHeads.forEach(k => heads.add(k));
           notes.clear();
           moved.forEach(k => notes.add(k));
         }

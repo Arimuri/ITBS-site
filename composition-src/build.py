@@ -811,6 +811,9 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
 .step>ul,.step>ol{font-size:clamp(18px,2vw,26px);line-height:1.65;font-weight:700}
 .step>ul ul{font-size:.85em;font-weight:400;color:var(--ink2)}
 .step>p{font-size:clamp(16px,1.7vw,20px)}
+/* 節の中の小見出し（例：曲名）。箇条書きより一段大きく、左に色の線 */
+.step>h3{font-size:clamp(20px,2.3vw,30px);margin:40px 0 14px;padding-left:14px;border-left:5px solid var(--acc);line-height:1.35}
+.step>h2+h3{margin-top:8px}
 /* 簡易コード進行ジェネレータ（keyboard.js の progmini） */
 .pm-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0 0}
 .pm-chord{font:inherit;font-size:clamp(16px,1.8vw,22px);font-weight:700;color:var(--acc-ink);text-align:center;

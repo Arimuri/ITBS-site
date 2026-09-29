@@ -358,9 +358,10 @@ def load():
     data["goals_html"] = render_blocks(goals)
     data["about_html"] = render_blocks(rest)
 
-    title, body = find("標準の流れ")
-    data["flow_title"] = title
-    data["flow_html"] = render_blocks(body)
+    # 標準の流れ（1回の時間配分）は節があれば出す。無ければトップに出さない（2026-09-30に節ごと削除）
+    flow = next(((k, secs[k]) for k in secs if "標準の流れ" in k), None)
+    data["flow_title"] = flow[0] if flow else ""
+    data["flow_html"] = render_blocks(flow[1]) if flow else ""
 
     # 全14回一覧
     _, body = find("全14回一覧")
@@ -1766,8 +1767,8 @@ def build_index(d):
         '<a href="toranomaki/">虎の巻</a>'
         '<a href="ear/">1度当て練習</a>'
         '<a href="prog/">コード進行ジェネレータ</a>'
-        '<a href="#flow">1回の流れ</a>'
-        '<a href="#eval">評価と提出物</a>'
+        + ('<a href="#flow">1回の流れ</a>' if d["flow_title"] else "")
+        + '<a href="#eval">評価と提出物</a>'
         "</div>",
         '<h2 id="lessons">全14回</h2>',
         f'<p>{inline(d["lessons_note"])}</p>' if d["lessons_note"] else "",
@@ -1801,9 +1802,9 @@ def build_index(d):
         parts.append("</div>")  # phase
     parts.append("</div>")  # phases
     parts.append(session_table(d))
+    if d["flow_title"]:
+        parts += [f'<h2 id="flow">{inline(d["flow_title"])}</h2>', columns(d["flow_html"])]
     parts += [
-        f'<h2 id="flow">{inline(d["flow_title"])}</h2>',
-        columns(d["flow_html"]),
         "<h2>表記ルール</h2>" if "到達目標" not in d["about_html"] else "<h2>ゴールと表記ルール</h2>",
         columns(d["about_html"]),
         f'<h2 id="eval">{inline(d["eval_title"])}</h2>',

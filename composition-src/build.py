@@ -2018,14 +2018,13 @@ def build_lesson(d, no):
         f'data-degrees="{degrees}"></div>'
     )
     flow = ls.get("flow") or []
-    # 授業の流れに {{roll}} があれば練習用ロールはそこに置き、右カラムには出さない
-    roll_in_flow = any(re.fullmatch(r"\{\{roll\}\}", l.strip()) for _, lines in flow for l in lines)
+    # 授業の流れがあるページは右カラムを出さない（練習用ロールは流れの {{roll}} の位置に置く）
     if flow:
         parts.append(render_flow(d, no, flow, practice_roll, chords))
         parts.append('<h2 class="flow-end">このドリルの設計</h2>')
     parts += [
         # PCでは左に講義と課題、右にピアノロール
-        '<div class="lesson-grid">' if not roll_in_flow else "<div>",
+        '<div class="lesson-grid">' if not flow else "<div>",
         '<div class="lesson-main">',
     ]
     if prog in ("", "—", "-"):
@@ -2042,6 +2041,8 @@ def build_lesson(d, no):
     for label, text in ls["items"]:
         if label == "伴奏" and not prog_has_note:
             continue
+        if flow and label == "新コード":   # 流れの「新コード」の節に出ている
+            continue
         rows.append(
             f'<div class="row"><div class="lbl">{inline(label)}</div>'
             f'<p class="val">{inline(text)}</p></div>'
@@ -2049,7 +2050,7 @@ def build_lesson(d, no):
     if rows:
         parts.append(f'<div class="rows">{"".join(rows)}</div>')
 
-    side = [] if roll_in_flow else [
+    side = [] if flow else [
         '<div class="lesson-side">',
         "<h2>4小節つくる</h2>",
         "<p>キーを変えても、数字は変わらない。</p>",
@@ -2412,7 +2413,7 @@ def main():
     print(f"{len(written)} ファイルを書き出した → {OUT}")
     for rel in written:
         print("  ", rel)
-    missing = [n for n, l in d["lessons"].items() if not l["items"]]
+    missing = [n for n, l in d["lessons"].items() if not l["items"] and not l.get("flow")]
     if missing:
         print("注意：詳細が空の回 →", missing, file=sys.stderr)
 

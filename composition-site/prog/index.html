@@ -62,6 +62,17 @@
 .btns button:disabled{opacity:.4;cursor:default}
 .btns select{font:inherit;font-size:13px;border:1px solid var(--ring);border-radius:9px;padding:8px 10px;background:var(--surface);color:var(--ink)}
 .status{margin:14px 0 0;font-size:13.5px;color:var(--ink2);min-height:1.8em}
+/* 実音のコードネーム（コピー用） */
+.names{display:flex;align-items:center;gap:12px;margin:12px 0 0;padding:10px 12px 10px 16px;background:var(--surface);
+  border:1px solid var(--ring);border-radius:12px}
+.names .k{flex:none;font-size:11px;letter-spacing:.12em;color:var(--muted)}
+.names output{flex:1;min-width:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:15px;font-weight:700;
+  color:var(--ink);white-space:pre-wrap;word-break:break-word;user-select:all}
+.names output:empty::before{content:"（コードを置くとここに出る）";font-family:inherit;font-weight:400;color:var(--muted);font-size:13px}
+.names button{flex:none;font:inherit;font-size:13px;border:1px solid var(--ring);border-radius:9px;padding:7px 14px;
+  background:var(--surface);color:var(--ink);cursor:pointer}
+.names button:hover{border-color:var(--acc);color:var(--acc)}
+.names button:disabled{opacity:.4;cursor:default}
 .status b{color:var(--ink)}
 </style>
 </head>
@@ -77,6 +88,7 @@
 </div>
 
 <div class="bars" id="bars"></div>
+<div class="names"><span class="k">実音</span><output id="names"></output><button id="copy" disabled>コピー</button></div>
 
 <div class="proll" id="proll">
   <h2>メロ</h2>
@@ -389,6 +401,7 @@
     document.getElementById('clearmel').disabled = !notes.size;
     store('prog:slots', JSON.stringify(slots));
     paint();
+    updateNames();
   }
 
   // ---- ピアノロール --------------------------------------------------------------
@@ -580,8 +593,57 @@
     }
     tonicPc = next; store('prog:key', keySel.value);
     paint();
+    updateNames();
   };
   bpmSel.onchange = () => { bpm = +bpmSel.value; store('prog:bpm', bpmSel.value); if (bus) startLoop(); };
+
+  // ---- 実音のコードネーム（コピー用） --------------------------------------------
+  // 綴りはキーに合わせる：度数の文字（I→キーの文字、II→その次…）から数えて #/b を付ける。
+  // だから C キーの ♭VII7 は Bb7、E キーの ♭VII7 は D7、D♭ キーの I は Db になる。
+  // コピー先を選ばないよう、記号は ASCII（# と b）。m7-5 はサイトの表記のまま
+  const LETTERS = 'CDEFGAB', NAT = [0, 2, 4, 5, 7, 9, 11];
+  const ROMAN = { I: 0, II: 1, III: 2, IV: 3, V: 4, VI: 5, VII: 6 };
+  const NUMERAL_RE = /^([#♭]?)(VII|VI|V|IV|III|II|I)(.*)$/;
+  function spell(deg, acc) {
+    const li = (LETTERS.indexOf(KEYS[tonicPc][0]) + deg) % 7;
+    const pc = (tonicPc + MAJOR[deg] + acc + 12) % 12;
+    const d = (((pc - NAT[li]) % 12) + 18) % 12 - 6;
+    return LETTERS[li] + (d > 0 ? '#'.repeat(d) : 'b'.repeat(-d));
+  }
+  const accOf = a => (a === '#' ? 1 : a === '♭' ? -1 : 0);
+  function realName(name) {
+    const parts = name.split('/');
+    const m = NUMERAL_RE.exec(parts[0]);
+    if (!m) return name;
+    let out = spell(ROMAN[m[2]], accOf(m[1])) + m[3];
+    const b = parts[1] && NUMERAL_RE.exec(parts[1]);
+    if (b) out += '/' + spell(ROMAN[b[2]], accOf(b[1]));
+    return out;
+  }
+  // 空の小節は N.C.、末尾の空き小節は省く
+  function namesText() {
+    let last = BARS - 1;
+    while (last >= 0 && !slots[last].length) last--;
+    return slots.slice(0, last + 1).map(bar => (bar.length ? bar.map(realName).join(' ') : 'N.C.')).join(' | ');
+  }
+  const namesEl = document.getElementById('names'), copyBtn = document.getElementById('copy');
+  function updateNames() {
+    const t = namesText();
+    namesEl.textContent = t;
+    copyBtn.disabled = !t;
+  }
+  copyBtn.onclick = async () => {
+    const t = namesText();
+    if (!t) return;
+    try { await navigator.clipboard.writeText(t); }
+    catch (e) {                                   // clipboard API が使えないときは選択してコピー
+      const r = document.createRange(); r.selectNodeContents(namesEl);
+      const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      try { document.execCommand('copy'); } catch (err) {}
+    }
+    copyBtn.textContent = 'コピーした';
+    setTimeout(() => { copyBtn.textContent = 'コピー'; }, 1200);
+  };
 
   document.getElementById('clear').onclick = () => {
     slots = Array.from({ length: BARS }, () => []);

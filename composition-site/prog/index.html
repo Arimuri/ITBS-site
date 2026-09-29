@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" type="image/png" href="/favicon.png">
+<title>コード進行ジェネレータ｜応用実習1,2：作曲</title>
+<meta name="description" content="覚えるべきコードをドラッグ&ドロップで8小節に並べ、鳴らして確かめて、MIDIでダウンロードする。">
+<link rel="canonical" href="https://intheblueshirt.com/composition/prog/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="in the blue shirt">
+<meta property="og:title" content="コード進行ジェネレータ｜応用実習1,2：作曲">
+<meta property="og:description" content="コードを8小節に並べて鳴らし、MIDIでダウンロードするツール。">
+<meta property="og:url" content="https://intheblueshirt.com/composition/prog/">
+<meta property="og:image" content="https://intheblueshirt.com/composition/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="../assets/base.css">
+<style>
+.cw-chip{touch-action:manipulation}
+.cw-chip.picked{outline:2px solid var(--acc);outline-offset:2px}
+.bars{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 0}
+@media (max-width:640px){.bars{grid-template-columns:repeat(2,1fr)}}
+.slot{position:relative;background:var(--surface);border:1px dashed var(--ring);border-radius:12px;min-height:76px;
+  display:flex;align-items:center;justify-content:center;padding:22px 8px 12px;cursor:pointer;user-select:none}
+.slot .no{position:absolute;top:6px;left:10px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.slot .empty{color:var(--muted);font-size:18px}
+.slot.filled{border-style:solid}
+.slot.over{border-color:var(--acc);background:var(--acc-soft)}
+.slot.now{box-shadow:inset 0 0 0 2px var(--acc)}
+.slot .x{position:absolute;top:2px;right:4px;border:none;background:none;color:var(--muted);cursor:pointer;
+  font:inherit;font-size:14px;padding:3px 6px;line-height:1}
+.slot .x:hover{color:var(--ng-ink)}
+.slot .cw-chip{cursor:grab}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 0;align-items:center}
+.btns button{background:var(--surface);border:1px solid var(--ring);border-radius:10px;padding:9px 14px;
+  font:inherit;font-size:13px;color:var(--ink);cursor:pointer}
+.btns button:hover{border-color:var(--acc);color:var(--acc)}
+.btns button.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:700}
+.btns button.pri:hover{color:#fff;opacity:.9}
+.btns button:disabled{opacity:.4;cursor:default}
+.btns select{font:inherit;font-size:13px;border:1px solid var(--ring);border-radius:9px;padding:8px 10px;background:var(--surface);color:var(--ink)}
+.status{margin:14px 0 0;font-size:13.5px;color:var(--ink2);min-height:1.8em}
+.status b{color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap tool">
+<p class="topnav"><a href="../">← 授業トップ</a><a href="../tips/">ポップスのコツ</a><a href="../ear/">1度当て練習</a></p>
+<p class="eyebrow">応用実習1,2：作曲</p>
+<h1>コード進行ジェネレータ</h1>
+<p class="lead">覚えるべきコードを8小節に並べて、MIDIでダウンロードする。</p>
+
+<div class="panel">
+  <div class="cw-grid" id="palette"></div>
+</div>
+
+<div class="bars" id="bars"></div>
+
+<div class="btns">
+  <button class="pri" id="play">鳴らす</button>
+  <select id="key" aria-label="キー"></select>
+  <select id="bpm" aria-label="テンポ"></select>
+  <button id="dl" disabled>MIDIをダウンロード</button>
+  <button id="clear" disabled>全部消す</button>
+</div>
+<p class="status" id="status">コードを小節にドラッグ。押してから小節を押してもいい。</p>
+
+<h2>使い方</h2>
+<ol>
+  <li>コードを押すと鳴る。ドラッグで小節に置く。小節から小節へも動かせる</li>
+  <li>「鳴らす」でループ再生。キーとテンポは横のプルダウン</li>
+  <li>「MIDIをダウンロード」して、DAWのトラックにドラッグ</li>
+</ol>
+<p class="why">和音の高さはサイト共通のルールで自動で決まる（ベースがルート、上に3声）。並べた進行はこのブラウザに保存される。端末を変えると消える。</p>
+
+<p class="foot">京都精華大学 メディア表現学部「応用実習1,2：作曲」（火曜・全14回・90分×2コマ）<br>担当：有村崚（<a href="https://intheblueshirt.com/">in the blue shirt</a>）</p>
+</div>
+
+<script src="../assets/voicing.js"></script>
+<script>
+(() => {
+  'use strict';
+  const BARS = 8;
+  // tips/ の「覚えるべきコード」と同じ表。色分けも同じ（I IIIm VIm｜IIm IV｜V）
+  const TIERS = [
+    { tier: 'tier1', groups: [['IM7', 'IIm7', 'IIIm7', 'IVM7', 'V7', 'VIm7', 'VIIm7-5'], ['Isus4', 'IVsus4', 'Vsus4']] },
+    { tier: 'tier2', groups: [['III7', 'IVm7']] },
+    { tier: 'tier3', groups: [['VI7', 'II7', 'I7', 'Vm7', '#IVm7-5', '#Idim7', '#Vdim7', '♭II7'], ['♭VIM7', '♭VII7']] }
+  ];
+  const GROUP_OF = { I: 1, IIIm: 1, VIm: 1, IIm: 2, IV: 2, V: 3 };
+  const KEYS = ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'];
+  const FILE_KEYS = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+  const BPMS = [70, 80, 90, 100, 110, 120, 130, 140], DEFAULT_BPM = 100;
+
+  // ---- 状態 -----------------------------------------------------------------
+  let slots = Array(BARS).fill(null);   // 各小節のコード名（null＝休み）
+  let tonicPc = 0, bpm = DEFAULT_BPM, picked = null;
+  const store = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+  try {
+    const s = JSON.parse(localStorage.getItem('prog:slots') || 'null');
+    if (Array.isArray(s) && s.length === BARS) slots = s.map(x => (typeof x === 'string' && window.Voicing.parse(x) ? x : null));
+    tonicPc = (+localStorage.getItem('prog:key') || 0) % 12;
+    const b = +localStorage.getItem('prog:bpm');
+    if (BPMS.includes(b)) bpm = b;
+  } catch (e) {}
+
+  // ---- 音を出す（ear/ と同じシンセ） ----------------------------------------
+  let ac = null;
+  function audio() {
+    ac ||= new (window.AudioContext || window.webkitAudioContext)();
+    if (ac.state === 'suspended') ac.resume();
+    return ac;
+  }
+  function tone(midi, at = 0, dur = 0.7, vol = 0.22, out = null) {
+    const c = audio(), t0 = c.currentTime + at, f = 440 * Math.pow(2, (midi - 69) / 12);
+    const g = c.createGain(), lp = c.createBiquadFilter();
+    lp.type = 'lowpass'; lp.frequency.value = 2600;
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(vol, t0 + 0.015);
+    g.gain.exponentialRampToValueAtTime(vol * 0.35, t0 + dur * 0.5);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    [['sine', 1], ['triangle', 0.3]].forEach(([type, amt]) => {
+      const o = c.createOscillator(), og = c.createGain();
+      o.type = type; o.frequency.value = f; og.gain.value = amt;
+      o.connect(og).connect(g); o.start(t0); o.stop(t0 + dur + 0.05);
+    });
+    g.connect(lp).connect(out || c.destination);
+  }
+  const chord = (notes, at, dur, vol = 0.16, out = null) => notes.forEach(n => tone(n, at, dur, vol, out));
+  function playOne(name, at = 0, dur = 1.1, out = null) {
+    const v = window.Voicing.voice([name], tonicPc)[0];   // 和音は ../assets/voicing.js で組む
+    tone(v.bass, at, dur, 0.19, out); tone(v.bass + 12, at, dur, 0.095, out); chord(v.upper, at, dur, 0.14, out);
+  }
+
+  // ---- パレット --------------------------------------------------------------
+  const mk = (tag, cls, text) => { const el = document.createElement(tag); if (cls) el.className = cls; if (text !== undefined) el.textContent = text; return el; };
+  const status = html => document.getElementById('status').innerHTML = html;
+  const palette = document.getElementById('palette');
+  const chips = [];
+  TIERS.forEach(({ tier, groups }) => {
+    const level = tier.slice(-1);
+    palette.appendChild(mk('div', 'cw-tier', tier));
+    const groupsEl = mk('div', 'cw-groups');
+    groups.forEach(names => {
+      const groupEl = mk('div', 'cw-group');
+      names.forEach(name => {
+        // 色分けは tier1 のダイアトニックだけ（tips/ と同じ）。7thを外して照らす
+        const triad = name.replace(/m7-5$|M7$|7$/, s => (s === 'm7-5' ? 'm-5' : ''));
+        const g = level === '1' && name.indexOf('sus') < 0 ? GROUP_OF[triad] : 0;
+        const chip = mk('button', 'cw-chip t' + level + (g ? ' g' + g : ''), name);
+        chip.draggable = true;
+        chip.addEventListener('click', () => {
+          playOne(name);
+          picked = picked === name ? null : name;
+          chips.forEach(c => c.classList.toggle('picked', c.textContent === picked));
+          status(picked ? `<b>${name}</b> を選択中。小節を押すと入る。` : 'コードを小節にドラッグ。押してから小節を押してもいい。');
+        });
+        chip.addEventListener('dragstart', e => {
+          e.dataTransfer.setData('text/plain', JSON.stringify({ name: name, from: -1 }));
+          e.dataTransfer.effectAllowed = 'copy';
+        });
+        chips.push(chip);
+        groupEl.appendChild(chip);
+      });
+      groupsEl.appendChild(groupEl);
+    });
+    palette.appendChild(groupsEl);
+  });
+
+  // ---- 8小節 ------------------------------------------------------------------
+  const bars = document.getElementById('bars');
+  const slotEls = [];
+  for (let i = 0; i < BARS; i++) {
+    const slot = mk('div', 'slot');
+    slot.dataset.i = i;
+    slot.addEventListener('click', e => {
+      if (e.target.closest('.x')) return;
+      if (picked) { setSlot(i, picked); playOne(picked); return; }
+      if (slots[i]) { playOne(slots[i]); return; }
+      status('先にコードを押して選ぶか、ドラッグで置く。');
+    });
+    slot.addEventListener('dragover', e => { e.preventDefault(); slot.classList.add('over'); });
+    slot.addEventListener('dragleave', () => slot.classList.remove('over'));
+    slot.addEventListener('drop', e => {
+      e.preventDefault();
+      slot.classList.remove('over');
+      let d = null;
+      try { d = JSON.parse(e.dataTransfer.getData('text/plain')); } catch (err) {}
+      if (!d || !window.Voicing.parse(d.name)) return;
+      if (d.from >= 0 && d.from !== i) {           // 小節から小節へ＝入れ替え
+        const was = slots[i];
+        setSlot(d.from, was, true);
+      }
+      setSlot(i, d.name);
+    });
+    slotEls.push(slot);
+    bars.appendChild(slot);
+  }
+
+  function setSlot(i, name, quiet) {
+    slots[i] = name || null;
+    if (!quiet) { picked = null; chips.forEach(c => c.classList.remove('picked')); }
+    render();
+  }
+
+  function render() {
+    slotEls.forEach((slot, i) => {
+      slot.innerHTML = '';
+      slot.appendChild(mk('span', 'no', String(i + 1)));
+      slot.classList.toggle('filled', !!slots[i]);
+      if (!slots[i]) { slot.appendChild(mk('span', 'empty', '＋')); return; }
+      const name = slots[i];
+      const triad = name.replace(/m7-5$|M7$|7$/, s => (s === 'm7-5' ? 'm-5' : ''));
+      const tier = TIERS.findIndex(t => t.groups.some(g => g.includes(name))) + 1;
+      const g = tier === 1 && name.indexOf('sus') < 0 ? GROUP_OF[triad] : 0;
+      const chip = mk('span', 'cw-chip t' + tier + (g ? ' g' + g : ''), name);
+      chip.draggable = true;
+      chip.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/plain', JSON.stringify({ name: name, from: i }));
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      const x = mk('button', 'x', '×');
+      x.setAttribute('aria-label', (i + 1) + '小節目を消す');
+      x.addEventListener('click', () => setSlot(i, null));
+      slot.appendChild(chip);
+      slot.appendChild(x);
+    });
+    const any = slots.some(Boolean);
+    document.getElementById('dl').disabled = !any;
+    document.getElementById('clear').disabled = !any;
+    store('prog:slots', JSON.stringify(slots));
+  }
+
+  // ---- 再生（1小節1コード、8小節ループ） --------------------------------------
+  const barSec = () => 240 / bpm;
+  const LOOKAHEAD = 2.5;
+  let loopTimer = null, loopBus = null, hlTimer = null, anchor = 0;
+
+  function stopLoop() {
+    if (loopTimer) { clearTimeout(loopTimer); loopTimer = null; }
+    if (hlTimer) { clearInterval(hlTimer); hlTimer = null; }
+    slotEls.forEach(el => el.classList.remove('now'));
+    if (loopBus) {
+      const bus = loopBus;
+      loopBus = null;
+      try {
+        bus.gain.cancelScheduledValues(ac.currentTime);
+        bus.gain.setTargetAtTime(0, ac.currentTime, 0.02);
+      } catch (e) {}
+      setTimeout(() => { try { bus.disconnect(); } catch (e) {} }, 400);
+    }
+    document.getElementById('play').textContent = '鳴らす';
+  }
+
+  function startLoop() {
+    stopLoop();
+    if (!slots.some(Boolean)) { status('コードを置いてから。'); return; }
+    const c = audio();
+    const bus = c.createGain();
+    bus.gain.value = 1;
+    bus.connect(c.destination);
+    loopBus = bus;
+    let nextAt = c.currentTime + 0.08;
+    anchor = nextAt;
+    (function tick() {
+      if (loopBus !== bus) return;
+      while (nextAt < c.currentTime + LOOKAHEAD) {
+        const names = slots.filter(Boolean);
+        if (names.length) {
+          const voiced = window.Voicing.voice(names, tonicPc);   // 毎周読み直すので、鳴らしながら差し替えられる
+          let k = 0;
+          slots.forEach((nm, i) => {
+            if (!nm) return;
+            const v = voiced[k++], at = nextAt - c.currentTime + i * barSec(), dur = barSec() * 0.95;
+            chord(v.upper, at, dur, 0.14, bus);
+            tone(v.bass, at, dur, 0.19, bus);          // ベース
+            tone(v.bass + 12, at, dur, 0.095, bus);    // ベースのオクターブ上
+          });
+        }
+        nextAt += BARS * barSec();
+      }
+      loopTimer = setTimeout(tick, 500);
+    })();
+    hlTimer = setInterval(() => {
+      const t = c.currentTime - anchor;
+      const cur = t < 0 ? -1 : Math.floor(t / barSec()) % BARS;
+      slotEls.forEach((el, i) => el.classList.toggle('now', i === cur));
+    }, 60);
+    document.getElementById('play').textContent = '止める';
+  }
+  document.getElementById('play').onclick = () => (loopBus ? stopLoop() : startLoop());
+
+  // ---- キー・テンポ ------------------------------------------------------------
+  const keySel = document.getElementById('key'), bpmSel = document.getElementById('bpm');
+  KEYS.forEach((k, i) => { const o = mk('option', '', k + ' キー'); o.value = String(i); keySel.appendChild(o); });
+  BPMS.forEach(b => { const o = mk('option', '', b + ' BPM'); o.value = String(b); bpmSel.appendChild(o); });
+  keySel.value = String(tonicPc);
+  bpmSel.value = String(bpm);
+  keySel.onchange = () => { tonicPc = +keySel.value; store('prog:key', keySel.value); if (loopBus) startLoop(); };
+  bpmSel.onchange = () => { bpm = +bpmSel.value; store('prog:bpm', bpmSel.value); if (loopBus) startLoop(); };
+
+  document.getElementById('clear').onclick = () => {
+    slots = Array(BARS).fill(null);
+    render();
+    status('消した。');
+  };
+
+  // ---- MIDI（format 0・480分解能・1小節1コード） -------------------------------
+  function vlq(n) {
+    const out = [n & 127];
+    n = Math.floor(n / 128);
+    while (n > 0) { out.unshift((n & 127) | 128); n = Math.floor(n / 128); }
+    return out;
+  }
+  function midiBytes() {
+    const TPQ = 480, BAR = TPQ * 4, GAP = 20;
+    const filled = slots.map((n, i) => ({ n, i })).filter(x => x.n);
+    const voiced = window.Voicing.voice(filled.map(x => x.n), tonicPc);   // 再生と同じボイシング
+    const ev = [];
+    filled.forEach((x, k) => {
+      const t0 = x.i * BAR, v = voiced[k], notes = [v.bass].concat(v.upper);
+      notes.forEach(n => ev.push({ t: t0, b: [0x90, n, n === v.bass ? 92 : 78] }));
+      notes.forEach(n => ev.push({ t: t0 + BAR - GAP, b: [0x80, n, 0] }));
+    });
+    ev.sort((a, b) => a.t - b.t);
+    const us = Math.round(60000000 / bpm);
+    const track = [];
+    let last = 0;
+    const push = (t, bytes) => { track.push(...vlq(t - last), ...bytes); last = t; };
+    push(0, [0xFF, 0x51, 0x03, (us >> 16) & 255, (us >> 8) & 255, us & 255]);   // テンポ
+    push(0, [0xFF, 0x58, 0x04, 4, 2, 24, 8]);                                   // 4/4
+    ev.forEach(e => push(e.t, e.b));
+    push(BARS * BAR, [0xFF, 0x2F, 0x00]);   // 8小節ちょうどで終わらせる（DAWでループしやすい）
+    const len = track.length;
+    return new Uint8Array([
+      0x4D, 0x54, 0x68, 0x64, 0, 0, 0, 6, 0, 0, 0, 1, (TPQ >> 8) & 255, TPQ & 255,
+      0x4D, 0x54, 0x72, 0x6B, (len >> 24) & 255, (len >> 16) & 255, (len >> 8) & 255, len & 255
+    ].concat(track));
+  }
+  document.getElementById('dl').onclick = () => {
+    if (!slots.some(Boolean)) return;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([midiBytes()], { type: 'audio/midi' }));
+    a.download = 'progression_' + FILE_KEYS[tonicPc] + '_' + bpm + 'bpm.mid';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    status('ダウンロードした。DAWのトラックにドラッグ。');
+  };
+
+  render();
+})();
+</script>
+</body>
+</html>

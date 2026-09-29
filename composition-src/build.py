@@ -1578,6 +1578,7 @@ def nav(depth, current=""):
         (f"{up}roadmap/", "理論ロードマップ"),
         (f"{up}tips/", "ポップスのコツ"),
         (f"{up}ear/", "1度当て練習"),
+        (f"{up}prog/", "コード進行ジェネレータ"),
     ]
     out = []
     for href, label in links:
@@ -1616,6 +1617,7 @@ def build_index(d):
         '<a href="roadmap/">理論ロードマップ</a>'
         '<a href="tips/">ポップスのコツ</a>'
         '<a href="ear/">1度当て練習</a>'
+        '<a href="prog/">コード進行ジェネレータ</a>'
         '<a href="#flow">1回の流れ</a>'
         '<a href="#eval">評価と提出物</a>'
         "</div>",

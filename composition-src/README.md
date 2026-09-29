@@ -41,6 +41,7 @@
 | パス | 内容 |
 | --- | --- |
 | `ear/index.html` | 1度当て練習ツール（Web Audio） |
+| `prog/index.html` | コード進行ジェネレータ。tier表と同じコードをドラッグ&ドロップで8小節に並べ、ループ再生とMIDIのDL。ボイシングは `../assets/voicing.js` |
 | `.htaccess` | WordPressのリライト無効化 |
 | `og.png` | OG画像。`python3 composition-src/make_og.py` で再生成 |
 

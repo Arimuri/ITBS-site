@@ -22,9 +22,18 @@ const PLAYLISTS = {
 
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
 
-// Extract the `var ytInitialData = {...};` blob. Uses brace-matching rather
-// than a regex so nested braces / strings inside the JSON don't trip it.
+// Extract the ytInitialData blob. YouTube serves two layouts at random (seen Sep 2026):
+//   new: <script id="yt-initial-data" type="application/json">{...}</script>
+//   old: var ytInitialData = {...};
+// The old one uses brace-matching rather than a regex so nested braces /
+// strings inside the JSON don't trip it.
 function extractInitialData(html) {
+  const tag = html.match(/<script[^>]*\bid="yt-initial-data"[^>]*>/);
+  if (tag) {
+    const begin = tag.index + tag[0].length;
+    const end = html.indexOf('</script>', begin);
+    if (end !== -1) return JSON.parse(html.slice(begin, end));
+  }
   const marker = 'var ytInitialData = ';
   const start = html.indexOf(marker);
   if (start === -1) throw new Error('ytInitialData not found');

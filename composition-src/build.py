@@ -24,7 +24,9 @@ def inline(s):
     """インライン記法だけを HTML に変換する。"""
     s = html.escape(s, quote=False)
     s = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", s)
-    s = re.sub(r"(https?://[^\s<（）()、。]+)", r'<a href="\1">\1</a>', s)
+    # [テキスト](URL) を先に。裸URLの自動リンクは、その href の中を二重に拾わないようにする
+    s = re.sub(r"\[([^\]]+)\]\(((?:https?://|\.{1,2}/|/)[^)\s]+)\)", r'<a href="\2">\1</a>', s)
+    s = re.sub(r'(?<!href=")(https?://[^\s<（）()、。"]+)', r'<a href="\1">\1</a>', s)
     return s
 
 
@@ -59,15 +61,22 @@ def render_table(header, body, cls=""):
 
 
 def render_list(block):
-    """4スペース字下げのネストに対応した箇条書き。"""
-    items = [
-        ((len(l) - len(l.lstrip(" "))) // 4, l.strip()[2:].strip()) for l in block
-    ]
+    """4スペース字下げのネストに対応した箇条書き。「1. 」始まりの並びは番号付き（<ol>）で出す。"""
+    items = []
+    for l in block:
+        depth = (len(l) - len(l.lstrip(" "))) // 4
+        s = l.strip()
+        m = re.match(r"^(\d+)\.\s+(.*)$", s)
+        if m:
+            items.append((depth, "ol", m.group(2).strip()))
+        else:
+            items.append((depth, "ul", s[2:].strip()))
 
     def build(i, depth):
-        out = ["<ul>"]
+        tag = items[i][1]
+        out = [f"<{tag}>"]
         while i < len(items) and items[i][0] >= depth:
-            d, text = items[i]
+            d, _, text = items[i]
             if d > depth:  # 先頭が深い異常ケース
                 sub, i = build(i, depth + 1)
                 out.append(sub)
@@ -78,7 +87,7 @@ def render_list(block):
                 sub, i = build(i, depth + 1)
                 li += sub
             out.append(li + "</li>")
-        out.append("</ul>")
+        out.append(f"</{tag}>")
         return "".join(out), i
 
     return build(0, 0)[0]
@@ -88,7 +97,8 @@ BOLD_ONLY = re.compile(r"\*\*(.+?)\*\*$")
 
 
 def is_bullet(ln):
-    return ln.lstrip(" ").startswith("- ")
+    s = ln.lstrip(" ")
+    return s.startswith("- ") or bool(re.match(r"^\d+\.\s", s))
 
 
 def render_blocks(lines):
@@ -567,9 +577,9 @@ h1{font-size:clamp(23px,4.6vw,32px);line-height:1.34;letter-spacing:-.01em;margi
 h2{font-size:18px;margin:44px 0 12px;letter-spacing:-.01em;padding-bottom:7px;border-bottom:1px solid var(--grid)}
 h3{font-size:14px;margin:26px 0 8px;color:var(--ink2);letter-spacing:.01em}
 p{margin:9px 0}
-ul{margin:9px 0;padding-left:1.35em}
+ul,ol{margin:9px 0;padding-left:1.35em}
 li{margin:4px 0}
-ul ul{margin:3px 0}
+ul ul,ul ol,ol ul,ol ol{margin:3px 0}
 .nw{white-space:nowrap}
 .eyebrow{font-size:11px;letter-spacing:.16em;color:var(--muted);margin:0 0 9px}
 .meta{color:var(--ink2);font-size:13.5px;margin:0 0 6px}
@@ -1710,6 +1720,7 @@ def nav(depth, current=""):
         (f"{up}roadmap/", "理論ロードマップ"),
         (f"{up}history/", "理論の歴史"),
         (f"{up}tips/", "ポップスのコツ"),
+        (f"{up}toranomaki/", "虎の巻"),
         (f"{up}ear/", "1度当て練習"),
         (f"{up}prog/", "コード進行ジェネレータ"),
     ]
@@ -1750,6 +1761,7 @@ def build_index(d):
         '<a href="roadmap/">理論ロードマップ</a>'
         '<a href="history/">理論の歴史</a>'
         '<a href="tips/">ポップスのコツ</a>'
+        '<a href="toranomaki/">虎の巻</a>'
         '<a href="ear/">1度当て練習</a>'
         '<a href="prog/">コード進行ジェネレータ</a>'
         '<a href="#flow">1回の流れ</a>'
@@ -2022,6 +2034,72 @@ def build_roadmap(d):
     )
 
 
+def render_doc(lines):
+    """### / #### 見出し入りの本文（虎の巻など、curriculum.md 以外の原稿用）。"""
+    out, buf = [], []
+
+    def flush():
+        if buf:
+            out.append(render_blocks(buf))
+            del buf[:]
+
+    for ln in lines:
+        if ln.startswith("#### "):
+            flush()
+            out.append(f"<h4>{inline(ln[5:].strip())}</h4>")
+        elif ln.startswith("### "):
+            flush()
+            out.append(f"<h3>{inline(ln[4:].strip())}</h3>")
+        else:
+            buf.append(ln)
+    flush()
+    return "\n".join(out)
+
+
+def build_toranomaki():
+    """composition-src/toranomaki.md（正本）から生成。無ければページも作らない。
+    原典は DTM初級虎の巻（Googleドキュメント）。文言はそちらから、階層の崩れだけ直して持ってきた。"""
+    path = SRC / "toranomaki.md"
+    if not path.exists():
+        return None
+    md = path.read_text(encoding="utf-8").splitlines()
+    title = next((l[2:].strip() for l in md if l.startswith("# ")), "音楽制作虎の巻")
+    head = []
+    for l in md:
+        if l.startswith("## "):
+            break
+        if not l.startswith("# "):
+            head.append(l.strip())
+    paras = [l for l in head if l]
+    lead = paras[0] if paras else ""
+    note = "　".join(paras[1:])
+    secs = split_sections(md, "## ")
+    parts = [
+        '<div class="wrap narrow">',
+        nav(1, "虎の巻"),
+        '<p class="eyebrow">応用実習1,2：作曲</p>',
+        f"<h1>{inline(title)}</h1>",
+        f'<p class="lead">{inline(lead)}</p>',
+        '<div class="index">'
+        + "".join(f'<a href="#t{i + 1}">{inline(t)}</a>' for i, (t, _) in enumerate(secs))
+        + "</div>",
+    ]
+    for i, (t, body) in enumerate(secs):
+        parts.append('<section class="stage">')
+        parts.append(f'<h2 id="t{i + 1}">{inline(t)}</h2>')
+        parts.append(render_doc(body))
+        parts.append("</section>")
+    if note:
+        parts.append(f'<p class="why">{inline(note)}</p>')
+    parts += [FOOT, "</div>"]
+    return page(
+        f"{title}｜{SITE_TITLE}",
+        "音楽制作を続けるための心構え・理論の学び方・機材・情報源。",
+        f"{BASE}toranomaki/",
+        "\n".join(parts),
+    )
+
+
 def build_history(d):
     """kammerkonzert/ensemble/ の振り子年表の簡易版。
     縦＝時間（行の高さは一定）。クラシックの系譜は左トラック、バークリーは右トラック。
@@ -2140,6 +2218,9 @@ def main():
     write("roadmap/index.html", build_roadmap(d))
     if d["history"]:
         write("history/index.html", build_history(d))
+    tora = build_toranomaki()
+    if tora:
+        write("toranomaki/index.html", tora)
 
     print(f"{len(written)} ファイルを書き出した → {OUT}")
     for rel in written:

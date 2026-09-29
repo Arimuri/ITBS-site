@@ -103,6 +103,7 @@
 | 資料 | 場所 |
 | --- | --- |
 | カリキュラム原稿（正本） | `composition-src/curriculum.md` |
+| 音楽制作虎の巻の原稿 | `composition-src/toranomaki.md`（原典＝Googleドキュメント「DTM初級虎の巻」。URLはREADME） |
 | 音楽理論ロードマップの原典 | `~/Dropbox/大学関連/2026/DTM初級/授業資料/DTM初級20260622.pptx` |
 | 他の授業のスライド | `~/Dropbox/大学関連/2026/` 以下 |
 | 授業概要（3Q/4Q） | `~/Dropbox/大学関連/2026/応用実習/作曲_授業概要_2026.md` |

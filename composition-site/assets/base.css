@@ -20,9 +20,9 @@ h1{font-size:clamp(23px,4.6vw,32px);line-height:1.34;letter-spacing:-.01em;margi
 h2{font-size:18px;margin:44px 0 12px;letter-spacing:-.01em;padding-bottom:7px;border-bottom:1px solid var(--grid)}
 h3{font-size:14px;margin:26px 0 8px;color:var(--ink2);letter-spacing:.01em}
 p{margin:9px 0}
-ul{margin:9px 0;padding-left:1.35em}
+ul,ol{margin:9px 0;padding-left:1.35em}
 li{margin:4px 0}
-ul ul{margin:3px 0}
+ul ul,ul ol,ol ul,ol ol{margin:3px 0}
 .nw{white-space:nowrap}
 .eyebrow{font-size:11px;letter-spacing:.16em;color:var(--muted);margin:0 0 9px}
 .meta{color:var(--ink2);font-size:13.5px;margin:0 0 6px}

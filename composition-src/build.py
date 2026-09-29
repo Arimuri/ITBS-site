@@ -642,24 +642,29 @@ a.card:hover{border-color:var(--acc)}
 .stage-src{font-size:11.5px;color:var(--muted);margin:10px 0 0}
 .stage-src a{color:var(--muted)}
 @media (max-width:520px){.row{grid-template-columns:1fr;gap:3px}.row .lbl{padding-top:0}}
-/* ざっくり音楽理論史（history/）のタイムライン。バークリーの系譜は .alt で緑にする */
-.timeline{list-style:none;margin:18px 0 0;padding:0;position:relative}
-.timeline::before{content:"";position:absolute;left:104px;top:8px;bottom:8px;width:2px;background:var(--grid)}
-.timeline li{position:relative;display:grid;grid-template-columns:88px 1fr;gap:28px;padding:0 0 22px;margin:0}
-.timeline li:last-child{padding-bottom:4px}
-.timeline li::before{content:"";position:absolute;left:99px;top:5px;width:12px;height:12px;border-radius:50%;
-  background:var(--acc);border:2px solid var(--page)}
-.timeline .tl-era{font-size:12px;font-weight:700;color:var(--acc-ink);text-align:right;line-height:1.5;padding-top:2px}
-.timeline .tl-title{font-size:15px;font-weight:700;margin:0;line-height:1.5}
-.timeline .tl-text{font-size:13.5px;color:var(--ink2);line-height:1.85;margin:4px 0 0}
-.timeline.alt li::before{background:#1d6a3a}
-.timeline.alt .tl-era{color:#1d6a3a}
-@media (max-width:560px){
-  .timeline::before{left:8px}
-  .timeline li{grid-template-columns:1fr;gap:2px;padding-left:30px}
-  .timeline li::before{left:3px;top:4px}
-  .timeline .tl-era{text-align:left}
-}
+/* ざっくり音楽理論史（history/）：kammerkonzert/ensemble/ の振り子年表の簡易版。
+   縦＝時間。クラシックは左トラック、バークリーは右トラック、最後に中央で合流。
+   ノード・カードは build.py が絶対配置で吐き、折れ線は SVG（xは%・yはpx、non-scaling-stroke） */
+.histwrap{max-width:860px;margin:26px auto 0}
+.histbox{position:relative}
+.histbox svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+.histbox .vline{position:absolute;width:1px;background:var(--grid)}
+.hnode{position:absolute;transform:translate(-50%,-50%);width:16px;height:16px;border-radius:50%;
+  background:var(--hc,var(--acc));border:2px solid var(--page);box-shadow:0 0 0 1px var(--ring);z-index:3}
+.hnode.merge{width:26px;height:26px;box-shadow:0 0 0 3px var(--page),0 0 0 4.5px var(--hc,var(--acc-ink))}
+.hcard{position:absolute;transform:translateY(-50%);max-width:min(70%,460px);background:var(--surface);
+  border:1px solid var(--ring);border-radius:11px;padding:10px 14px;z-index:2}
+.hcard h3{margin:0;font-size:14px;line-height:1.45;letter-spacing:-.01em}
+.hcard h3 .cy{color:var(--muted);font-weight:400;font-size:11.5px;margin-left:8px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.hcard p{margin:5px 0 0;font-size:12.5px;color:var(--ink2);line-height:1.75}
+.hcard.mergecard{transform:translateX(-50%);left:50%;max-width:min(86%,480px)}
+.hlabel{position:absolute;left:0;right:0;transform:translateY(-50%);z-index:2;text-align:center}
+.hlabel span{display:inline-block;background:var(--page);padding:2px 12px;font-size:13.5px;font-weight:700;color:var(--hc,var(--acc-ink))}
+@media (max-width:620px){.hcard{max-width:76%}.hcard p{font-size:11.5px;line-height:1.65}}
+/* スクロールで出現。JSが動かないときは常に見せる */
+html.js .hrv{opacity:0;transition:opacity .6s ease}
+html.js .hrv.show{opacity:1}
+@media (prefers-reduced-motion:reduce){html.js .hrv{opacity:1;transition:none}}
 /* 表 */
 .tablebox{overflow-x:auto;margin:12px 0}
 table{border-collapse:collapse;width:100%;font-size:13px}
@@ -2018,7 +2023,67 @@ def build_roadmap(d):
 
 
 def build_history(d):
+    """kammerkonzert/ensemble/ の振り子年表の簡易版。
+    縦＝時間（行の高さは一定）。クラシックの系譜は左トラック、バークリーは右トラック。
+    折れ線が全ノードを時系列につなぎ、最後は中央の「この授業」（つながりの節の同名の行）に合流する。"""
     h = d["history"]
+    CL, BK = 16, 84            # トラックの横位置（%）
+    ROW, HEAD = 168, 66        # 1項目・系譜見出しの縦の割り当て（px）
+    els, pts = [], []
+    y = 16
+    for sec in h["sections"]:
+        if not sec["timeline"]:
+            continue
+        berk = "バークリー" in sec["title"]
+        x = BK if berk else CL
+        node_c = "#1d6a3a" if berk else "var(--acc)"      # コツのtier表の緑と同じ系統
+        ink_c = "#1d6a3a" if berk else "var(--acc-ink)"
+        els.append(f'<div class="hlabel hrv" style="top:{y + HEAD // 2}px;--hc:{ink_c}"><span>{inline(sec["title"])}</span></div>')
+        y += HEAD
+        for label, text in sec["items"]:
+            p = label.split("　")
+            era, ttl = p[0], "　".join(p[1:]) or p[0]
+            yc = y + ROW // 2
+            els.append(f'<div class="hnode hrv" style="top:{yc}px;left:{x}%;--hc:{node_c}"></div>')
+            side = f"left:calc({CL}% + 16px)" if not berk else f"right:calc({100 - BK}% + 16px)"
+            els.append(
+                f'<div class="hcard hrv" style="top:{yc}px;{side}">'
+                f'<h3>{inline(ttl)}<span class="cy">{inline(era)}</span></h3>'
+                f'<p>{inline(text)}</p></div>'
+            )
+            pts.append((x, yc))
+            y += ROW
+    track_end = y
+    # 合流ノード：つながりの節の「この授業」の行。残りの行はチャートの下に定義行で出す
+    merge, conn_title, conn_rows, conn_extra = None, "", [], ""
+    for sec in h["sections"]:
+        if sec["timeline"]:
+            continue
+        conn_title, conn_extra = sec["title"], sec.get("extra", "")
+        for label, text in sec["items"]:
+            if label == "この授業" and merge is None:
+                merge = (label, text)
+            else:
+                conn_rows.append((label, text))
+    if merge:
+        yc = y + 44
+        pts.append((50, yc))
+        els.append(f'<div class="hnode merge hrv" style="top:{yc}px;left:50%"></div>')
+        els.append(
+            f'<div class="hcard mergecard hrv" style="top:{yc + 26}px">'
+            f'<h3>{inline(merge[0])}</h3><p>{inline(merge[1])}</p></div>'
+        )
+        y = yc + 190
+    total = y
+    line = " ".join(f"{x},{yc}" for x, yc in pts)
+    chart = (
+        f'<div class="histwrap"><div class="histbox" style="height:{total}px">'
+        f'<svg viewBox="0 0 100 {total}" preserveAspectRatio="none" aria-hidden="true">'
+        f'<polyline points="{line}" fill="none" stroke="var(--muted)" stroke-width="2" opacity="0.4" vector-effect="non-scaling-stroke"/></svg>'
+        f'<div class="vline" style="left:{CL}%;top:0;height:{track_end}px"></div>'
+        f'<div class="vline" style="left:{BK}%;top:0;height:{track_end}px"></div>'
+        + "".join(els) + "</div></div>"
+    )
     parts = [
         '<div class="wrap narrow">',
         nav(1, "理論の歴史"),
@@ -2026,34 +2091,28 @@ def build_history(d):
         f"<h1>{inline(h['title'])}</h1>",
         f'<p class="lead">{inline(h["lead"])}</p>',
         h["intro"],
+        chart,
     ]
-    for sec in h["sections"]:
+    if conn_rows:
         parts.append('<section class="stage">')
-        parts.append(f"<h2>{inline(sec['title'])}</h2>")
-        if sec["timeline"]:
-            lis = []
-            for label, text in sec["items"]:
-                p = label.split("　")
-                era, ttl = p[0], "　".join(p[1:]) or p[0]
-                lis.append(
-                    f'<li><div class="tl-era">{inline(era)}</div>'
-                    f'<div><p class="tl-title">{inline(ttl)}</p><p class="tl-text">{inline(text)}</p></div></li>'
-                )
-            cls = "timeline alt" if "バークリー" in sec["title"] else "timeline"
-            parts.append(f'<ul class="{cls}">{"".join(lis)}</ul>')
-        else:
-            rows = "".join(
-                f'<div class="row"><div class="lbl">{inline(l)}</div><p class="val">{inline(t)}</p></div>'
-                for l, t in sec["items"]
-            )
-            parts.append(f'<div class="rows tight">{rows}</div>')
-        if sec.get("extra"):
-            parts.append(sec["extra"])
+        parts.append(f"<h2>{inline(conn_title)}</h2>")
+        rows = "".join(
+            f'<div class="row"><div class="lbl">{inline(l)}</div><p class="val">{inline(t)}</p></div>'
+            for l, t in conn_rows
+        )
+        parts.append(f'<div class="rows tight">{rows}</div>')
+        if conn_extra:
+            parts.append(conn_extra)
         parts.append("</section>")
+    parts.append(
+        "<script>document.documentElement.classList.add('js');"
+        "const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('show');io.unobserve(e.target)}}),{threshold:.15});"
+        "document.querySelectorAll('.hrv').forEach(el=>io.observe(el));</script>"
+    )
     parts += [FOOT, "</div>"]
     return page(
         f"{h['title']}｜{SITE_TITLE}",
-        "クラシック理論とバークリー理論、2つの系譜をざっくり把握する。実践が先、理論があと。",
+        "クラシック理論とバークリー理論、2つの系譜を1本の年表で把握する。あくまで実践が先、理論があと。",
         f"{BASE}history/",
         "\n".join(parts),
     )

@@ -321,6 +321,73 @@
     box.wrap.style.display = 'none';            // 元の表はスクリプトが動かないとき用に残し、隠す
   }
 
+  // 簡易コード進行ジェネレータ（ドリルの授業の流れ用）。4小節をダイアトニック7つから選んでループし、
+  // 「1度を鳴らす」で中心を確かめる。Phase 1〜3 はダイアトニック外を出さない方針なので選択肢も7つだけ
+  function setupProgmini(root) {
+    const mk = (tag, cls, text) => { const el = document.createElement(tag); if (cls) el.className = cls; if (text !== undefined) el.textContent = text; return el; };
+    const PM = ['IM7', 'IIm7', 'IIIm7', 'IVM7', 'V7', 'VIm7', 'VIIm7-5'];
+    const init = (root.dataset.prog || 'IVM7-IIIm7-IIm7-IM7').split('-');
+    const row = mk('div', 'pm-row');
+    const sels = init.map(v => {
+      const s = mk('select', 'pm-chord');
+      PM.forEach(c => { const o = mk('option', '', c); o.value = c; s.appendChild(o); });
+      s.value = PM.indexOf(v) >= 0 ? v : PM[0];
+      row.appendChild(s);
+      return s;
+    });
+    const top = mk('div', 'pm-top');
+    const keySel = mk('select', 'pm-key');
+    keySel.setAttribute('aria-label', 'キー');
+    for (let k = 0; k < 12; k++) { const o = mk('option', '', KEYS[k] + ' キー'); o.value = String(k); keySel.appendChild(o); }
+    const playBtn = mk('button', 'pm-play', '再生');
+    const oneBtn = mk('button', 'pm-one', '1度を鳴らす');
+    [keySel, playBtn, oneBtn].forEach(el => top.appendChild(el));
+    root.appendChild(row); root.appendChild(top);
+    let tonic = 0, bus = null, timer = null, hl = null;
+    const BAR = 2.4, AHEAD = 2.5;                 // 1小節＝100BPMの4拍
+    function stop() {
+      if (timer) { clearTimeout(timer); timer = null; }
+      if (hl) { clearInterval(hl); hl = null; }
+      sels.forEach(s => s.classList.remove('now'));
+      if (bus) {
+        const b = bus; bus = null;
+        try { b.gain.cancelScheduledValues(ac.currentTime); b.gain.setTargetAtTime(0, ac.currentTime, 0.02); } catch (e) {}
+        setTimeout(() => { try { b.disconnect(); } catch (e) {} }, 400);
+      }
+      playBtn.textContent = '再生';
+    }
+    function start() {
+      stop();
+      const c = audio(), b = c.createGain();
+      b.gain.value = 1; b.connect(c.destination); bus = b;
+      let next = c.currentTime + 0.08;
+      const anchor = next;
+      (function tick() {
+        if (bus !== b) return;
+        while (next < c.currentTime + AHEAD) {
+          const v = window.Voicing.voice(sels.map(s => s.value), tonic);
+          v.forEach((x, i) => {
+            const at = next - c.currentTime + i * BAR, dur = BAR * 0.95;
+            tone(x.bass, at, dur, 0.13, b); tone(x.bass + 12, at, dur, 0.065, b);
+            x.upper.forEach(m => tone(m, at, dur, 0.08, b));
+          });
+          next += BAR * sels.length;
+        }
+        timer = setTimeout(tick, 500);
+      })();
+      hl = setInterval(() => {
+        const t = c.currentTime - anchor, cur = t < 0 ? -1 : Math.floor(t / BAR) % sels.length;
+        sels.forEach((s, i) => s.classList.toggle('now', i === cur));
+      }, 60);
+      playBtn.textContent = '止める';
+    }
+    playBtn.addEventListener('click', () => (bus ? stop() : start()));
+    // 変えたら頭から鳴らし直す（1周ぶん先に予約しているため）
+    sels.forEach(s => s.addEventListener('change', () => { if (bus) start(); }));
+    keySel.addEventListener('change', () => { tonic = +keySel.value; if (bus) start(); });
+    oneBtn.addEventListener('click', () => tone(60 + ((tonic + 6) % 12) - 6, 0, 1.4, 0.24));
+  }
+
   const els = document.querySelectorAll('[data-widget]');
   for (let i = 0; i < els.length; i++) {
     const kind = els[i].dataset.widget;
@@ -328,5 +395,6 @@
     else if (kind === 'scale') setupScale(els[i]);
     else if (kind === 'chords') setupChords(els[i]);
     else if (kind === 'diatonic') setupDiatonic(els[i]);
+    else if (kind === 'progmini') setupProgmini(els[i]);
   }
 })();

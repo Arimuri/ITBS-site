@@ -809,6 +809,16 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
 .step>ul,.step>ol{font-size:clamp(18px,2vw,26px);line-height:1.65;font-weight:700}
 .step>ul ul{font-size:.85em;font-weight:400;color:var(--ink2)}
 .step>p{font-size:clamp(16px,1.7vw,20px)}
+/* 簡易コード進行ジェネレータ（keyboard.js の progmini） */
+.pm-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0 0}
+.pm-chord{font:inherit;font-size:clamp(16px,1.8vw,22px);font-weight:700;color:var(--acc-ink);text-align:center;
+  border:1px solid var(--ring);border-radius:11px;padding:14px 8px;background:var(--surface);cursor:pointer}
+.pm-chord.now{border-color:var(--acc);background:var(--acc-soft);box-shadow:inset 0 0 0 1px var(--acc)}
+.pm-top{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 18px}
+.pm-top select,.pm-top button{font:inherit;font-size:14px;border:1px solid var(--ring);border-radius:9px;
+  padding:8px 14px;background:var(--surface);color:var(--ink);cursor:pointer}
+.pm-top .pm-play{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:700}
+@media (max-width:560px){.pm-row{grid-template-columns:repeat(2,1fr)}}
 .flow-end{margin-top:40px;padding-top:28px;border-top:3px solid var(--grid);color:var(--ink2);font-size:18px}
 .roll-warn{font-size:12.5px;color:var(--ng-ink);font-weight:700;margin:10px 0 0}
 .roll-warn:empty{display:none}
@@ -1702,6 +1712,73 @@ KEYBOARD_JS = r"""/* 鍵盤ウィジェット（composition-src/build.py が生�
     box.wrap.style.display = 'none';            // 元の表はスクリプトが動かないとき用に残し、隠す
   }
 
+  // 簡易コード進行ジェネレータ（ドリルの授業の流れ用）。4小節をダイアトニック7つから選んでループし、
+  // 「1度を鳴らす」で中心を確かめる。Phase 1〜3 はダイアトニック外を出さない方針なので選択肢も7つだけ
+  function setupProgmini(root) {
+    const mk = (tag, cls, text) => { const el = document.createElement(tag); if (cls) el.className = cls; if (text !== undefined) el.textContent = text; return el; };
+    const PM = ['IM7', 'IIm7', 'IIIm7', 'IVM7', 'V7', 'VIm7', 'VIIm7-5'];
+    const init = (root.dataset.prog || 'IVM7-IIIm7-IIm7-IM7').split('-');
+    const row = mk('div', 'pm-row');
+    const sels = init.map(v => {
+      const s = mk('select', 'pm-chord');
+      PM.forEach(c => { const o = mk('option', '', c); o.value = c; s.appendChild(o); });
+      s.value = PM.indexOf(v) >= 0 ? v : PM[0];
+      row.appendChild(s);
+      return s;
+    });
+    const top = mk('div', 'pm-top');
+    const keySel = mk('select', 'pm-key');
+    keySel.setAttribute('aria-label', 'キー');
+    for (let k = 0; k < 12; k++) { const o = mk('option', '', KEYS[k] + ' キー'); o.value = String(k); keySel.appendChild(o); }
+    const playBtn = mk('button', 'pm-play', '再生');
+    const oneBtn = mk('button', 'pm-one', '1度を鳴らす');
+    [keySel, playBtn, oneBtn].forEach(el => top.appendChild(el));
+    root.appendChild(row); root.appendChild(top);
+    let tonic = 0, bus = null, timer = null, hl = null;
+    const BAR = 2.4, AHEAD = 2.5;                 // 1小節＝100BPMの4拍
+    function stop() {
+      if (timer) { clearTimeout(timer); timer = null; }
+      if (hl) { clearInterval(hl); hl = null; }
+      sels.forEach(s => s.classList.remove('now'));
+      if (bus) {
+        const b = bus; bus = null;
+        try { b.gain.cancelScheduledValues(ac.currentTime); b.gain.setTargetAtTime(0, ac.currentTime, 0.02); } catch (e) {}
+        setTimeout(() => { try { b.disconnect(); } catch (e) {} }, 400);
+      }
+      playBtn.textContent = '再生';
+    }
+    function start() {
+      stop();
+      const c = audio(), b = c.createGain();
+      b.gain.value = 1; b.connect(c.destination); bus = b;
+      let next = c.currentTime + 0.08;
+      const anchor = next;
+      (function tick() {
+        if (bus !== b) return;
+        while (next < c.currentTime + AHEAD) {
+          const v = window.Voicing.voice(sels.map(s => s.value), tonic);
+          v.forEach((x, i) => {
+            const at = next - c.currentTime + i * BAR, dur = BAR * 0.95;
+            tone(x.bass, at, dur, 0.13, b); tone(x.bass + 12, at, dur, 0.065, b);
+            x.upper.forEach(m => tone(m, at, dur, 0.08, b));
+          });
+          next += BAR * sels.length;
+        }
+        timer = setTimeout(tick, 500);
+      })();
+      hl = setInterval(() => {
+        const t = c.currentTime - anchor, cur = t < 0 ? -1 : Math.floor(t / BAR) % sels.length;
+        sels.forEach((s, i) => s.classList.toggle('now', i === cur));
+      }, 60);
+      playBtn.textContent = '止める';
+    }
+    playBtn.addEventListener('click', () => (bus ? stop() : start()));
+    // 変えたら頭から鳴らし直す（1周ぶん先に予約しているため）
+    sels.forEach(s => s.addEventListener('change', () => { if (bus) start(); }));
+    keySel.addEventListener('change', () => { tonic = +keySel.value; if (bus) start(); });
+    oneBtn.addEventListener('click', () => tone(60 + ((tonic + 6) % 12) - 6, 0, 1.4, 0.24));
+  }
+
   const els = document.querySelectorAll('[data-widget]');
   for (let i = 0; i < els.length; i++) {
     const kind = els[i].dataset.widget;
@@ -1709,6 +1786,7 @@ KEYBOARD_JS = r"""/* 鍵盤ウィジェット（composition-src/build.py が生�
     else if (kind === 'scale') setupScale(els[i]);
     else if (kind === 'chords') setupChords(els[i]);
     else if (kind === 'diatonic') setupDiatonic(els[i]);
+    else if (kind === 'progmini') setupProgmini(els[i]);
   }
 })();
 """
@@ -1871,15 +1949,18 @@ def demo_notes(spec):
     return " ".join(out)
 
 
-def render_flow(no, flow, practice_roll, chords):
-    """授業の流れ：##### ごとに番号付きの大きい節にする。{{roll}} は練習用ロール、{{roll-demo …}} は見本のロール"""
+def render_flow(d, no, flow, practice_roll, chords):
+    """授業の流れ：##### ごとに番号付きの大きい節にする。
+    {{roll}}＝練習用ロール、{{roll-demo …}}＝見本のロール、
+    {{from-roadmap 段階N}}＝ロードマップのその段階の鍵盤と表（原稿はロードマップ側の1か所だけ）。
+    {{progmini}} など他の {{…}} は render_blocks が鍵盤ウィジェットの置き場にする"""
     out = ['<div class="flow">']
     for title, lines in flow:
         out.append(f'<section class="step"><h2>{inline(title)}</h2>')
         buf = []
         for ln in lines + ["{{__end__}}"]:
             s = ln.strip()
-            m = re.fullmatch(r"\{\{(roll|roll-demo\s+(.+)|__end__)\}\}", s)
+            m = re.fullmatch(r"\{\{(roll|roll-demo\s+(.+)|from-roadmap\s+(.+)|__end__)\}\}", s)
             if not m:
                 buf.append(ln)
                 continue
@@ -1893,6 +1974,12 @@ def render_flow(no, flow, practice_roll, chords):
                     f'<div class="roll" data-lesson="{no:02d}-demo" data-progs="{chords}" '
                     f'data-degrees="1,2,3,4,5,6,7" data-nosave="1" data-notes="{demo_notes(m.group(2))}"></div>'
                 )
+            elif m.group(3):
+                st = next((x for x in d["roadmap"] if x["title"].startswith(m.group(3).strip())), None)
+                if not st:
+                    raise SystemExit(f"from-roadmap：ロードマップに「{m.group(3)}」が無い")
+                widgets = "".join(re.findall(r'<div data-widget="[^"]+"></div>', st.get("extra", "")))
+                out.append(f'<div class="stage-grid"><div>{widgets}</div><div>{st.get("tables", "")}</div></div>')
         out.append("</section>")
     out.append("</div>")
     return "\n".join(out)
@@ -1929,7 +2016,7 @@ def build_lesson(d, no):
     # 授業の流れに {{roll}} があれば練習用ロールはそこに置き、右カラムには出さない
     roll_in_flow = any(re.fullmatch(r"\{\{roll\}\}", l.strip()) for _, lines in flow for l in lines)
     if flow:
-        parts.append(render_flow(no, flow, practice_roll, chords))
+        parts.append(render_flow(d, no, flow, practice_roll, chords))
         parts.append('<h2 class="flow-end">このドリルの設計</h2>')
     parts += [
         # PCでは左に講義と課題、右にピアノロール
@@ -1954,7 +2041,8 @@ def build_lesson(d, no):
             f'<div class="row"><div class="lbl">{inline(label)}</div>'
             f'<p class="val">{inline(text)}</p></div>'
         )
-    parts.append(f'<div class="rows">{"".join(rows)}</div>')
+    if rows:
+        parts.append(f'<div class="rows">{"".join(rows)}</div>')
 
     side = [] if roll_in_flow else [
         '<div class="lesson-side">',
@@ -1984,6 +2072,8 @@ def build_lesson(d, no):
     parts.append("</div>")
     parts.append('<script src="../assets/voicing.js" defer></script>')
     parts.append('<script src="../assets/roll.js" defer></script>')
+    if any('data-widget=' in p for p in parts):   # 流れに鍵盤・簡易ジェネレータがあるときだけ
+        parts.append('<script src="../assets/keyboard.js" defer></script>')
 
     desc = f'ドリル{no}「{ls["title"]}」。使える音は{ls["sounds_raw"]}、伴奏は{ls["prog"]}。'
     aim = dict(ls["items"]).get("狙い", "")

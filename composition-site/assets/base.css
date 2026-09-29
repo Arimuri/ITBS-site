@@ -238,6 +238,16 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
 .step>ul,.step>ol{font-size:clamp(18px,2vw,26px);line-height:1.65;font-weight:700}
 .step>ul ul{font-size:.85em;font-weight:400;color:var(--ink2)}
 .step>p{font-size:clamp(16px,1.7vw,20px)}
+/* 簡易コード進行ジェネレータ（keyboard.js の progmini） */
+.pm-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0 0}
+.pm-chord{font:inherit;font-size:clamp(16px,1.8vw,22px);font-weight:700;color:var(--acc-ink);text-align:center;
+  border:1px solid var(--ring);border-radius:11px;padding:14px 8px;background:var(--surface);cursor:pointer}
+.pm-chord.now{border-color:var(--acc);background:var(--acc-soft);box-shadow:inset 0 0 0 1px var(--acc)}
+.pm-top{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 18px}
+.pm-top select,.pm-top button{font:inherit;font-size:14px;border:1px solid var(--ring);border-radius:9px;
+  padding:8px 14px;background:var(--surface);color:var(--ink);cursor:pointer}
+.pm-top .pm-play{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:700}
+@media (max-width:560px){.pm-row{grid-template-columns:repeat(2,1fr)}}
 .flow-end{margin-top:40px;padding-top:28px;border-top:3px solid var(--grid);color:var(--ink2);font-size:18px}
 .roll-warn{font-size:12.5px;color:var(--ng-ink);font-weight:700;margin:10px 0 0}
 .roll-warn:empty{display:none}

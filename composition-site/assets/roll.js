@@ -111,8 +111,17 @@
       const d = mk('div', 'roll-bar');
       barsEl.appendChild(d); bars.push(d);
     }
+    // 進行の1要素＝1小節。「I+IV」と書くと小節の真ん中でコードが変わる（2拍ずつ）
+    const barChords = b => String(prog[b % prog.length]).split('+');
     function updateBars() {
-      for (let b = 0; b < BARS; b++) bars[b].textContent = prog[b % prog.length];
+      for (let b = 0; b < BARS; b++) {
+        const cs = barChords(b);
+        bars[b].innerHTML = '';
+        bars[b].classList.toggle('split', cs.length > 1);
+        cs.forEach(c => { const sp = document.createElement('span'); sp.textContent = c; bars[b].appendChild(sp); });
+      }
+      for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++)
+        cells[r][c].classList.toggle('halfstart', c % STEPS === STEPS / 2 && barChords(Math.floor(c / STEPS)).length > 1);
     }
     const gut = [], cells = [], byCol = [];
     for (let c = 0; c < COLS; c++) byCol.push([]);
@@ -213,7 +222,12 @@
       const key = prog.join('-') + '@' + tonicPc;
       if (key !== voicedFor) {
         const o = keyOffset(tonicPc);
-        voiced = window.Voicing.voice(prog, 0).map(v => ({ bass: v.bass + o, upper: v.upper.map(m => m + o) }));
+        const flat = [];
+        for (let b = 0; b < BARS; b++) barChords(b).forEach(c => flat.push(c));
+        const vs = window.Voicing.voice(flat, 0).map(v => ({ bass: v.bass + o, upper: v.upper.map(m => m + o) }));
+        voiced = [];                                  // voiced[小節] ＝ その小節のコード（1つか2つ）
+        let k = 0;
+        for (let b = 0; b < BARS; b++) voiced.push(barChords(b).map(() => vs[k++]));
         voicedFor = key;
       }
       return voiced;
@@ -223,9 +237,11 @@
     function scheduleStep(n, at, out) {
       const c = audio(), rel = at - c.currentTime;
       const col = ((n % COLS) + COLS) % COLS;
-      if (col % STEPS === 0) {                       // 小節のあたま：コードとベース
-        const v = voicing()[(col / STEPS) % prog.length];
-        const dur = STEPS * stepSec() * 0.96;
+      const inBar = col % STEPS, bv = voicing()[Math.floor(col / STEPS)];
+      const half = bv.length > 1 && inBar === STEPS / 2;
+      if (inBar === 0 || half) {                     // 小節のあたま（2コードの小節は真ん中も）：コードとベース
+        const v = half ? bv[1] : bv[0];
+        const dur = (bv.length > 1 ? STEPS / 2 : STEPS) * stepSec() * 0.96;
         v.upper.forEach(m => tone(m, rel, dur, 0.075, out));
         tone(v.bass, rel, dur, 0.13, out);
         tone(v.bass + 12, rel, dur, 0.065, out);

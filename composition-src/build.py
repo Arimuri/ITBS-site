@@ -422,7 +422,18 @@ def load():
             lesson = lessons[no]
             lesson["title"] = m.group(2).strip() or lesson["theme"]
             lesson["phase_title"] = phase_title
+            # 「##### 見出し」から下は授業の流れ（ページの上から順に投影して進める）。
+            # それより上の「- **ラベル**：本文」が、これまでどおりの設計メモの行
+            lesson["flow"] = []
+            step = None
             for ln in bullets:
+                if ln.startswith("##### "):
+                    step = (ln[6:].strip(), [])
+                    lesson["flow"].append(step)
+                    continue
+                if step is not None:
+                    step[1].append(ln)
+                    continue
                 b = re.match(r"^- \*\*(.+?)\*\*：(.*)$", ln.strip())
                 if b:
                     lesson["items"].append((b.group(1), b.group(2).strip()))
@@ -787,6 +798,18 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
 @media (max-width:560px){.dg-chords{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .tablebox tr.iv-hl td{background:var(--acc-soft)}
 .roll-note{font-size:12px;color:var(--ink2);margin:10px 0 0}
+/* ドリルの授業の流れ：上から順に投影してスクロールで進める。文字は大きめ */
+.flow{counter-reset:step;margin:8px 0 0}
+.step{padding:34px 0 38px;border-top:1px solid var(--grid)}
+.step:first-child{border-top:none;padding-top:18px}
+.step>h2{counter-increment:step;display:flex;align-items:center;gap:14px;margin:0 0 18px;
+  font-size:clamp(24px,2.8vw,36px);letter-spacing:-.01em}
+.step>h2::before{content:counter(step);flex:none;width:40px;height:40px;border-radius:11px;
+  background:var(--acc);color:#fff;font-size:20px;display:grid;place-items:center}
+.step>ul,.step>ol{font-size:clamp(18px,2vw,26px);line-height:1.65;font-weight:700}
+.step>ul ul{font-size:.85em;font-weight:400;color:var(--ink2)}
+.step>p{font-size:clamp(16px,1.7vw,20px)}
+.flow-end{margin-top:40px;padding-top:28px;border-top:3px solid var(--grid);color:var(--ink2);font-size:18px}
 .roll-warn{font-size:12.5px;color:var(--ng-ink);font-weight:700;margin:10px 0 0}
 .roll-warn:empty{display:none}
 /* PC（16:9）前提の横長レイアウト。1100px 未満では1段に戻る */
@@ -1053,6 +1076,9 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
     let prog = progs[0].split('-');
     const open = new Set((root.dataset.degrees || '').split(',').filter(Boolean));
     const notes = new Set();                      // "midi,col"
+    // data-notes：最初から置いておく音（見本のメロ）。data-nosave：保存しない（開き直すと見本に戻る）
+    const nosave = root.dataset.nosave === '1';
+    (root.dataset.notes || '').split(/\s+/).filter(Boolean).forEach(k => notes.add(k));
     let tonicPc = 0, bpm = DEFAULT_BPM, dragging = false, drawMode = 'draw', warn = '';
     const stepSec = () => 60 / bpm / 2;           // 横1マス＝8分音符
     const cycleLen = () => COLS * stepSec();      // 4小節1周
@@ -1185,15 +1211,18 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
 
     // ---- 保存 ----
     function save() {
+      if (nosave) return;
       try {
         localStorage.setItem('roll:' + lesson, JSON.stringify({ k: tonicPc, b: bpm, p: prog.join('-'), n: Array.from(notes) }));
       } catch (err) {}
     }
     function load() {
+      if (nosave) return;
       try {
         const raw = localStorage.getItem('roll:' + lesson);
         if (!raw) return;
         const o = JSON.parse(raw);
+        notes.clear();                               // 保存があれば data-notes より優先
         if (typeof o.k === 'number' && o.k >= 0 && o.k < 12) tonicPc = o.k;
         if (BPMS.indexOf(o.b) >= 0) bpm = o.b;
         if (progs.indexOf(o.p) >= 0) prog = o.p.split('-');
@@ -1824,6 +1853,51 @@ def build_index(d):
     )
 
 
+NOTE_PC = {"C": 0, "D": 2, "E": 4, "F": 5, "G": 7, "A": 9, "B": 11}
+
+
+def demo_notes(spec):
+    """「C4:0-1 B3:2-3 D4:18」→ ロールの "midi,col" の並び。マスは8分音符・0始まり、範囲は両端を含む"""
+    out = []
+    for tok in spec.split():
+        m = re.fullmatch(r"([A-G])([#b♭]?)(-?\d):(\d+)(?:-(\d+))?", tok)
+        if not m:
+            raise SystemExit(f"roll-demo の書き方が変：{tok}（例 C4:0-1）")
+        pc = NOTE_PC[m.group(1)] + (1 if m.group(2) == "#" else -1 if m.group(2) else 0)
+        midi = (int(m.group(3)) + 1) * 12 + pc
+        a = int(m.group(4))
+        b = int(m.group(5)) if m.group(5) else a
+        out += [f"{midi},{c}" for c in range(a, b + 1)]
+    return " ".join(out)
+
+
+def render_flow(no, flow, practice_roll, chords):
+    """授業の流れ：##### ごとに番号付きの大きい節にする。{{roll}} は練習用ロール、{{roll-demo …}} は見本のロール"""
+    out = ['<div class="flow">']
+    for title, lines in flow:
+        out.append(f'<section class="step"><h2>{inline(title)}</h2>')
+        buf = []
+        for ln in lines + ["{{__end__}}"]:
+            s = ln.strip()
+            m = re.fullmatch(r"\{\{(roll|roll-demo\s+(.+)|__end__)\}\}", s)
+            if not m:
+                buf.append(ln)
+                continue
+            if buf:
+                out.append(render_blocks(buf))
+                buf = []
+            if m.group(1) == "roll":
+                out.append(practice_roll)
+            elif m.group(2):
+                out.append(
+                    f'<div class="roll" data-lesson="{no:02d}-demo" data-progs="{chords}" '
+                    f'data-degrees="1,2,3,4,5,6,7" data-nosave="1" data-notes="{demo_notes(m.group(2))}"></div>'
+                )
+        out.append("</section>")
+    out.append("</div>")
+    return "\n".join(out)
+
+
 def build_lesson(d, no):
     ls = d["lessons"][no]
     tips = [t for t in d["tips"] if no in t["nos"]]
@@ -1844,8 +1918,22 @@ def build_lesson(d, no):
         + (f'｜{session_label(d, ls)}' if ls.get("session") else "")
         + '</p>',
         f'<h1>ドリル{no}　{inline(ls["title"])}</h1>',
+    ]
+    degrees = ",".join(x for x in DEG_ALL if x in ls["deg"])
+    practice_roll = (
+        f'<div class="roll" data-lesson="{no:02d}" '
+        f'data-progs="{"|".join(roll_prog_choices(no, prog))}" '
+        f'data-degrees="{degrees}"></div>'
+    )
+    flow = ls.get("flow") or []
+    # 授業の流れに {{roll}} があれば練習用ロールはそこに置き、右カラムには出さない
+    roll_in_flow = any(re.fullmatch(r"\{\{roll\}\}", l.strip()) for _, lines in flow for l in lines)
+    if flow:
+        parts.append(render_flow(no, flow, practice_roll, chords))
+        parts.append('<h2 class="flow-end">このドリルの設計</h2>')
+    parts += [
         # PCでは左に講義と課題、右にピアノロール
-        '<div class="lesson-grid">',
+        '<div class="lesson-grid">' if not roll_in_flow else "<div>",
         '<div class="lesson-main">',
     ]
     if prog in ("", "—", "-"):
@@ -1868,14 +1956,11 @@ def build_lesson(d, no):
         )
     parts.append(f'<div class="rows">{"".join(rows)}</div>')
 
-    degrees = ",".join(x for x in DEG_ALL if x in ls["deg"])
-    side = [
+    side = [] if roll_in_flow else [
         '<div class="lesson-side">',
         "<h2>4小節つくる</h2>",
         "<p>キーを変えても、数字は変わらない。</p>",
-        f'<div class="roll" data-lesson="{no:02d}" '
-        f'data-progs="{"|".join(roll_prog_choices(no, prog))}" '
-        f'data-degrees="{degrees}"></div>',
+        practice_roll,
         "</div>",
     ]
 

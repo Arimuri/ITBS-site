@@ -45,6 +45,9 @@
     let prog = progs[0].split('-');
     const open = new Set((root.dataset.degrees || '').split(',').filter(Boolean));
     const notes = new Set();                      // "midi,col"
+    // data-notes：最初から置いておく音（見本のメロ）。data-nosave：保存しない（開き直すと見本に戻る）
+    const nosave = root.dataset.nosave === '1';
+    (root.dataset.notes || '').split(/\s+/).filter(Boolean).forEach(k => notes.add(k));
     let tonicPc = 0, bpm = DEFAULT_BPM, dragging = false, drawMode = 'draw', warn = '';
     const stepSec = () => 60 / bpm / 2;           // 横1マス＝8分音符
     const cycleLen = () => COLS * stepSec();      // 4小節1周
@@ -177,15 +180,18 @@
 
     // ---- 保存 ----
     function save() {
+      if (nosave) return;
       try {
         localStorage.setItem('roll:' + lesson, JSON.stringify({ k: tonicPc, b: bpm, p: prog.join('-'), n: Array.from(notes) }));
       } catch (err) {}
     }
     function load() {
+      if (nosave) return;
       try {
         const raw = localStorage.getItem('roll:' + lesson);
         if (!raw) return;
         const o = JSON.parse(raw);
+        notes.clear();                               // 保存があれば data-notes より優先
         if (typeof o.k === 'number' && o.k >= 0 && o.k < 12) tonicPc = o.k;
         if (BPMS.indexOf(o.b) >= 0) bpm = o.b;
         if (progs.indexOf(o.p) >= 0) prog = o.p.split('-');

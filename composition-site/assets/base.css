@@ -227,6 +227,18 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
 @media (max-width:560px){.dg-chords{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .tablebox tr.iv-hl td{background:var(--acc-soft)}
 .roll-note{font-size:12px;color:var(--ink2);margin:10px 0 0}
+/* ドリルの授業の流れ：上から順に投影してスクロールで進める。文字は大きめ */
+.flow{counter-reset:step;margin:8px 0 0}
+.step{padding:34px 0 38px;border-top:1px solid var(--grid)}
+.step:first-child{border-top:none;padding-top:18px}
+.step>h2{counter-increment:step;display:flex;align-items:center;gap:14px;margin:0 0 18px;
+  font-size:clamp(24px,2.8vw,36px);letter-spacing:-.01em}
+.step>h2::before{content:counter(step);flex:none;width:40px;height:40px;border-radius:11px;
+  background:var(--acc);color:#fff;font-size:20px;display:grid;place-items:center}
+.step>ul,.step>ol{font-size:clamp(18px,2vw,26px);line-height:1.65;font-weight:700}
+.step>ul ul{font-size:.85em;font-weight:400;color:var(--ink2)}
+.step>p{font-size:clamp(16px,1.7vw,20px)}
+.flow-end{margin-top:40px;padding-top:28px;border-top:3px solid var(--grid);color:var(--ink2);font-size:18px}
 .roll-warn{font-size:12.5px;color:var(--ng-ink);font-weight:700;margin:10px 0 0}
 .roll-warn:empty{display:none}
 /* PC（16:9）前提の横長レイアウト。1100px 未満では1段に戻る */

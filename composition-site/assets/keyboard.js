@@ -193,7 +193,8 @@
     tone(v.bass + 12, at, dur, 0.065, bus);
     v.upper.forEach(m => tone(m, at, dur, 0.08, bus));
   }
-  // 段階4：ダイアトニックコード（4和音）。キーを選ぶとボタンの下に実音のコード名。押すと鳴って、鍵盤のコードトーンが光る
+  // 段階4：ダイアトニックコード（4和音）。キーを選ぶとボタンの下に実音のコード名。押すと鳴って、鍵盤のコードトーンが光る。
+  // 光った鍵には「キー度数/コード度数」を併記（例：6/3）。コード度数は長短を問わず R・3・5・7（curriculum の表記ルールと同じ）
   const DIATONIC = [['IM7', 'M7'], ['IIm7', 'm7'], ['IIIm7', 'm7'], ['IVM7', 'M7'], ['V7', '7'], ['VIm7', 'm7'], ['VIIm7-5', 'm7-5']];
   const LETTERS = 'CDEFGAB', NAT = [0, 2, 4, 5, 7, 9, 11];
   // キーの i 番目（0＝1度）の音名。キー名の文字から順に数えるので、E♭キーの4は A♭、Bキーの7は A#
@@ -235,17 +236,24 @@
     // 光らせるのは、実際に鳴らす音そのもの（playChord と同じボイシング：ベース・そのオクターブ上・上の3声）
     function light() {
       const k = w.state.tonicPc;
-      const lit = {};
+      const lit = {};                                 // midi → コード度数（R・3・5・7）
       let rootPc = -1;
       if (cur !== null) {
         const v = window.Voicing.voice([DIATONIC[cur][0]], k)[0];
-        [v.bass, v.bass + 12].concat(v.upper).forEach(m => { lit[m] = true; });
         rootPc = (k + MAJOR[cur]) % 12;
+        const cdeg = m => {
+          const iv = (((m - rootPc) % 12) + 12) % 12;
+          return iv === 0 ? 'R' : iv <= 4 ? '3' : iv <= 7 ? '5' : '7';
+        };
+        [v.bass, v.bass + 12].concat(v.upper).forEach(m => { lit[m] = cdeg(m); });
       }
       w.keys.forEach(el => {
         const m = +el.dataset.midi;
-        el.classList.toggle('lit', !!lit[m]);
-        el.classList.toggle('croot', !!lit[m] && m % 12 === rootPc);
+        el.classList.toggle('lit', m in lit);
+        el.classList.toggle('croot', m in lit && m % 12 === rootPc);
+        // 鳴っている鍵はキー度数にコード度数を併記する（キー度数/コード度数）
+        const d = MAJOR.indexOf((((m - k) % 12) + 12) % 12);
+        el.textContent = d >= 0 ? (m in lit ? (d + 1) + '/' + lit[m] : String(d + 1)) : '';
       });
       chips.forEach((c, i) => c.b.classList.toggle('on', i === cur));
       if (cur === null) { w.status.textContent = ''; return; }

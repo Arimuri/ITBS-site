@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="icon" type="image/png" href="/favicon.png">
 <title>コード進行ジェネレータ｜応用実習1,2：作曲</title>
-<meta name="description" content="覚えるべきコードをドラッグ&ドロップで8小節に並べ、鳴らして確かめて、MIDIでダウンロードする。1小節に2コードも置ける。">
+<meta name="description" content="覚えるべきコードをドラッグ&ドロップで8小節に並べ、ピアノロールにメロを打ち込み、鳴らして確かめて、MIDIでダウンロードする。">
 <link rel="canonical" href="https://intheblueshirt.com/composition/prog/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="in the blue shirt">
 <meta property="og:title" content="コード進行ジェネレータ｜応用実習1,2：作曲">
-<meta property="og:description" content="コードを8小節に並べて鳴らし、MIDIでダウンロードするツール。">
+<meta property="og:description" content="コードを8小節に並べ、メロを打ち込んで鳴らし、MIDIでダウンロードするツール。">
 <meta property="og:url" content="https://intheblueshirt.com/composition/prog/">
 <meta property="og:image" content="https://intheblueshirt.com/composition/og.png">
 <meta name="twitter:card" content="summary_large_image">
@@ -40,6 +40,19 @@
 .half+.half{border-left:1px dashed var(--ring)}
 .half .x{position:absolute;top:-4px;right:0}
 .half .cw-chip{font-size:12.5px;padding:5px 6px}
+/* 8小節ピアノロール（各回ページの4小節ロールと同じ見た目。列数と幅だけ違う） */
+.proll{margin:18px 0 0}
+.proll h2{margin-bottom:8px}
+.proll .roll-grid{--rh:18px;min-width:1320px;grid-template-columns:34px 1fr}
+.proll .roll-bars{grid-template-columns:repeat(8,1fr)}
+.proll .roll-bar{display:flex;padding:0}
+.proll .roll-bar span{flex:1;padding:7px 0}
+.proll .roll-bar span+span{border-left:1px dashed var(--grid)}
+.proll .roll-cells{grid-template-columns:repeat(64,1fr)}
+.proll .rc{position:relative;display:flex;align-items:center;padding-left:2px;font-size:9px;line-height:1;font-weight:700;
+  color:#fff;white-space:nowrap;overflow:visible;z-index:0}
+.proll .rc.on{z-index:1}
+.proll .rc.halfstart{border-left:1px dashed var(--muted)}
 .btns{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 0;align-items:center}
 .btns button{background:var(--surface);border:1px solid var(--ring);border-radius:10px;padding:9px 14px;
   font:inherit;font-size:13px;color:var(--ink);cursor:pointer}
@@ -57,7 +70,7 @@
 <p class="topnav"><a href="../">← 授業トップ</a><a href="../tips/">ポップスのコツ</a><a href="../ear/">1度当て練習</a></p>
 <p class="eyebrow">応用実習1,2：作曲</p>
 <h1>コード進行ジェネレータ</h1>
-<p class="lead">覚えるべきコードを8小節に並べて、MIDIでダウンロードする。</p>
+<p class="lead">覚えるべきコードを8小節に並べ、メロを打ち込んで、MIDIでダウンロードする。</p>
 
 <div class="panel">
   <div class="cw-grid" id="palette"></div>
@@ -65,12 +78,23 @@
 
 <div class="bars" id="bars"></div>
 
+<div class="proll" id="proll">
+  <h2>メロ</h2>
+  <div class="roll-scroll"><div class="roll-grid">
+    <div class="roll-corner"></div><div class="roll-bars" id="rbars"></div>
+    <div class="roll-gutter" id="rgut"></div><div class="roll-cells" id="rcells"></div>
+  </div></div>
+  <p class="roll-warn" id="rwarn"></p>
+  <p class="roll-note">マスを押すと音が置ける。横にドラッグで伸ばす。音の頭の数字＝キー度数/コード度数（例：1/3）。濃い行＝スケール、太線＝小節、点線＝コードの切り替わり。</p>
+</div>
+
 <div class="btns">
   <button class="pri" id="play">鳴らす</button>
   <select id="key" aria-label="キー"></select>
   <select id="bpm" aria-label="テンポ"></select>
   <button id="dl" disabled>MIDIをダウンロード</button>
-  <button id="clear" disabled>全部消す</button>
+  <button id="clear" disabled>コードを消す</button>
+  <button id="clearmel" disabled>メロを消す</button>
 </div>
 <p class="status" id="status">コードを小節にドラッグ。押してから小節を押してもいい。</p>
 
@@ -78,10 +102,11 @@
 <ol>
   <li>コードを押すと鳴る。ドラッグで小節に置く。小節から小節へも動かせる</li>
   <li>小節の右端の「＋」で3拍目にもコードが入る（1小節2つ、2拍ずつ）。半分の×で1つに戻る</li>
-  <li>「鳴らす」でループ再生。キーとテンポは横のプルダウン</li>
-  <li>「MIDIをダウンロード」して、DAWのトラックにドラッグ</li>
+  <li>ピアノロールにメロを打ち込む。音の頭にキー度数/コード度数が出る</li>
+  <li>「鳴らす」でループ再生。キーとテンポは横のプルダウン。キーを変えるとメロも一緒に移調する（数字は変わらない）</li>
+  <li>「MIDIをダウンロード」して、DAWのトラックにドラッグ（コードとメロの2トラック）</li>
 </ol>
-<p class="why">和音の高さは自動で決まる。前のコードと共通する音は残し、動く声部は近くへ、一番上の音は歌のようにつながるように選んでいる。並べた進行はこのブラウザに保存される。端末を変えると消える。</p>
+<p class="why">和音の高さは自動で決まる。前のコードと共通する音は残し、動く声部は近くへ、一番上の音は歌のようにつながるように選んでいる。並べた進行とメロはこのブラウザに保存される。端末を変えると消える。</p>
 
 <p class="foot">京都精華大学 メディア表現学部「応用実習1,2：作曲」（火曜・全14回・90分×2コマ）<br>担当：有村崚（<a href="https://intheblueshirt.com/">in the blue shirt</a>）</p>
 </div>
@@ -90,7 +115,10 @@
 <script>
 (() => {
   'use strict';
-  const BARS = 8;
+  const BARS = 8, STEPS = 8, COLS = BARS * STEPS;      // 横1マス＝8分音符
+  const LOW = 48, HIGH = 72, ROWS = HIGH - LOW + 1;      // ロールの音域（各回ページと同じ）
+  const MAJOR = [0, 2, 4, 5, 7, 9, 11];
+  const KEYDEG = ['1', '♭2', '2', '♭3', '3', '4', '#4', '5', '♭6', '6', '♭7', '7'];
   // tips/ の「覚えるべきコード」と同じ表。色分けも同じ（I IIIm VIm｜IIm IV｜V）
   const TIERS = [
     { tier: 'tier1', groups: [['IM7', 'IIm7', 'IIIm7', 'IVM7', 'V7', 'VIm7', 'VIIm7-5'], ['Isus4', 'IVsus4', 'Vsus4']] },
@@ -101,10 +129,12 @@
   const KEYS = ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'];
   const FILE_KEYS = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
   const BPMS = [70, 80, 90, 100, 110, 120, 130, 140], DEFAULT_BPM = 100;
+  const SCHED_AHEAD = 0.12, TICK_MS = 25;
 
   // ---- 状態 -----------------------------------------------------------------
-  // 各小節はコード名の配列。[]＝休み、[A]＝1小節、[A, B]＝2拍ずつ
+  // 各小節はコード名の配列。[]＝休み、[A]＝1小節、[A, B]＝2拍ずつ。メロは "midi,col" の集合
   let slots = Array.from({ length: BARS }, () => []);
+  const notes = new Set();
   let tonicPc = 0, bpm = DEFAULT_BPM, picked = null;
   const store = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
   try {
@@ -116,9 +146,15 @@
     tonicPc = (+localStorage.getItem('prog:key') || 0) % 12;
     const b = +localStorage.getItem('prog:bpm');
     if (BPMS.includes(b)) bpm = b;
+    const n = JSON.parse(localStorage.getItem('prog:notes') || '[]');
+    if (Array.isArray(n)) n.forEach(k => {
+      const q = String(k).split(',');
+      if (q.length === 2 && +q[0] >= LOW && +q[0] <= HIGH && +q[1] >= 0 && +q[1] < COLS) notes.add((+q[0]) + ',' + (+q[1]));
+    });
   } catch (e) {}
+  const saveNotes = () => store('prog:notes', JSON.stringify(Array.from(notes)));
 
-  // ---- 音を出す（ear/ と同じシンセ） ----------------------------------------
+  // ---- 音を出す（ear/・各回ページと同じシンセ） -------------------------------
   let ac = null;
   function audio() {
     ac ||= new (window.AudioContext || window.webkitAudioContext)();
@@ -126,12 +162,12 @@
     return ac;
   }
   function tone(midi, at = 0, dur = 0.7, vol = 0.22, out = null) {
-    const c = audio(), t0 = c.currentTime + at, f = 440 * Math.pow(2, (midi - 69) / 12);
+    const c = audio(), t0 = c.currentTime + Math.max(at, 0), f = 440 * Math.pow(2, (midi - 69) / 12);
     const g = c.createGain(), lp = c.createBiquadFilter();
     lp.type = 'lowpass'; lp.frequency.value = 2600;
     g.gain.setValueAtTime(0, t0);
     g.gain.linearRampToValueAtTime(vol, t0 + 0.015);
-    g.gain.exponentialRampToValueAtTime(vol * 0.35, t0 + dur * 0.5);
+    g.gain.exponentialRampToValueAtTime(Math.max(vol * 0.35, 0.0002), t0 + dur * 0.5);
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
     [['sine', 1], ['triangle', 0.3]].forEach(([type, amt]) => {
       const o = c.createOscillator(), og = c.createGain();
@@ -140,20 +176,57 @@
     });
     g.connect(lp).connect(out || c.destination);
   }
-  const chord = (notes, at, dur, vol = 0.16, out = null) => notes.forEach(n => tone(n, at, dur, vol, out));
+  const chord = (list, at, dur, vol = 0.16, out = null) => list.forEach(n => tone(n, at, dur, vol, out));
   function playOne(name, at = 0, dur = 1.1, out = null) {
     const v = window.Voicing.voice([name], tonicPc)[0];   // 和音は ../assets/voicing.js で組む
     tone(v.bass, at, dur, 0.19, out); tone(v.bass + 12, at, dur, 0.095, out); chord(v.upper, at, dur, 0.14, out);
   }
 
-  // 8小節を「コード名・開始拍・長さ（拍）」の並びにする（再生とMIDIで共用）
-  function flatten() {
+  // 8小節を「コード名・開始マス・長さ（マス）」の並びにする（再生・MIDI・度数ラベルで共用）
+  function segments() {
     const seq = [];
     slots.forEach((bar, i) => {
-      const each = 4 / bar.length;
-      bar.forEach((nm, s) => seq.push({ name: nm, start: i * 4 + s * each, beats: each }));
+      const each = STEPS / bar.length;
+      bar.forEach((nm, s) => seq.push({ name: nm, start: i * STEPS + s * each, len: each }));
     });
     return seq;
+  }
+  const chordAt = col => {
+    const bar = slots[Math.floor(col / STEPS)];
+    if (!bar.length) return null;
+    return bar.length === 1 ? bar[0] : bar[(col % STEPS) < STEPS / 2 ? 0 : 1];
+  };
+
+  // ---- 度数ラベル ------------------------------------------------------------
+  // コード度数は curriculum の書き方に合わせる：そのコードが本来持つ3rd・5th・7thを「3」「5」「7」と呼び、
+  // 外れた音は ♭・# を付ける（IIIm7 の上の1＝♭6、VIm の上の5＝7、IVM7 の上の3＝7、I の上の4＝4）
+  function chordDeg(iv, ch) {
+    const has = x => ch.ivs.indexOf(x) >= 0;
+    const t3 = has(4) ? 4 : has(3) ? 3 : null;
+    const n5 = has(6) ? 6 : has(8) ? 8 : 7;
+    const n7 = has(11) ? 11 : has(10) ? 10 : has(9) ? 9 : (t3 === 4 || has(8)) ? 11 : 10;
+    switch (iv) {
+      case 0: return 'R';
+      case 1: return '♭9';
+      case 2: return '9';
+      case 3: return t3 === 3 ? '3' : '♭3';
+      case 4: return t3 === 3 ? '#3' : '3';
+      case 5: return '4';
+      case 6: return n5 === 6 ? '♭5' : '#4';
+      case 7: return '5';
+      case 8: return n5 === 8 ? '#5' : '♭6';
+      case 9: return n7 === 9 ? '7' : '6';
+      case 10: return n7 === 10 ? '7' : '♭7';
+      default: return n7 === 11 ? '7' : 'M7';
+    }
+  }
+  function labelFor(m, col) {
+    const kd = KEYDEG[((m - tonicPc) % 12 + 12) % 12];
+    const nm = chordAt(col);
+    if (!nm) return kd;
+    const ch = window.Voicing.parse(nm);
+    const rootPc = (tonicPc + ch.root) % 12;
+    return kd + '/' + chordDeg(((m - rootPc) % 12 + 12) % 12, ch);
   }
 
   // ---- パレット --------------------------------------------------------------
@@ -195,7 +268,7 @@
     palette.appendChild(groupsEl);
   });
 
-  // ---- 8小節 ------------------------------------------------------------------
+  // ---- 8小節のスロット ---------------------------------------------------------
   const bars = document.getElementById('bars');
   const slotEls = [];
   const cellEls = [];   // 小節ごとの発光対象（1コードならslot、2コードなら半分）
@@ -311,76 +384,176 @@
       }
     });
     const any = slots.some(b => b.length);
-    document.getElementById('dl').disabled = !any;
+    document.getElementById('dl').disabled = !(any || notes.size);
     document.getElementById('clear').disabled = !any;
+    document.getElementById('clearmel').disabled = !notes.size;
     store('prog:slots', JSON.stringify(slots));
+    paint();
   }
 
-  // ---- 再生（8小節ループ、1小節1〜2コード） ------------------------------------
-  const beatSec = () => 60 / bpm;
-  const LOOKAHEAD = 2.5;
-  let loopTimer = null, loopBus = null, hlTimer = null, anchor = 0;
+  // ---- ピアノロール --------------------------------------------------------------
+  const rbars = document.getElementById('rbars'), rgut = document.getElementById('rgut'), rcells = document.getElementById('rcells');
+  const rwarn = document.getElementById('rwarn');
+  const barHeads = [];
+  for (let b = 0; b < BARS; b++) { const d = mk('div', 'roll-bar'); rbars.appendChild(d); barHeads.push(d); }
+  const gut = [], cells = [], byCol = [];
+  for (let c = 0; c < COLS; c++) byCol.push([]);
+  for (let r = 0; r < ROWS; r++) {
+    const g = mk('div', 'roll-deg');
+    rgut.appendChild(g); gut.push(g);
+    const row = [];
+    for (let c = 0; c < COLS; c++) {
+      const el = mk('div', 'rc' + (c % STEPS === 0 && c ? ' barstart' : ''));
+      el.dataset.r = String(r); el.dataset.c = String(c);
+      rcells.appendChild(el); row.push(el); byCol[c].push(el);
+    }
+    cells.push(row);
+  }
+  const midiOf = r => HIGH - r;
+  // キーの移動量は ±6 半音に正規化（各回ページのロールと同じ）。メロを動かす量に使う
+  const keyOffset = pc => ((pc + 6) % 12) - 6;
 
-  function clearNow() {
-    slotEls.forEach(el => el.classList.remove('now'));
-    cellEls.forEach(cells => cells.forEach(el => el.classList.remove('now')));
+  function paint() {
+    for (let b = 0; b < BARS; b++) {
+      barHeads[b].innerHTML = '';
+      const bar = slots[b];
+      if (!bar.length) barHeads[b].appendChild(mk('span', '', '—'));
+      else bar.forEach(nm => barHeads[b].appendChild(mk('span', '', nm)));
+    }
+    for (let r = 0; r < ROWS; r++) {
+      const m = midiOf(r);
+      const iv = ((m - tonicPc) % 12 + 12) % 12;
+      const d = MAJOR.indexOf(iv);
+      const isScale = d >= 0;
+      gut[r].textContent = isScale ? String(d + 1) : '';
+      gut[r].className = 'roll-deg' + (isScale ? ' scale open' : '');
+      for (let c = 0; c < COLS; c++) {
+        const el = cells[r][c];
+        el.classList.toggle('scale', isScale);
+        el.classList.toggle('oct', iv === 0);
+        el.classList.toggle('halfstart', c % STEPS === STEPS / 2 && slots[Math.floor(c / STEPS)].length === 2);
+        const on = notes.has(m + ',' + c);
+        el.classList.toggle('on', on);
+        // 音の頭にだけ「キー度数/コード度数」を出す（伸ばしている途中のマスには出さない）
+        el.textContent = on && !(c > 0 && notes.has(m + ',' + (c - 1))) ? labelFor(m, c) : '';
+      }
+    }
+  }
+
+  let dragging = false, drawMode = 'draw';
+  function applyCell(el) {
+    const m = midiOf(+el.dataset.r), key = m + ',' + el.dataset.c;
+    if (drawMode === 'draw') {
+      if (!notes.has(key)) { notes.add(key); tone(m, 0, 0.35, 0.2); }
+    } else notes.delete(key);
+  }
+  rcells.addEventListener('pointerdown', e => {
+    const el = e.target.closest('.rc');
+    if (!el) return;
+    e.preventDefault();
+    const m = midiOf(+el.dataset.r);
+    drawMode = notes.has(m + ',' + el.dataset.c) ? 'erase' : 'draw';
+    dragging = true;
+    try { rcells.setPointerCapture(e.pointerId); } catch (err) {}
+    applyCell(el); paint();
+  });
+  rcells.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const cell = el && el.closest && el.closest('.rc');
+    if (cell && rcells.contains(cell)) { applyCell(cell); paint(); }
+  });
+  window.addEventListener('pointerup', () => {
+    if (!dragging) return;
+    dragging = false;
+    saveNotes();
+    document.getElementById('dl').disabled = !(slots.some(b => b.length) || notes.size);
+    document.getElementById('clearmel').disabled = !notes.size;
+  });
+
+  // ---- 再生（8分音符ごとに先読み予約。置いた音がその周のうちに鳴る） ------------------
+  const stepSec = () => 60 / bpm / 2;
+  let bus = null, timer = null, raf = null, startAt = 0, lastCol = -1;
+  let voiced = null, voicedFor = '';
+  function voicing(seq) {
+    const key = seq.map(s => s.name).join('-') + '@' + tonicPc;
+    if (key !== voicedFor) { voiced = window.Voicing.voice(seq.map(s => s.name), tonicPc); voicedFor = key; }
+    return voiced;
+  }
+  function scheduleStep(n, at, out) {
+    const c = audio(), rel = at - c.currentTime, col = n % COLS;
+    const seq = segments();
+    if (seq.length) {
+      const v = voicing(seq);
+      seq.forEach((s, k) => {
+        if (s.start !== col) return;
+        const dur = s.len * stepSec() * 0.95;
+        chord(v[k].upper, rel, dur, notes.size ? 0.09 : 0.14, out);
+        tone(v[k].bass, rel, dur, notes.size ? 0.15 : 0.19, out);
+        tone(v[k].bass + 12, rel, dur, notes.size ? 0.075 : 0.095, out);
+      });
+    }
+    for (let m = LOW; m <= HIGH; m++) {
+      if (!notes.has(m + ',' + col)) continue;
+      if (col > 0 && notes.has(m + ',' + (col - 1))) continue;   // 伸ばしている途中
+      let len = 1;
+      while (col + len < COLS && notes.has(m + ',' + (col + len))) len++;
+      tone(m, rel, len * stepSec() * 0.95, 0.2, out);
+    }
+  }
+  function markCol(col) {
+    if (col === lastCol) return;
+    if (lastCol >= 0) byCol[lastCol].forEach(el => el.classList.remove('now'));
+    if (col >= 0) byCol[col].forEach(el => el.classList.add('now'));
+    cellEls.forEach(cs => cs.forEach(el => el.classList.remove('now')));
+    if (col >= 0) {
+      const cs = cellEls[Math.floor(col / STEPS)] || [];
+      const cell = cs.length > 1 ? cs[(col % STEPS) < STEPS / 2 ? 0 : 1] : cs[0];
+      if (cell) cell.classList.add('now');
+    }
+    lastCol = col;
   }
   function stopLoop() {
-    if (loopTimer) { clearTimeout(loopTimer); loopTimer = null; }
-    if (hlTimer) { clearInterval(hlTimer); hlTimer = null; }
-    clearNow();
-    if (loopBus) {
-      const bus = loopBus;
-      loopBus = null;
+    if (timer) { clearTimeout(timer); timer = null; }
+    if (raf) { cancelAnimationFrame(raf); raf = null; }
+    if (bus) {
+      const b = bus; bus = null;
       try {
-        bus.gain.cancelScheduledValues(ac.currentTime);
-        bus.gain.setTargetAtTime(0, ac.currentTime, 0.02);
+        b.gain.cancelScheduledValues(ac.currentTime);
+        b.gain.setTargetAtTime(0, ac.currentTime, 0.02);
       } catch (e) {}
-      setTimeout(() => { try { bus.disconnect(); } catch (e) {} }, 400);
+      setTimeout(() => { try { b.disconnect(); } catch (e) {} }, 400);
     }
+    markCol(-1);
     document.getElementById('play').textContent = '鳴らす';
   }
-
   function startLoop() {
     stopLoop();
-    if (!slots.some(b => b.length)) { status('コードを置いてから。'); return; }
+    if (!slots.some(b => b.length) && !notes.size) { status('コードかメロを置いてから。'); return; }
     const c = audio();
-    const bus = c.createGain();
-    bus.gain.value = 1;
-    bus.connect(c.destination);
-    loopBus = bus;
-    let nextAt = c.currentTime + 0.08;
-    anchor = nextAt;
+    const b = c.createGain();
+    b.gain.value = 1; b.connect(c.destination); bus = b;
+    startAt = c.currentTime + 0.08;
+    let nextStep = 0;
     (function tick() {
-      if (loopBus !== bus) return;
-      while (nextAt < c.currentTime + LOOKAHEAD) {
-        const seq = flatten();   // 毎周読み直すので、鳴らしながら差し替えられる
-        if (seq.length) {
-          const voiced = window.Voicing.voice(seq.map(x => x.name), tonicPc);
-          seq.forEach((x, k) => {
-            const v = voiced[k], at = nextAt - c.currentTime + x.start * beatSec(), dur = x.beats * beatSec() * 0.95;
-            chord(v.upper, at, dur, 0.14, bus);
-            tone(v.bass, at, dur, 0.19, bus);          // ベース
-            tone(v.bass + 12, at, dur, 0.095, bus);    // ベースのオクターブ上
-          });
-        }
-        nextAt += BARS * 4 * beatSec();
+      if (bus !== b) return;
+      const step = stepSec(), horizon = c.currentTime + SCHED_AHEAD;
+      while (startAt + nextStep * step < horizon) {
+        const at = startAt + nextStep * step;
+        if (at >= c.currentTime - 0.02) scheduleStep(nextStep, at, b);   // 遅れた分はまとめて鳴らさず捨てる
+        nextStep++;
       }
-      loopTimer = setTimeout(tick, 500);
+      timer = setTimeout(tick, TICK_MS);
     })();
-    hlTimer = setInterval(() => {
-      const t = c.currentTime - anchor;
-      clearNow();
-      if (t < 0) return;
-      const beat = (t / beatSec()) % (BARS * 4);
-      const bar = Math.floor(beat / 4);
-      const cells = cellEls[bar] || [];
-      const cell = cells.length > 1 ? cells[Math.floor((beat % 4) / 2)] : cells[0];
-      if (cell) cell.classList.add('now');
-    }, 60);
+    (function follow() {
+      if (bus !== b) return;
+      const el = c.currentTime - startAt;
+      markCol(el < 0 ? -1 : Math.floor((el % (COLS * stepSec())) / stepSec()));
+      raf = requestAnimationFrame(follow);
+    })();
     document.getElementById('play').textContent = '止める';
   }
-  document.getElementById('play').onclick = () => (loopBus ? stopLoop() : startLoop());
+  document.getElementById('play').onclick = () => (bus ? stopLoop() : startLoop());
 
   // ---- キー・テンポ ------------------------------------------------------------
   const keySel = document.getElementById('key'), bpmSel = document.getElementById('bpm');
@@ -388,50 +561,81 @@
   BPMS.forEach(b => { const o = mk('option', '', b + ' BPM'); o.value = String(b); bpmSel.appendChild(o); });
   keySel.value = String(tonicPc);
   bpmSel.value = String(bpm);
-  keySel.onchange = () => { tonicPc = +keySel.value; store('prog:key', keySel.value); if (loopBus) startLoop(); };
-  bpmSel.onchange = () => { bpm = +bpmSel.value; store('prog:bpm', bpmSel.value); if (loopBus) startLoop(); };
+  keySel.onchange = () => {
+    const next = +keySel.value;
+    const delta = keyOffset(next) - keyOffset(tonicPc);
+    rwarn.textContent = '';
+    if (delta && notes.size) {
+      // メロは全体を同じ量だけ動かす（数字は変わらず高さだけ変わる）。盤面から出るときはオクターブ単位でずらす
+      let lo = Infinity, hi = -Infinity;
+      notes.forEach(k => { const m = +k.split(',')[0]; if (m < lo) lo = m; if (m > hi) hi = m; });
+      const cands = [delta, delta - 12, delta + 12, delta - 24, delta + 24];
+      const d = cands.find(x => lo + x >= LOW && hi + x <= HIGH);
+      if (d === undefined) rwarn.textContent = '音域が広すぎてこのキーに収まらない。メロはそのまま（度数だけ変わる）。';
+      else {
+        const moved = Array.from(notes, k => { const q = k.split(','); return (+q[0] + d) + ',' + q[1]; });
+        notes.clear(); moved.forEach(k => notes.add(k));
+        saveNotes();
+      }
+    }
+    tonicPc = next; store('prog:key', keySel.value);
+    paint();
+  };
+  bpmSel.onchange = () => { bpm = +bpmSel.value; store('prog:bpm', bpmSel.value); if (bus) startLoop(); };
 
   document.getElementById('clear').onclick = () => {
     slots = Array.from({ length: BARS }, () => []);
     render();
-    status('消した。');
+    status('コードを消した。');
+  };
+  document.getElementById('clearmel').onclick = () => {
+    notes.clear(); saveNotes(); render();
+    status('メロを消した。');
   };
 
-  // ---- MIDI（format 0・480分解能） ---------------------------------------------
+  // ---- MIDI（format 1・480分解能・コードとメロの2トラック） ------------------------
   function vlq(n) {
     const out = [n & 127];
     n = Math.floor(n / 128);
     while (n > 0) { out.unshift((n & 127) | 128); n = Math.floor(n / 128); }
     return out;
   }
-  function midiBytes() {
-    const TPQ = 480, GAP = 20;
-    const seq = flatten();
-    const voiced = window.Voicing.voice(seq.map(x => x.name), tonicPc);   // 再生と同じボイシング
-    const ev = [];
-    seq.forEach((x, k) => {
-      const t0 = Math.round(x.start * TPQ), len = Math.round(x.beats * TPQ);
-      const v = voiced[k], notes = [v.bass].concat(v.upper);
-      notes.forEach(n => ev.push({ t: t0, b: [0x90, n, n === v.bass ? 92 : 78] }));
-      notes.forEach(n => ev.push({ t: t0 + len - GAP, b: [0x80, n, 0] }));
-    });
+  const TPQ = 480, STEP_T = TPQ / 2, GAP = 20;
+  function track(head, ev) {
     ev.sort((a, b) => a.t - b.t);
-    const us = Math.round(60000000 / bpm);
-    const track = [];
+    const bytes = [];
     let last = 0;
-    const push = (t, bytes) => { track.push(...vlq(t - last), ...bytes); last = t; };
-    push(0, [0xFF, 0x51, 0x03, (us >> 16) & 255, (us >> 8) & 255, us & 255]);   // テンポ
-    push(0, [0xFF, 0x58, 0x04, 4, 2, 24, 8]);                                   // 4/4
+    const push = (t, b) => { bytes.push(...vlq(t - last), ...b); last = t; };
+    head.forEach(h => push(0, h));
     ev.forEach(e => push(e.t, e.b));
-    push(BARS * 4 * TPQ, [0xFF, 0x2F, 0x00]);   // 8小節ちょうどで終わらせる（DAWでループしやすい）
-    const len = track.length;
-    return new Uint8Array([
-      0x4D, 0x54, 0x68, 0x64, 0, 0, 0, 6, 0, 0, 0, 1, (TPQ >> 8) & 255, TPQ & 255,
-      0x4D, 0x54, 0x72, 0x6B, (len >> 24) & 255, (len >> 16) & 255, (len >> 8) & 255, len & 255
-    ].concat(track));
+    push(COLS * STEP_T, [0xFF, 0x2F, 0x00]);   // 8小節ちょうどで終わらせる（DAWでループしやすい）
+    const len = bytes.length;
+    return [0x4D, 0x54, 0x72, 0x6B, (len >> 24) & 255, (len >> 16) & 255, (len >> 8) & 255, len & 255].concat(bytes);
+  }
+  const nameMeta = s => [0xFF, 0x03, s.length].concat(Array.from(s, ch => ch.charCodeAt(0)));
+  function midiBytes() {
+    const us = Math.round(60000000 / bpm);
+    const seq = segments(), v = seq.length ? window.Voicing.voice(seq.map(s => s.name), tonicPc) : [];   // 再生と同じボイシング
+    const cev = [];
+    seq.forEach((s, k) => {
+      const t0 = s.start * STEP_T, len = s.len * STEP_T, list = [v[k].bass].concat(v[k].upper);
+      list.forEach(n => cev.push({ t: t0, b: [0x90, n, n === v[k].bass ? 92 : 78] }));
+      list.forEach(n => cev.push({ t: t0 + len - GAP, b: [0x80, n, 0] }));
+    });
+    const mev = [];
+    for (let m = LOW; m <= HIGH; m++) for (let c = 0; c < COLS; c++) {
+      if (!notes.has(m + ',' + c) || (c > 0 && notes.has(m + ',' + (c - 1)))) continue;
+      let len = 1;
+      while (c + len < COLS && notes.has(m + ',' + (c + len))) len++;
+      mev.push({ t: c * STEP_T, b: [0x91, m, 96] });
+      mev.push({ t: (c + len) * STEP_T - GAP, b: [0x81, m, 0] });
+    }
+    const t0 = track([[0xFF, 0x51, 0x03, (us >> 16) & 255, (us >> 8) & 255, us & 255], [0xFF, 0x58, 0x04, 4, 2, 24, 8], nameMeta('Chords')], cev);
+    const t1 = track([nameMeta('Melody')], mev);
+    return new Uint8Array([0x4D, 0x54, 0x68, 0x64, 0, 0, 0, 6, 0, 1, 0, 2, (TPQ >> 8) & 255, TPQ & 255].concat(t0, t1));
   }
   document.getElementById('dl').onclick = () => {
-    if (!slots.some(b => b.length)) return;
+    if (!slots.some(b => b.length) && !notes.size) return;
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([midiBytes()], { type: 'audio/midi' }));
     a.download = 'progression_' + FILE_KEYS[tonicPc] + '_' + bpm + 'bpm.mid';

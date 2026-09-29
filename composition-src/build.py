@@ -576,7 +576,7 @@ CSS = """/* 応用実習1,2：作曲 特設サイト 共通スタイル（compos
   --grid:#c6dff0;--ring:rgba(12,21,34,.12);--acc:#1f6fc4;--acc-soft:#d4e8f8;
   --acc-ink:#175a9f; /* --acc-soft のような色地に文字を載せるとき用 */
   --ng-ink:#ad3a28;  /* 誤答など、否定を表す文字色 */
-  --row-scale:#dcecf8;--row-open:#c9e2f5; /* ピアノロールの行（スケール／解禁済み） */
+  --row-scale:#dcecf8;--row-open:#fbe3a6; /* ピアノロールの行（スケール／今回使う音＝黄色で目立たせる） */
 }
 html{background:var(--page);color-scheme:light}
 *{box-sizing:border-box}
@@ -725,6 +725,7 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
 .roll-deg{display:grid;place-items:center;font-size:10px;line-height:1;color:transparent}
 .roll-deg.scale{color:var(--ink2)}
 .roll-deg.open{color:var(--acc-ink);font-weight:700}
+.roll .roll-deg.open{background:var(--row-open);color:#7a4f00}
 .roll-cells{display:grid;grid-template-columns:repeat(32,1fr);grid-auto-rows:var(--rh);
   touch-action:none;user-select:none}
 .rc{border-right:1px solid var(--grid);cursor:pointer}
@@ -1190,7 +1191,7 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
         }
       }
       warnEl.textContent = warn;
-      noteEl.textContent = '濃い行＝スケール、番号が濃い行＝解禁音。横1マス＝8分音符、太線＝小節。';
+      noteEl.textContent = '黄色い行＝今回使う音、濃い行＝スケール。横1マス＝8分音符、太線＝小節。';
     }
 
     // ---- 打ち込み ----
@@ -1972,7 +1973,7 @@ def render_flow(d, no, flow, practice_roll, chords):
             elif m.group(2):
                 out.append(
                     f'<div class="roll" data-lesson="{no:02d}-demo" data-progs="{chords}" '
-                    f'data-degrees="1,2,3,4,5,6,7" data-nosave="1" data-notes="{demo_notes(m.group(2))}"></div>'
+                    f'data-degrees="" data-nosave="1" data-notes="{demo_notes(m.group(2))}"></div>'
                 )
             elif m.group(3):
                 st = next((x for x in d["roadmap"] if x["title"].startswith(m.group(3).strip())), None)

@@ -149,7 +149,7 @@
         }
       }
       warnEl.textContent = warn;
-      noteEl.textContent = '濃い行＝スケール、番号が濃い行＝解禁音。横1マス＝8分音符、太線＝小節。';
+      noteEl.textContent = '黄色い行＝今回使う音、濃い行＝スケール。横1マス＝8分音符、太線＝小節。';
     }
 
     // ---- 打ち込み ----

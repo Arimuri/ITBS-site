@@ -2169,7 +2169,8 @@ def build_history(d):
         nav(1, "理論の歴史"),
         '<p class="eyebrow">応用実習1,2：作曲</p>',
         f"<h1>{inline(h['title'])}</h1>",
-        (f'<p class="lead">{inline(h["lead"])}</p>' if h["lead"] else ""),
+        # 節の頭の1行（箇条書きでなければ）は、コツの鉄則と同じくデカく出す
+        (f'<div class="motto"><p>{inline(h["lead"])}</p></div>' if h["lead"] else ""),
         h["intro"],
         chart,
     ]

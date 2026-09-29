@@ -465,7 +465,9 @@ def load():
         lead, rest = "", list(body)
         for n, ln in enumerate(rest):
             if ln.strip():
-                lead, rest = ln.strip(), rest[n + 1 :]
+                # 節の頭が箇条書きなら、リードにせず本文（intro）として出す
+                if not is_bullet(ln):
+                    lead, rest = ln.strip(), rest[n + 1 :]
                 break
         head_at = next((i for i, ln in enumerate(rest) if ln.startswith("### ")), len(rest))
         sections = []
@@ -2167,7 +2169,7 @@ def build_history(d):
         nav(1, "理論の歴史"),
         '<p class="eyebrow">応用実習1,2：作曲</p>',
         f"<h1>{inline(h['title'])}</h1>",
-        f'<p class="lead">{inline(h["lead"])}</p>',
+        (f'<p class="lead">{inline(h["lead"])}</p>' if h["lead"] else ""),
         h["intro"],
         chart,
     ]

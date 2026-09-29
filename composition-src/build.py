@@ -447,6 +447,36 @@ def load():
             }
         )
 
+    # ざっくり音楽理論史（節が無ければページも作らない）
+    data["history"] = None
+    hist_key = next((k for k in secs if "理論史" in k), None)
+    if hist_key:
+        body = secs[hist_key]
+        lead, rest = "", list(body)
+        for n, ln in enumerate(rest):
+            if ln.strip():
+                lead, rest = ln.strip(), rest[n + 1 :]
+                break
+        head_at = next((i for i, ln in enumerate(rest) if ln.startswith("### ")), len(rest))
+        sections = []
+        for head, bullets in split_sections(rest[head_at:], "### "):
+            items, others = [], []
+            for ln in bullets:
+                m = re.match(r"^- \*\*(.+?)\*\*：(.*)$", ln.strip())
+                if m:
+                    items.append((m.group(1), m.group(2).strip()))
+                else:
+                    others.append(ln)
+            # ラベルの頭が年代（数字・世紀）ならタイムライン、そうでなければ行（つながりの節）
+            timeline = sum(1 for l, _ in items if re.search(r"[0-9０-９]|世紀", l.split("　")[0])) > len(items) / 2
+            sections.append({"title": head, "items": items, "timeline": timeline, "extra": render_blocks(others)})
+        data["history"] = {
+            "title": hist_key,
+            "lead": lead,
+            "intro": render_blocks(rest[:head_at]),
+            "sections": sections,
+        }
+
     # ポップスのコツ
     _, body = find("ポップスのコツ")
     data["tips_note"] = next(
@@ -612,6 +642,24 @@ a.card:hover{border-color:var(--acc)}
 .stage-src{font-size:11.5px;color:var(--muted);margin:10px 0 0}
 .stage-src a{color:var(--muted)}
 @media (max-width:520px){.row{grid-template-columns:1fr;gap:3px}.row .lbl{padding-top:0}}
+/* ざっくり音楽理論史（history/）のタイムライン。バークリーの系譜は .alt で緑にする */
+.timeline{list-style:none;margin:18px 0 0;padding:0;position:relative}
+.timeline::before{content:"";position:absolute;left:104px;top:8px;bottom:8px;width:2px;background:var(--grid)}
+.timeline li{position:relative;display:grid;grid-template-columns:88px 1fr;gap:28px;padding:0 0 22px;margin:0}
+.timeline li:last-child{padding-bottom:4px}
+.timeline li::before{content:"";position:absolute;left:99px;top:5px;width:12px;height:12px;border-radius:50%;
+  background:var(--acc);border:2px solid var(--page)}
+.timeline .tl-era{font-size:12px;font-weight:700;color:var(--acc-ink);text-align:right;line-height:1.5;padding-top:2px}
+.timeline .tl-title{font-size:15px;font-weight:700;margin:0;line-height:1.5}
+.timeline .tl-text{font-size:13.5px;color:var(--ink2);line-height:1.85;margin:4px 0 0}
+.timeline.alt li::before{background:#1d6a3a}
+.timeline.alt .tl-era{color:#1d6a3a}
+@media (max-width:560px){
+  .timeline::before{left:8px}
+  .timeline li{grid-template-columns:1fr;gap:2px;padding-left:30px}
+  .timeline li::before{left:3px;top:4px}
+  .timeline .tl-era{text-align:left}
+}
 /* 表 */
 .tablebox{overflow-x:auto;margin:12px 0}
 table{border-collapse:collapse;width:100%;font-size:13px}
@@ -1655,6 +1703,7 @@ def nav(depth, current=""):
     links = [
         (f"{up}", "← 授業トップ"),
         (f"{up}roadmap/", "理論ロードマップ"),
+        (f"{up}history/", "理論の歴史"),
         (f"{up}tips/", "ポップスのコツ"),
         (f"{up}ear/", "1度当て練習"),
         (f"{up}prog/", "コード進行ジェネレータ"),
@@ -1694,6 +1743,7 @@ def build_index(d):
         '<div class="chips">'
         '<a href="#lessons">全14回</a>'
         '<a href="roadmap/">理論ロードマップ</a>'
+        '<a href="history/">理論の歴史</a>'
         '<a href="tips/">ポップスのコツ</a>'
         '<a href="ear/">1度当て練習</a>'
         '<a href="prog/">コード進行ジェネレータ</a>'
@@ -1967,6 +2017,48 @@ def build_roadmap(d):
     )
 
 
+def build_history(d):
+    h = d["history"]
+    parts = [
+        '<div class="wrap narrow">',
+        nav(1, "理論の歴史"),
+        '<p class="eyebrow">応用実習1,2：作曲</p>',
+        f"<h1>{inline(h['title'])}</h1>",
+        f'<p class="lead">{inline(h["lead"])}</p>',
+        h["intro"],
+    ]
+    for sec in h["sections"]:
+        parts.append('<section class="stage">')
+        parts.append(f"<h2>{inline(sec['title'])}</h2>")
+        if sec["timeline"]:
+            lis = []
+            for label, text in sec["items"]:
+                p = label.split("　")
+                era, ttl = p[0], "　".join(p[1:]) or p[0]
+                lis.append(
+                    f'<li><div class="tl-era">{inline(era)}</div>'
+                    f'<div><p class="tl-title">{inline(ttl)}</p><p class="tl-text">{inline(text)}</p></div></li>'
+                )
+            cls = "timeline alt" if "バークリー" in sec["title"] else "timeline"
+            parts.append(f'<ul class="{cls}">{"".join(lis)}</ul>')
+        else:
+            rows = "".join(
+                f'<div class="row"><div class="lbl">{inline(l)}</div><p class="val">{inline(t)}</p></div>'
+                for l, t in sec["items"]
+            )
+            parts.append(f'<div class="rows tight">{rows}</div>')
+        if sec.get("extra"):
+            parts.append(sec["extra"])
+        parts.append("</section>")
+    parts += [FOOT, "</div>"]
+    return page(
+        f"{h['title']}｜{SITE_TITLE}",
+        "クラシック理論とバークリー理論、2つの系譜をざっくり把握する。実践が先、理論があと。",
+        f"{BASE}history/",
+        "\n".join(parts),
+    )
+
+
 def main():
     d = load()
     (OUT / "assets").mkdir(parents=True, exist_ok=True)
@@ -1987,6 +2079,8 @@ def main():
         write(f"{no:02d}/index.html", build_lesson(d, no))
     write("tips/index.html", build_tips(d))
     write("roadmap/index.html", build_roadmap(d))
+    if d["history"]:
+        write("history/index.html", build_history(d))
 
     print(f"{len(written)} ファイルを書き出した → {OUT}")
     for rel in written:

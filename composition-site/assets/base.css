@@ -120,6 +120,9 @@ html.js .hrv.show{opacity:1}
 @media (prefers-reduced-motion:reduce){html.js .hrv{opacity:1;transition:none}}
 /* 表 */
 .tablebox{overflow-x:auto;margin:12px 0}
+/* 評価の表：2列しかないので幅を内容に合わせ、比重は右揃え */
+.eval table{width:auto;min-width:min(100%,360px)}
+.eval th:last-child,.eval td:last-child{text-align:right;font-variant-numeric:tabular-nums}
 table{border-collapse:collapse;width:100%;font-size:13px}
 th,td{padding:7px 10px;text-align:left;border-bottom:1px solid var(--grid);vertical-align:top}
 th{font-size:10.5px;color:var(--muted);letter-spacing:.07em;white-space:nowrap}

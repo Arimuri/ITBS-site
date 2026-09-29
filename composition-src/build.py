@@ -546,7 +546,7 @@ def load():
         )
     data["tips"] = tips
 
-    title, body = find("評価とワークシート")
+    title, body = find("評価")
     data["eval_title"] = title
     data["eval_html"] = render_blocks(body)
 
@@ -680,6 +680,9 @@ html.js .hrv.show{opacity:1}
 @media (prefers-reduced-motion:reduce){html.js .hrv{opacity:1;transition:none}}
 /* 表 */
 .tablebox{overflow-x:auto;margin:12px 0}
+/* 評価の表：2列しかないので幅を内容に合わせ、比重は右揃え */
+.eval table{width:auto;min-width:min(100%,360px)}
+.eval th:last-child,.eval td:last-child{text-align:right;font-variant-numeric:tabular-nums}
 table{border-collapse:collapse;width:100%;font-size:13px}
 th,td{padding:7px 10px;text-align:left;border-bottom:1px solid var(--grid);vertical-align:top}
 th{font-size:10.5px;color:var(--muted);letter-spacing:.07em;white-space:nowrap}
@@ -1768,7 +1771,7 @@ def build_index(d):
         '<a href="ear/">1度当て練習</a>'
         '<a href="prog/">コード進行ジェネレータ</a>'
         + ('<a href="#flow">1回の流れ</a>' if d["flow_title"] else "")
-        + '<a href="#eval">評価と提出物</a>'
+        + '<a href="#eval">評価</a>'
         "</div>",
         '<h2 id="lessons">全14回</h2>',
         f'<p>{inline(d["lessons_note"])}</p>' if d["lessons_note"] else "",
@@ -1808,7 +1811,7 @@ def build_index(d):
         "<h2>表記ルール</h2>" if "到達目標" not in d["about_html"] else "<h2>ゴールと表記ルール</h2>",
         columns(d["about_html"]),
         f'<h2 id="eval">{inline(d["eval_title"])}</h2>',
-        columns(d["eval_html"]),
+        f'<div class="eval">{columns(d["eval_html"])}</div>',
         FOOT,
         "</div>",
     ]

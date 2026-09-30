@@ -1831,6 +1831,12 @@ KEYBOARD_JS = r"""/* 鍵盤ウィジェット（composition-src/build.py が生�
 })();
 """
 
+# ブラウザに古い JS/CSS が残らないよう、読み込み先に中身のハッシュを付ける（assets/roll.js?v=abcd1234）
+def asset(name):
+    import hashlib
+    src = {"base.css": CSS, "voicing.js": VOICING_JS, "roll.js": ROLL_JS, "keyboard.js": KEYBOARD_JS}[name]
+    return f"assets/{name}?v={hashlib.md5(src.encode('utf-8')).hexdigest()[:8]}"
+
 # -------------------------------------------------------------------- テンプレート
 
 def page(title, desc, url, body, css_extra="", depth=1):
@@ -1851,7 +1857,7 @@ def page(title, desc, url, body, css_extra="", depth=1):
 <meta property="og:url" content="{url}">
 <meta property="og:image" content="{BASE}og.png">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="{up}assets/base.css">{css_extra}
+<link rel="stylesheet" href="{up}{asset("base.css")}">{css_extra}
 </head>
 <body>
 {body}
@@ -2122,10 +2128,10 @@ def build_lesson(d, no):
     parts.append(f'<div class="pager">{prev_l}<div class="sp"></div>{next_l}</div>')
     parts.append(FOOT)
     parts.append("</div>")
-    parts.append('<script src="../assets/voicing.js" defer></script>')
-    parts.append('<script src="../assets/roll.js" defer></script>')
+    parts.append(f'<script src="../{asset("voicing.js")}" defer></script>')
+    parts.append(f'<script src="../{asset("roll.js")}" defer></script>')
     if any('data-widget=' in p for p in parts):   # 流れに鍵盤・簡易ジェネレータがあるときだけ
-        parts.append('<script src="../assets/keyboard.js" defer></script>')
+        parts.append(f'<script src="../{asset("keyboard.js")}" defer></script>')
 
     desc = f'ドリル{no}「{ls["title"]}」。使える音は{ls["sounds_raw"]}、伴奏は{ls["prog"]}。'
     aim = dict(ls["items"]).get("狙い", "")
@@ -2206,8 +2212,8 @@ def build_tips(d):
     for view in rest:
         parts += section(view)
 
-    parts.append('<script src="../assets/voicing.js" defer></script>')
-    parts.append('<script src="../assets/keyboard.js" defer></script>')
+    parts.append(f'<script src="../{asset("voicing.js")}" defer></script>')
+    parts.append(f'<script src="../{asset("keyboard.js")}" defer></script>')
     parts += [FOOT, "</div>"]
     return page(
         f"ポップスのコツ｜{SITE_TITLE}",
@@ -2256,8 +2262,8 @@ def build_roadmap(d):
         if src:
             parts.append(src)
         parts.append("</section>")
-    parts.append('<script src="../assets/voicing.js" defer></script>')
-    parts.append('<script src="../assets/keyboard.js" defer></script>')
+    parts.append(f'<script src="../{asset("voicing.js")}" defer></script>')
+    parts.append(f'<script src="../{asset("keyboard.js")}" defer></script>')
     parts += [FOOT, "</div>"]
     return page(
         "何もわからない人のための音楽理論ロードマップ｜" + SITE_TITLE,

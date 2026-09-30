@@ -28,6 +28,13 @@
 | `assets/keyboard.js` | ロードマップの鍵盤とコツのコードtier（build.py内の `KEYBOARD_JS` を直す） |
 | `assets/voicing.js` | サイトで鳴る和音のボイシング（build.py内の `VOICING_JS` を直す） |
 
+## JS/CSS の読み込みには版番号が付く
+
+`assets/roll.js?v=5b93be0d` のように、中身のハッシュを `?v=` に付けて読み込む（build.py の `asset()`）。
+サーバーが Cache-Control を返さないため、付けないとブラウザに古い JS が残り、新しい HTML と食い違う
+（2026-09-30：古い roll.js が data-key を知らず、春泥棒のコードだけ C で鳴った）。
+手書きページ（ear/・prog/）の `voicing.js?v=…` と `base.css?v=…` は手で付け直す
+
 ## 見た目について決めたこと
 
 - 背景は薄い水色（`--page:#e6f4fc`）。**OSのダークモードでも反転させない**。

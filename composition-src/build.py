@@ -1091,6 +1091,8 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
 
   function setup(root) {
     const lesson = root.dataset.lesson || '0';
+    // data-bars：このロールの小節数（既定4）。見本で「弱起の小節＋8小節」などにする
+    const BARS = Math.max(1, +root.dataset.bars || 4), COLS = BARS * STEPS;
     const progs = (root.dataset.progs || 'I-VIm-IV-V').split('|');
     let prog = progs[0].split('-');
     const open = new Set((root.dataset.degrees || '').split(',').filter(Boolean));
@@ -1101,7 +1103,7 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
     // data-heads：同じ高さの音が続くとき、ここで音を切る（「ミミミー」を1本の長い音にしない）
     const heads = new Set((root.dataset.heads || '').split(/\s+/).filter(Boolean));
     const isHead = (m, c) => c > 0 && notes.has(m + ',' + (c - 1)) && heads.has(m + ',' + c);
-    let tonicPc = 0, bpm = DEFAULT_BPM, dragging = false, drawMode = 'draw', warn = '';
+    let tonicPc = (+root.dataset.key || 0) % 12, bpm = DEFAULT_BPM, dragging = false, drawMode = 'draw', warn = '';   // data-key：最初のキー（0=C）
     const stepSec = () => 60 / bpm / 2;           // 横1マス＝8分音符
     const cycleLen = () => COLS * stepSec();      // 4小節1周
     let bus = null, timer = null, raf = null, startAt = 0, lastCol = -1;
@@ -1136,6 +1138,11 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
     const gutEl = mk('div', 'roll-gutter');
     const cellsEl = mk('div', 'roll-cells');
     [mk('div', 'roll-corner'), barsEl, gutEl, cellsEl].forEach(el => grid.appendChild(el));
+    if (BARS !== 4) {                                   // CSS は4小節前提なので、それ以外は幅と列数を上書き
+      grid.style.minWidth = (BARS * 150) + 'px';
+      barsEl.style.gridTemplateColumns = 'repeat(' + BARS + ',1fr)';
+      cellsEl.style.gridTemplateColumns = 'repeat(' + COLS + ',1fr)';
+    }
     scroll.appendChild(grid);
     const noteEl = mk('p', 'roll-note');
     const warnEl = mk('p', 'roll-warn');
@@ -1162,13 +1169,14 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
       barsEl.appendChild(d); bars.push(d);
     }
     // 進行の1要素＝1小節。「I+IV」と書くと小節の真ん中でコードが変わる（2拍ずつ）
-    const barChords = b => String(prog[b % prog.length]).split('+');
+    // 「NC」の小節はコードなし（弱起の小節など）
+    const barChords = b => String(prog[b % prog.length]).split('+').filter(c => c !== 'NC');
     function updateBars() {
       for (let b = 0; b < BARS; b++) {
         const cs = barChords(b);
         bars[b].innerHTML = '';
         bars[b].classList.toggle('split', cs.length > 1);
-        cs.forEach(c => { const sp = document.createElement('span'); sp.textContent = c; bars[b].appendChild(sp); });
+        (cs.length ? cs : ['—']).forEach(c => { const sp = document.createElement('span'); sp.textContent = c; bars[b].appendChild(sp); });
       }
       for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++)
         cells[r][c].classList.toggle('halfstart', c % STEPS === STEPS / 2 && barChords(Math.floor(c / STEPS)).length > 1);
@@ -1289,7 +1297,7 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
       const col = ((n % COLS) + COLS) % COLS;
       const inBar = col % STEPS, bv = voicing()[Math.floor(col / STEPS)];
       const half = bv.length > 1 && inBar === STEPS / 2;
-      if (inBar === 0 || half) {                     // 小節のあたま（2コードの小節は真ん中も）：コードとベース
+      if (bv.length && (inBar === 0 || half)) {       // 小節のあたま（2コードの小節は真ん中も）：コードとベース
         const v = half ? bv[1] : bv[0];
         const dur = (bv.length > 1 ? STEPS / 2 : STEPS) * stepSec() * 0.96;
         v.upper.forEach(m => tone(m, rel, dur, 0.075, out));
@@ -2007,11 +2015,15 @@ def render_flow(d, no, flow, practice_roll, chords):
                 # 「prog=I-I-I-V7」があればその伴奏、無ければそのドリルの伴奏
                 toks = m.group(2).split()
                 demo_prog = next((t[5:] for t in toks if t.startswith("prog=")), chords)
-                spec = " ".join(t for t in toks if not t.startswith("prog="))
+                demo_bars = next((t[5:] for t in toks if t.startswith("bars=")), "")
+                demo_key = next((t[4:] for t in toks if t.startswith("key=")), "")
+                spec = " ".join(t for t in toks if not re.match(r"^(prog|bars|key)=", t))
                 cells, heads = demo_notes(spec)
                 out.append(
                     f'<div class="roll" data-lesson="{no:02d}-demo" data-progs="{html.escape(demo_prog)}" '
-                    f'data-degrees="" data-nosave="1" data-notes="{cells}" data-heads="{heads}"></div>'
+                    + (f'data-bars="{int(demo_bars)}" ' if demo_bars else "")
+                    + (f'data-key="{int(demo_key)}" ' if demo_key else "")
+                    + f'data-degrees="" data-nosave="1" data-notes="{cells}" data-heads="{heads}"></div>'
                 )
             elif m.group(3):
                 st = next((x for x in d["roadmap"] if x["title"].startswith(m.group(3).strip())), None)

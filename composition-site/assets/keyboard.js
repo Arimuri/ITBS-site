@@ -388,6 +388,129 @@
     oneBtn.addEventListener('click', () => tone(60 + ((tonic + 6) % 12) - 6, 0, 1.4, 0.24));
   }
 
+  // 進行の再生（中級編の {{play}}）。data-progs="ラベル=IIm7 V7 IM7|IIm7 ♭II7 IM7"
+  // 空白区切りの1要素＝1小節、「A+B」は小節の真ん中で変わる。行ごとに再生ボタンと、鳴る音のピアノロール。
+  // キーは上のプルダウンで全行共通。ロールは voicing.js が組んだ音そのもの（上の3声とベース）を描く
+  function setupPlay(root) {
+    const mk = (tag, cls, text) => { const el = document.createElement(tag); if (cls) el.className = cls; if (text !== undefined) el.textContent = text; return el; };
+    const NS = 'http://www.w3.org/2000/svg';
+    const sv = (tag, attrs, cls) => { const el = document.createElementNS(NS, tag); for (const k in attrs) el.setAttribute(k, attrs[k]); if (cls) el.setAttribute('class', cls); return el; };
+    const BAR = 2.4;                                  // 1小節＝100BPMの4拍
+    const RH = 7, BW = 60, GW = 16, GAP = 5;          // ロールの行の高さ・1小節の幅・度数の欄・上の声部とベースの間
+    const top = mk('div', 'pl-top');
+    const keySel = mk('select', 'pl-key');
+    keySel.setAttribute('aria-label', 'キー');
+    for (let k = 0; k < 12; k++) { const o = mk('option', '', KEYS[k] + ' キー'); o.value = String(k); keySel.appendChild(o); }
+    top.appendChild(keySel);
+    root.appendChild(top);
+    let tonic = 0, bus = null, timers = [], cur = null;
+    const rows = [];
+    // 今のキーでボイシングした音（小節ごとに [{ bass, upper }]）。キーが変わったときだけ組み直す
+    function voiced(r) {
+      if (r.vKey === tonic) return r.v;
+      const flat = [];
+      r.bars.forEach(x => x.split('+').forEach(n => flat.push(n)));
+      const vs = window.Voicing.voice(flat, tonic, { loop: false });
+      let k = 0;
+      r.v = r.bars.map(x => x.split('+').map(() => vs[k++]));
+      r.vKey = tonic;
+      return r.v;
+    }
+    function mark(r, i) {
+      r.cells.forEach((el, q) => el.classList.toggle('now', q === i));
+      (r.hl || []).forEach((el, q) => el.classList.toggle('now', q === i));
+    }
+    // ピアノロール：行は半音。上の3声の帯とベースの帯に分け、キーのスケールの行に度数を振る
+    function drawRoll(r) {
+      const v = voiced(r), ups = [], bs = [];
+      v.forEach(bar => bar.forEach(x => { x.upper.forEach(m => ups.push(m)); bs.push(x.bass); }));
+      const band = (lo, hi) => { const out = []; for (let m = hi; m >= lo; m--) out.push(m); return out; };
+      const hiBand = band(Math.min.apply(null, ups) - 1, Math.max.apply(null, ups) + 1);
+      const loBand = band(Math.min.apply(null, bs) - 1, Math.max.apply(null, bs) + 1);
+      const n = r.bars.length, W = GW + n * BW, H = (hiBand.length + loBand.length) * RH + GAP;
+      const svg = sv('svg', { viewBox: '0 0 ' + W + ' ' + H, role: 'img', 'aria-label': 'ピアノロール' }, 'pl-roll');
+      svg.style.maxWidth = Math.round(W * 1.4) + 'px';
+      const y = {};
+      hiBand.forEach((m, i) => { y[m] = i * RH; });
+      loBand.forEach((m, i) => { y[m] = hiBand.length * RH + GAP + i * RH; });
+      [hiBand, loBand].forEach(list => list.forEach(m => {
+        const d = MAJOR.indexOf((((m - tonic) % 12) + 12) % 12);
+        svg.appendChild(sv('rect', { x: GW, y: y[m], width: n * BW, height: RH }, 'cr-row' + (d >= 0 ? ' scale' : '') + (d === 0 ? ' tonic' : '')));
+        if (d >= 0) {
+          const t = sv('text', { x: GW - 3, y: y[m] + RH - 1.2, 'text-anchor': 'end' }, 'cr-deg' + (d === 0 ? ' tonic' : ''));
+          t.textContent = String(d + 1);
+          svg.appendChild(t);
+        }
+      }));
+      r.hl = r.bars.map((x, i) => { const el = sv('rect', { x: GW + i * BW, y: 0, width: BW, height: H }, 'cr-hl'); svg.appendChild(el); return el; });
+      for (let i = 0; i <= n; i++) svg.appendChild(sv('line', { x1: GW + i * BW, x2: GW + i * BW, y1: 0, y2: H }, 'cr-bar'));
+      svg.appendChild(sv('line', { x1: GW, x2: W, y1: hiBand.length * RH + GAP / 2, y2: hiBand.length * RH + GAP / 2 }, 'cr-sep'));
+      v.forEach((bar, i) => bar.forEach((x, j) => {
+        const w = BW / bar.length, x0 = GW + i * BW + j * w;
+        if (j > 0) svg.appendChild(sv('line', { x1: x0, x2: x0, y1: 0, y2: H }, 'cr-half'));
+        x.upper.forEach(m => svg.appendChild(sv('rect', { x: x0 + 1.5, y: y[m] + 0.8, width: w - 3, height: RH - 1.6, rx: 1 }, 'cr-note')));
+        svg.appendChild(sv('rect', { x: x0 + 1.5, y: y[x.bass] + 0.8, width: w - 3, height: RH - 1.6, rx: 1 }, 'cr-bass'));
+      }));
+      svg.addEventListener('click', () => (cur === r ? stop() : start(r)));
+      if (r.roll) r.roll.replaceWith(svg); else r.body.appendChild(svg);
+      r.roll = svg;
+      if (cur === r) mark(r, -1);
+    }
+    function stop() {
+      timers.forEach(t => clearTimeout(t)); timers = [];
+      if (bus) {
+        const b = bus; bus = null;
+        try { b.gain.cancelScheduledValues(ac.currentTime); b.gain.setTargetAtTime(0, ac.currentTime, 0.02); } catch (e) {}
+        setTimeout(() => { try { b.disconnect(); } catch (e) {} }, 400);
+      }
+      if (cur) {
+        cur.btn.textContent = '再生'; cur.btn.classList.add('pri');
+        mark(cur, -1);
+        cur = null;
+      }
+    }
+    function start(r) {
+      stop();
+      const c = audio(), b = c.createGain();
+      b.gain.value = 1; b.connect(c.destination); bus = b; cur = r;
+      voiced(r).forEach((bar, i) => {
+        bar.forEach((x, j) => {
+          const at = 0.08 + i * BAR + j * BAR / bar.length, dur = BAR / bar.length * 0.95;
+          tone(x.bass, at, dur, 0.13, b); tone(x.bass + 12, at, dur, 0.065, b);
+          x.upper.forEach(m => tone(m, at, dur, 0.08, b));
+        });
+        timers.push(setTimeout(() => mark(r, i), (0.08 + i * BAR) * 1000));
+      });
+      timers.push(setTimeout(stop, (0.08 + r.bars.length * BAR + 0.2) * 1000));
+      r.btn.textContent = '止める'; r.btn.classList.remove('pri');
+    }
+    (root.dataset.progs || '').split('|').forEach(part => {
+      const eq = part.lastIndexOf('=');
+      const label = eq >= 0 ? part.slice(0, eq).trim() : '';
+      const bars = (eq >= 0 ? part.slice(eq + 1) : part).trim().split(/\s+/).filter(Boolean);
+      if (!bars.length) return;
+      const row = mk('div', 'pl-row');
+      const btn = mk('button', 'pl-play pri', '再生');
+      const body = mk('div', 'pl-body');
+      if (label) body.appendChild(mk('div', 'pl-label', label));
+      const list = mk('div', 'pl-bars');
+      const cells = bars.map(x => { const el = mk('span', 'pl-bar', x.replace(/\+/g, ' ')); list.appendChild(el); return el; });
+      body.appendChild(list);
+      row.appendChild(btn); row.appendChild(body);
+      root.appendChild(row);
+      const r = { bars: bars, cells: cells, btn: btn, body: body };
+      btn.addEventListener('click', () => (cur === r ? stop() : start(r)));
+      rows.push(r);
+    });
+    rows.forEach(drawRoll);
+    keySel.addEventListener('change', () => {
+      tonic = +keySel.value;
+      const playing = cur;
+      rows.forEach(drawRoll);
+      if (playing) start(playing);
+    });
+  }
+
   const els = document.querySelectorAll('[data-widget]');
   for (let i = 0; i < els.length; i++) {
     const kind = els[i].dataset.widget;
@@ -396,5 +519,6 @@
     else if (kind === 'chords') setupChords(els[i]);
     else if (kind === 'diatonic') setupDiatonic(els[i]);
     else if (kind === 'progmini') setupProgmini(els[i]);
+    else if (kind === 'play') setupPlay(els[i]);
   }
 })();

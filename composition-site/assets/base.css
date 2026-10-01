@@ -257,6 +257,36 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
   padding:8px 14px;background:var(--surface);color:var(--ink);cursor:pointer}
 .pm-top .pm-play{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:700}
 @media (max-width:560px){.pm-row{grid-template-columns:repeat(2,1fr)}}
+/* 進行の再生（keyboard.js の play。中級編）：行ごとに再生ボタンと小節のチップ */
+.pl-top{margin:14px 0 6px}
+.pl-top select{font:inherit;font-size:13px;border:1px solid var(--ring);border-radius:9px;padding:7px 12px;
+  background:var(--surface);color:var(--ink)}
+.pl-row{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--grid)}
+.pl-row:last-child{border-bottom:1px solid var(--grid);margin-bottom:6px}
+.pl-play{flex:none;min-width:5.2em;font:inherit;font-size:13px;border:1px solid var(--ring);border-radius:9px;
+  padding:7px 12px;background:var(--surface);color:var(--ink);cursor:pointer}
+.pl-play.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:700}
+.pl-body{min-width:0}
+.pl-label{font-size:12px;color:var(--muted);margin:0 0 4px}
+.pl-bars{display:flex;flex-wrap:wrap;gap:6px}
+.pl-bar{font-weight:700;font-size:14px;color:var(--acc-ink);border:1px solid var(--ring);border-radius:8px;
+  padding:3px 10px;background:var(--surface)}
+.pl-bar.now{background:var(--acc-soft);border-color:var(--acc)}
+.pl-body{flex:1}
+.pl-roll{display:block;width:100%;height:auto;margin:8px 0 2px;border:1px solid var(--ring);border-radius:8px;
+  background:var(--surface);cursor:pointer}
+.pl-roll .cr-row{fill:var(--surface)}
+.pl-roll .cr-row.scale{fill:var(--row-scale)}
+.pl-roll .cr-row.tonic{fill:#c6def2}
+.pl-roll .cr-deg{font-size:5.6px;font-weight:700;fill:var(--ink2)}
+.pl-roll .cr-deg.tonic{fill:var(--acc-ink)}
+.pl-roll .cr-hl{fill:transparent}
+.pl-roll .cr-hl.now{fill:rgba(31,111,196,.14)}
+.pl-roll .cr-bar{stroke:var(--muted);stroke-width:.8}
+.pl-roll .cr-half{stroke:var(--muted);stroke-width:.5;stroke-dasharray:1.5 1.5}
+.pl-roll .cr-sep{stroke:var(--muted);stroke-width:.5;stroke-dasharray:2 2}
+.pl-roll .cr-note{fill:var(--acc)}
+.pl-roll .cr-bass{fill:var(--acc-ink)}
 .flow-end{margin-top:40px;padding-top:28px;border-top:3px solid var(--grid);color:var(--ink2);font-size:18px}
 .roll-warn{font-size:12.5px;color:var(--ng-ink);font-weight:700;margin:10px 0 0}
 .roll-warn:empty{display:none}

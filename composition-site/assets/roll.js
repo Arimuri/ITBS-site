@@ -10,6 +10,7 @@
   const MAJOR = [0, 2, 4, 5, 7, 9, 11];
   const KEYDEG = ['1', '♭2', '2', '♭3', '3', '4', '#4', '5', '♭6', '6', '♭7', '7'];
   const KEYS = ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'];
+  const FILE_KEYS = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
   const BPMS = [70, 80, 90, 100, 110, 120, 130, 140], DEFAULT_BPM = 100;
   // 1周ぶんをまとめて予約すると、置いた音が次の周まで鳴らない。
   // 8分音符ごとに SCHED_AHEAD 秒だけ先を予約することで、置いた音がその周のうちに鳴る。
@@ -297,7 +298,8 @@
 
     // ---- 保存 ----
     // 小節数が4以外のロールは保存先を分ける（4小節の頃の進行・メロを8小節のロールに読ませない）
-    const storeKey = 'roll:' + lesson + (BARS !== 4 ? '@' + BARS : '');
+    // data-store があればその名前で保存（同じ回に練習用ロールが2本あるとき）
+    const storeKey = 'roll:' + (root.dataset.store || lesson + (BARS !== 4 ? '@' + BARS : ''));
     function save() {
       if (nosave) return;
       try {
@@ -338,6 +340,54 @@
       }
       return voiced;
     }
+    // ---- data-dl：ロールの下に「コード進行のMIDIをダウンロード」（選んでいる進行・キー・テンポのまま。Logic に読み込む用） ----
+    // format 0・480分解能・1トラック。ボイシングは再生と同じ（ベース＋上3〜4音）
+    function vlq(n) {
+      const out = [n & 127];
+      n = Math.floor(n / 128);
+      while (n > 0) { out.unshift((n & 127) | 128); n = Math.floor(n / 128); }
+      return out;
+    }
+    function chordMidi() {
+      const TPQ = 480, STEP_T = TPQ * 4 / STEPS, GAP = 20, ev = [];
+      voicing().forEach((segs, b) => segs.forEach(s => {
+        const t0 = (b * STEPS + s.start) * STEP_T, t1 = t0 + s.len * STEP_T - GAP;
+        [s.v.bass].concat(s.v.upper).forEach((n, i) => {
+          ev.push({ t: t0, b: [0x90, n, i ? 78 : 92] });
+          ev.push({ t: t1, b: [0x80, n, 0] });
+        });
+      }));
+      ev.sort((x, y) => x.t - y.t);
+      const us = Math.round(60000000 / bpm), bytes = [];
+      let last = 0;
+      const push = (t, b) => { bytes.push.apply(bytes, vlq(t - last).concat(b)); last = t; };
+      push(0, [0xFF, 0x51, 0x03, (us >> 16) & 255, (us >> 8) & 255, us & 255]);
+      push(0, [0xFF, 0x58, 0x04, 4, 2, 24, 8]);
+      push(0, [0xFF, 0x03, 6].concat(Array.from('Chords', ch => ch.charCodeAt(0))));
+      ev.forEach(e => push(e.t, e.b));
+      push(COLS * STEP_T, [0xFF, 0x2F, 0x00]);
+      const len = bytes.length;
+      return new Uint8Array([0x4D, 0x54, 0x68, 0x64, 0, 0, 0, 6, 0, 0, 0, 1, (TPQ >> 8) & 255, TPQ & 255,
+        0x4D, 0x54, 0x72, 0x6B, (len >> 24) & 255, (len >> 16) & 255, (len >> 8) & 255, len & 255].concat(bytes));
+    }
+    if (root.dataset.dl === '1') {
+      const row = mk('div', 'rh-btns'), msg = mk('p', 'rh-status');
+      const dlBtn = mk('button', '', 'コード進行のMIDIをダウンロード');
+      dlBtn.type = 'button';
+      dlBtn.addEventListener('click', () => {
+        const name = progLabels[prog.join('-')];
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([chordMidi()], { type: 'audio/midi' }));
+        a.download = (name ? name + '_' : '') + 'chords_' + FILE_KEYS[tonicPc] + '_' + bpm + 'bpm.mid';
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+        msg.textContent = 'ダウンロードした。Logicのトラックにドラッグ。';
+      });
+      row.appendChild(dlBtn);
+      root.appendChild(row);
+      root.appendChild(msg);
+    }
+
     // 通し番号 n のステップ（8分音符1つ）を、時刻 at に予約する。
     // 予約の直前に notes を見るので、その時点で置いてある音がそのまま鳴る。
     function scheduleStep(n, at, out) {

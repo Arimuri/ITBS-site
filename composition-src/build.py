@@ -814,6 +814,51 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
 @media (max-width:560px){.dg-chords{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .tablebox tr.iv-hl td{background:var(--acc-soft)}
 .roll-note{font-size:12px;color:var(--ink2);margin:10px 0 0}
+/* リハモ（assets/reharm.js）：コード進行ジェネレータのメロ固定版。スロットは prog/ と同じ見た目 */
+.reharm{margin:14px 0 0}
+.reharm .cw-chip{touch-action:manipulation}
+.reharm .cw-chip.picked{outline:2px solid var(--acc);outline-offset:2px}
+.rh-btns{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0;align-items:center}
+.rh-btns button,.rh-btns select,.rh-names button{font:inherit;font-size:13px;border:1px solid var(--ring);border-radius:9px;
+  padding:8px 13px;background:var(--surface);color:var(--ink);cursor:pointer}
+.rh-btns button:hover,.rh-names button:hover{border-color:var(--acc);color:var(--acc)}
+.rh-btns button.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:700}
+.rh-btns button:disabled,.rh-names button:disabled{opacity:.4;cursor:default}
+.rh-names{display:flex;align-items:center;gap:12px;margin:10px 0 0;padding:9px 12px 9px 16px;background:var(--surface);
+  border:1px solid var(--ring);border-radius:12px}
+.rh-names .k{flex:none;font-size:11px;letter-spacing:.12em;color:var(--muted)}
+.rh-names output{flex:1;min-width:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;font-weight:700;
+  white-space:pre-wrap;word-break:break-word;user-select:all}
+.rh-names output:empty::before{content:"（コードを置くとここに出る）";font-family:inherit;font-weight:400;color:var(--muted);font-size:13px}
+.rh-status{margin:10px 0 0;font-size:13px;color:var(--ink2);min-height:1.6em}
+.rh-bars{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0 10px}
+@media (max-width:640px){.rh-bars{grid-template-columns:repeat(2,1fr)}}
+.rh-slot{position:relative;background:var(--surface);border:1px dashed var(--ring);border-radius:12px;min-height:70px;
+  display:flex;align-items:center;justify-content:center;padding:22px 8px 10px;cursor:pointer;user-select:none}
+.rh-slot .no{position:absolute;top:6px;left:10px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.rh-slot .empty{color:var(--muted);font-size:18px}
+.rh-slot.filled{border-style:solid}
+.rh-slot.over,.reharm .half.over,.reharm .add.over{border-color:var(--acc);background:var(--acc-soft)}
+.rh-slot.now,.reharm .half.now{box-shadow:inset 0 0 0 2px var(--acc)}
+.rh-slot .x{border:none;background:none;color:var(--muted);cursor:pointer;font:inherit;font-size:14px;padding:3px 6px;line-height:1}
+.rh-slot .x:hover{color:var(--ng-ink)}
+.rh-slot>.x{position:absolute;top:2px;right:4px}
+.rh-slot .cw-chip{cursor:grab;font-size:14px;padding:6px 10px}
+.rh-slot.filled.single{padding-right:34px}
+.reharm .add{position:absolute;top:24px;bottom:10px;right:5px;width:22px;border:1px dashed var(--ring);border-radius:8px;
+  display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;cursor:pointer}
+.reharm .add:hover{border-color:var(--acc);color:var(--acc)}
+.reharm .halves{display:flex;align-self:stretch;flex:1;margin:-6px -4px -8px}
+.reharm .half{flex:1;position:relative;display:flex;align-items:center;justify-content:center;border-radius:8px;padding:14px 2px 2px}
+.reharm .half+.half{border-left:1px dashed var(--ring)}
+.reharm .half .x{position:absolute;top:-4px;right:0}
+.reharm .half .cw-chip{font-size:12.5px;padding:5px 6px}
+.reharm .roll-grid{--rh:18px}
+.reharm .rc{display:flex;align-items:center;padding-left:2px;font-size:9px;line-height:1;font-weight:700;color:#fff;
+  white-space:nowrap;overflow:visible;position:relative;z-index:0}
+.reharm .rc.on{z-index:1}
+.reharm .rc.on.clash{background:var(--ng-ink);border-right-color:var(--ng-ink)}   /* 短9度でぶつかる音 */
+.reharm .rc.hide{background:var(--page);border-right-color:transparent}
 /* ドリルの授業の流れ：上から順に投影してスクロールで進める。文字は大きめ */
 .flow{counter-reset:step;margin:8px 0 0}
 .step{padding:34px 0 38px;border-top:1px solid var(--grid)}
@@ -2023,9 +2068,14 @@ KEYBOARD_JS = r"""/* 鍵盤ウィジェット（composition-src/build.py が生�
 """
 
 # ブラウザに古い JS/CSS が残らないよう、読み込み先に中身のハッシュを付ける（assets/roll.js?v=abcd1234）
+# リハモ（ジェネレータのメロ固定版）。JS は composition-src/reharm.js に書いて、そのまま assets/ に出す
+REHARM_JS = (SRC / "reharm.js").read_text(encoding="utf-8")
+
+
 def asset(name):
     import hashlib
-    src = {"base.css": CSS, "voicing.js": VOICING_JS, "roll.js": ROLL_JS, "keyboard.js": KEYBOARD_JS}[name]
+    src = {"base.css": CSS, "voicing.js": VOICING_JS, "roll.js": ROLL_JS, "keyboard.js": KEYBOARD_JS,
+           "reharm.js": REHARM_JS}[name]
     return f"assets/{name}?v={hashlib.md5(src.encode('utf-8')).hexdigest()[:8]}"
 
 # -------------------------------------------------------------------- テンプレート
@@ -2209,6 +2259,19 @@ def demo_roll(spec, lesson, default_prog):
     )
 
 
+def reharm_widget(spec, store):
+    """{{reharm bars=16 key=5 high=77 name=hotaru C4:6-7 F4:8-10 …}} → リハモ（assets/reharm.js）の <div>。
+    メロは roll-demo と同じ書き方。マス0〜7が弱起の小節、8から本編。bars＝本編の小節数"""
+    toks = spec.split()
+    opt = {t.split("=", 1)[0]: t.split("=", 1)[1] for t in toks if re.match(r"^(bars|key|high|name)=", t)}
+    cells, heads = demo_notes(" ".join(t for t in toks if not re.match(r"^(bars|key|high|name)=", t)))
+    return (
+        f'<div class="reharm" data-store="{store}" data-notes="{cells}" data-heads="{heads}"'
+        + "".join(f' data-{k}="{html.escape(v)}"' for k, v in opt.items())
+        + "></div>"
+    )
+
+
 def render_flow(d, no, flow, practice_roll, chords):
     """授業の流れ：##### ごとに番号付きの大きい節にする。
     {{roll}}＝練習用ロール、{{roll-demo …}}＝見本のロール、
@@ -2220,6 +2283,13 @@ def render_flow(d, no, flow, practice_roll, chords):
         buf = []
         for ln in lines + ["{{__end__}}"]:
             s = ln.strip()
+            rh = re.fullmatch(r"\{\{reharm\s+(.+)\}\}", s)
+            if rh:
+                if buf:
+                    out.append(render_blocks(buf))
+                    buf = []
+                out.append(reharm_widget(rh.group(1), f"reharm:{no:02d}"))
+                continue
             m = re.fullmatch(r"\{\{(roll|roll-demo\s+(.+)|from-roadmap\s+(.+)|__end__)\}\}", s)
             if not m:
                 buf.append(ln)
@@ -2335,6 +2405,8 @@ def build_lesson(d, no):
     parts.append(f'<script src="../{asset("roll.js")}" defer></script>')
     if any('data-widget=' in p for p in parts):   # 流れに鍵盤・簡易ジェネレータがあるときだけ
         parts.append(f'<script src="../{asset("keyboard.js")}" defer></script>')
+    if any('class="reharm"' in p for p in parts):  # 流れにリハモ（{{reharm}}）があるときだけ
+        parts.append(f'<script src="../{asset("reharm.js")}" defer></script>')
 
     desc = f'ドリル{no}「{ls["title"]}」。使える音は{ls["sounds_raw"]}、伴奏は{ls["prog"]}。'
     aim = dict(ls["items"]).get("狙い", "")
@@ -2753,6 +2825,7 @@ def main():
     write("assets/voicing.js", VOICING_JS)
     write("assets/roll.js", ROLL_JS)
     write("assets/keyboard.js", KEYBOARD_JS)
+    write("assets/reharm.js", REHARM_JS)
     write("index.html", build_index(d))
     for no in sorted(d["lessons"]):
         write(f"{no:02d}/index.html", build_lesson(d, no))

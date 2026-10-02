@@ -195,7 +195,7 @@
   }
   // 段階4：ダイアトニックコード（4和音）。キーを選ぶとボタンの下に実音のコード名。押すと鳴って、鍵盤のコードトーンが光る。
   // 光った鍵には「キー度数/コード度数」を併記（例：6/3）。コード度数は長短を問わず R・3・5・7（curriculum の表記ルールと同じ）
-  const DIATONIC = [['IM7', 'M7'], ['IIm7', 'm7'], ['IIIm7', 'm7'], ['IVM7', 'M7'], ['V7', '7'], ['VIm7', 'm7'], ['VIIm7-5', 'm7-5']];
+  const DIATONIC = [['Imaj7', 'maj7'], ['IIm7', 'm7'], ['IIIm7', 'm7'], ['IVmaj7', 'maj7'], ['V7', '7'], ['VIm7', 'm7'], ['VIIm7-5', 'm7-5']];
   const LETTERS = 'CDEFGAB', NAT = [0, 2, 4, 5, 7, 9, 11];
   // キーの i 番目（0＝1度）の音名。キー名の文字から順に数えるので、E♭キーの4は A♭、Bキーの7は A#
   function noteName(k, i) {
@@ -300,8 +300,8 @@
         if (label) groupEl.appendChild(mk('span', 'cw-glabel', label));
         text.split(/[\s　]+/).filter(Boolean).forEach(tok => {
           const name = tok.split('→')[0], ch = window.Voicing.parse(name);
-          // 色分けは tier1 のダイアトニックだけ。IM7→I、IIm7→IIm、VIIm7-5→VIIm-5 のように7thを外して照らす
-          const triad = name.replace(/m7-5$|M7$|7$/, s => (s === 'm7-5' ? 'm-5' : ''));
+          // 色分けは tier1 のダイアトニックだけ。Imaj7→I、IIm7→IIm、VIIm7-5→VIIm-5 のように7thを外して照らす
+          const triad = name.replace(/m7-5$|maj7$|M7$|7$/, s => (s === 'm7-5' ? 'm-5' : ''));
           const g = level === '1' && name.indexOf('sus') < 0 ? groupOf[triad] : 0;
           const chip = mk('button', 'cw-chip t' + level + (g ? ' g' + g : ''), name);
           chip.addEventListener('click', () => {
@@ -325,8 +325,8 @@
   // 「1度を鳴らす」で中心を確かめる。Phase 1〜3 はダイアトニック外を出さない方針なので選択肢も7つだけ
   function setupProgmini(root) {
     const mk = (tag, cls, text) => { const el = document.createElement(tag); if (cls) el.className = cls; if (text !== undefined) el.textContent = text; return el; };
-    const PM = ['IM7', 'IIm7', 'IIIm7', 'IVM7', 'V7', 'VIm7', 'VIIm7-5'];
-    const init = (root.dataset.prog || 'IVM7-IIIm7-IIm7-IM7').split('-');
+    const PM = ['Imaj7', 'IIm7', 'IIIm7', 'IVmaj7', 'V7', 'VIm7', 'VIIm7-5'];
+    const init = (root.dataset.prog || 'IVmaj7-IIIm7-IIm7-Imaj7').split('-').map(x => x.replace(/M7$/, 'maj7'));
     const row = mk('div', 'pm-row');
     const sels = init.map(v => {
       const s = mk('select', 'pm-chord');
@@ -388,7 +388,7 @@
     oneBtn.addEventListener('click', () => tone(60 + ((tonic + 6) % 12) - 6, 0, 1.4, 0.24));
   }
 
-  // 進行の再生（中級編の {{play}}）。data-progs="ラベル=IIm7 V7 IM7|IIm7 ♭II7 IM7"
+  // 進行の再生（中級編の {{play}}）。data-progs="ラベル=IIm7 V7 Imaj7|IIm7 ♭II7 Imaj7"
   // 空白区切りの1要素＝1小節、「A+B」は小節の真ん中で変わる。行ごとに再生ボタンと、鳴る音のピアノロール。
   // キーは上のプルダウンで全行共通。ロールは voicing.js が組んだ音そのもの（上の3声とベース）を描く
   function setupPlay(root) {

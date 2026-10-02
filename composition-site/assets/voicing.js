@@ -23,7 +23,7 @@
   const W_CENTER = 0.35, W_BCENTER = 0.3;
 
   const stepOf = m => (((DEG[m[2]] + (m[1] === '#' ? 1 : m[1] === '♭' ? -1 : 0)) % 12) + 12) % 12;
-  // 「IIm7」「IV/V」「♭VIM7」などを { root, bass, ivs }（root・bass はキーの1度からの半音）にする
+  // 「IIm7」「IV/V」「♭VImaj7」などを { root, bass, ivs }（root・bass はキーの1度からの半音）にする
   function parse(name) {
     const parts = String(name).trim().split('/');
     const m = NUMERAL.exec(parts[0]);

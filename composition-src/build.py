@@ -180,7 +180,7 @@ FALLBACK_PROGS = {
     9: "I-IV-V7-I",
     10: "I-VIm-IIm7-V",
     12: "I-VIm-IV-IV/V",  # 4on5 を種明かしする回
-    13: "I-IV-♭VIM7-♭VII7",
+    13: "I-IV-♭VImaj7-♭VII7",
     14: "I-VIm-IV-V",
     15: "I-VIm-IV-V",
 }
@@ -190,7 +190,7 @@ DEFAULT_PROG = "I-VIm-IV-V"
 # 右の数字は「その進行を出してよい最初のドリル」。授業の解禁順に合わせてある。
 # 回をまとめたり順番を変えたりしたら、ここも合わせて直すこと。
 ROLL_PROG_CHOICES = [
-    ("IVM7-IIIm7-IIm7-I", 1),  # Phase 1 の進行（IIIm7 の上で1が♭6、2が7）
+    ("IVmaj7-IIIm7-IIm7-I", 1),  # Phase 1 の進行（IIIm7 の上で1が♭6、2が7）
     ("I-IV-VIm-IV", 1),
     ("I-VIm-IIm7-IV", 1),
     ("I-VIm-IV-V", 1),      # Phase 1 の代わりの候補（V入り。Vの上は1が11th、2が5th）
@@ -209,7 +209,7 @@ ROLL_PROG_CHOICES = [
     ("I-Vm7-I7-IV", 11),
     ("I-VIm-IV-IV/V", 12),  # 4on5 はドリル12で種明かしする
     ("IIm7-♭II7-I-I", 12),
-    ("I-IV-♭VIM7-♭VII7", 13),
+    ("I-IV-♭VImaj7-♭VII7", 13),
 ]
 
 
@@ -986,7 +986,7 @@ VOICING_JS = r"""/* 和音のボイシング（composition-src/build.py が生�
   const W_CENTER = 0.35, W_BCENTER = 0.3;
 
   const stepOf = m => (((DEG[m[2]] + (m[1] === '#' ? 1 : m[1] === '♭' ? -1 : 0)) % 12) + 12) % 12;
-  // 「IIm7」「IV/V」「♭VIM7」などを { root, bass, ivs }（root・bass はキーの1度からの半音）にする
+  // 「IIm7」「IV/V」「♭VImaj7」などを { root, bass, ivs }（root・bass はキーの1度からの半音）にする
   function parse(name) {
     const parts = String(name).trim().split('/');
     const m = NUMERAL.exec(parts[0]);
@@ -1366,7 +1366,7 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
         case 8: return n5 === 8 ? '#5' : '♭6';
         case 9: return n7 === 9 ? '7' : '6';
         case 10: return n7 === 10 ? '7' : '♭7';
-        default: return n7 === 11 ? '7' : 'M7';
+        default: return n7 === 11 ? '7' : 'maj7';
       }
     }
     function labelFor(m, c) {
@@ -1785,7 +1785,7 @@ KEYBOARD_JS = r"""/* 鍵盤ウィジェット（composition-src/build.py が生�
   }
   // 段階4：ダイアトニックコード（4和音）。キーを選ぶとボタンの下に実音のコード名。押すと鳴って、鍵盤のコードトーンが光る。
   // 光った鍵には「キー度数/コード度数」を併記（例：6/3）。コード度数は長短を問わず R・3・5・7（curriculum の表記ルールと同じ）
-  const DIATONIC = [['IM7', 'M7'], ['IIm7', 'm7'], ['IIIm7', 'm7'], ['IVM7', 'M7'], ['V7', '7'], ['VIm7', 'm7'], ['VIIm7-5', 'm7-5']];
+  const DIATONIC = [['Imaj7', 'maj7'], ['IIm7', 'm7'], ['IIIm7', 'm7'], ['IVmaj7', 'maj7'], ['V7', '7'], ['VIm7', 'm7'], ['VIIm7-5', 'm7-5']];
   const LETTERS = 'CDEFGAB', NAT = [0, 2, 4, 5, 7, 9, 11];
   // キーの i 番目（0＝1度）の音名。キー名の文字から順に数えるので、E♭キーの4は A♭、Bキーの7は A#
   function noteName(k, i) {
@@ -1890,8 +1890,8 @@ KEYBOARD_JS = r"""/* 鍵盤ウィジェット（composition-src/build.py が生�
         if (label) groupEl.appendChild(mk('span', 'cw-glabel', label));
         text.split(/[\s　]+/).filter(Boolean).forEach(tok => {
           const name = tok.split('→')[0], ch = window.Voicing.parse(name);
-          // 色分けは tier1 のダイアトニックだけ。IM7→I、IIm7→IIm、VIIm7-5→VIIm-5 のように7thを外して照らす
-          const triad = name.replace(/m7-5$|M7$|7$/, s => (s === 'm7-5' ? 'm-5' : ''));
+          // 色分けは tier1 のダイアトニックだけ。Imaj7→I、IIm7→IIm、VIIm7-5→VIIm-5 のように7thを外して照らす
+          const triad = name.replace(/m7-5$|maj7$|M7$|7$/, s => (s === 'm7-5' ? 'm-5' : ''));
           const g = level === '1' && name.indexOf('sus') < 0 ? groupOf[triad] : 0;
           const chip = mk('button', 'cw-chip t' + level + (g ? ' g' + g : ''), name);
           chip.addEventListener('click', () => {
@@ -1915,8 +1915,8 @@ KEYBOARD_JS = r"""/* 鍵盤ウィジェット（composition-src/build.py が生�
   // 「1度を鳴らす」で中心を確かめる。Phase 1〜3 はダイアトニック外を出さない方針なので選択肢も7つだけ
   function setupProgmini(root) {
     const mk = (tag, cls, text) => { const el = document.createElement(tag); if (cls) el.className = cls; if (text !== undefined) el.textContent = text; return el; };
-    const PM = ['IM7', 'IIm7', 'IIIm7', 'IVM7', 'V7', 'VIm7', 'VIIm7-5'];
-    const init = (root.dataset.prog || 'IVM7-IIIm7-IIm7-IM7').split('-');
+    const PM = ['Imaj7', 'IIm7', 'IIIm7', 'IVmaj7', 'V7', 'VIm7', 'VIIm7-5'];
+    const init = (root.dataset.prog || 'IVmaj7-IIIm7-IIm7-Imaj7').split('-').map(x => x.replace(/M7$/, 'maj7'));
     const row = mk('div', 'pm-row');
     const sels = init.map(v => {
       const s = mk('select', 'pm-chord');
@@ -1978,7 +1978,7 @@ KEYBOARD_JS = r"""/* 鍵盤ウィジェット（composition-src/build.py が生�
     oneBtn.addEventListener('click', () => tone(60 + ((tonic + 6) % 12) - 6, 0, 1.4, 0.24));
   }
 
-  // 進行の再生（中級編の {{play}}）。data-progs="ラベル=IIm7 V7 IM7|IIm7 ♭II7 IM7"
+  // 進行の再生（中級編の {{play}}）。data-progs="ラベル=IIm7 V7 Imaj7|IIm7 ♭II7 Imaj7"
   // 空白区切りの1要素＝1小節、「A+B」は小節の真ん中で変わる。行ごとに再生ボタンと、鳴る音のピアノロール。
   // キーは上のプルダウンで全行共通。ロールは voicing.js が組んだ音そのもの（上の3声とベース）を描く
   function setupPlay(root) {
@@ -2623,7 +2623,7 @@ _PLAY_NAME = re.compile(rf"([#♭]?{_NUM})(.*?)(?:/[#♭]?{_NUM})?")
 
 
 def play_widget(spec):
-    """{{play ラベル=IIm7 V7 IM7 | IIm7 ♭II7 IM7}} → 進行の再生（assets/keyboard.js の play）。
+    """{{play ラベル=IIm7 V7 Imaj7 | IIm7 ♭II7 Imaj7}} → 進行の再生（assets/keyboard.js の play）。
     「|」で行を分け、「ラベル=」は省略できる。空白区切りの1要素＝1小節、「A+B」は小節の真ん中で変わる"""
     rows = []
     for part in spec.split("|"):

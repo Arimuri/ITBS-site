@@ -17,8 +17,8 @@
   // ドリル4「ダイアトニックコードを3つに分ける：T/SD/D」の並び。色は tips/ のグループ分けと同じ。
   // 4和音だけにそろえる（tier表・ロードマップ段階4・prog/ と同じ。三和音と混ぜると混乱するため）
   const GROUPS = [
-    { label: 'T', g: 1, names: ['IM7', 'IIIm7', 'VIm7'] },
-    { label: 'SD', g: 2, names: ['IIm7', 'IVM7'] },
+    { label: 'T', g: 1, names: ['Imaj7', 'IIIm7', 'VIm7'] },
+    { label: 'SD', g: 2, names: ['IIm7', 'IVmaj7'] },
     { label: 'D', g: 3, names: ['V7', 'VIIm7-5'] }
   ];
   const chipClass = name => {
@@ -67,7 +67,7 @@
       case 8: return n5 === 8 ? '#5' : '♭6';
       case 9: return n7 === 9 ? '7' : '6';
       case 10: return n7 === 10 ? '7' : '♭7';
-      default: return n7 === 11 ? '7' : 'M7';
+      default: return n7 === 11 ? '7' : 'maj7';
     }
   }
 
@@ -94,7 +94,8 @@
     try {
       const o = JSON.parse(localStorage.getItem(storeKey) || 'null');
       if (o) {
-        if (Array.isArray(o.s) && o.s.length === BODY) slots = o.s.map(b => (Array.isArray(b) ? b : []).filter(n => typeof n === 'string' && window.Voicing.parse(n)).slice(0, 2));
+        // 以前の保存の「IM7」なども maj7 表記に直して読む
+        if (Array.isArray(o.s) && o.s.length === BODY) slots = o.s.map(b => (Array.isArray(b) ? b : []).filter(n => typeof n === 'string' && window.Voicing.parse(n)).map(n => n.replace(/M7$/, 'maj7')).slice(0, 2));
         if (typeof o.k === 'number' && o.k >= 0 && o.k < 12) tonicPc = o.k;
         if (BPMS.indexOf(o.b) >= 0) bpm = o.b;
       }

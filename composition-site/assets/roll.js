@@ -224,7 +224,7 @@
         case 8: return n5 === 8 ? '#5' : '♭6';
         case 9: return n7 === 9 ? '7' : '6';
         case 10: return n7 === 10 ? '7' : '♭7';
-        default: return n7 === 11 ? '7' : 'M7';
+        default: return n7 === 11 ? '7' : 'maj7';
       }
     }
     function labelFor(m, c) {

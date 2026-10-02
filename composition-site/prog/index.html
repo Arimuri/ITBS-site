@@ -123,7 +123,7 @@
 <p class="foot">京都精華大学 メディア表現学部「応用実習1,2：作曲」（火曜・全14回・90分×2コマ）<br>担当：有村崚（<a href="https://intheblueshirt.com/">in the blue shirt</a>）</p>
 </div>
 
-<script src="../assets/voicing.js?v=60b118c9"></script>
+<script src="../assets/voicing.js?v=b69ba5b6"></script>
 <script>
 (() => {
   'use strict';
@@ -133,9 +133,9 @@
   const KEYDEG = ['1', '♭2', '2', '♭3', '3', '4', '#4', '5', '♭6', '6', '♭7', '7'];
   // tips/ の「覚えるべきコード」と同じ表。色分けも同じ（I IIIm VIm｜IIm IV｜V）
   const TIERS = [
-    { tier: 'tier1', groups: [['IM7', 'IIm7', 'IIIm7', 'IVM7', 'V7', 'VIm7', 'VIIm7-5'], ['Isus4', 'IVsus4', 'Vsus4']] },
+    { tier: 'tier1', groups: [['Imaj7', 'IIm7', 'IIIm7', 'IVmaj7', 'V7', 'VIm7', 'VIIm7-5'], ['Isus4', 'IVsus4', 'Vsus4']] },
     { tier: 'tier2', groups: [['III7', 'IVm7']] },
-    { tier: 'tier3', groups: [['VI7', 'II7', 'I7', 'Vm7', '#IVm7-5', '#Idim7', '#Vdim7', '♭II7'], ['♭VIM7', '♭VII7']] }
+    { tier: 'tier3', groups: [['VI7', 'II7', 'I7', 'Vm7', '#IVm7-5', '#Idim7', '#Vdim7', '♭II7'], ['♭VImaj7', '♭VII7']] }
   ];
   const GROUP_OF = { I: 1, IIIm: 1, VIm: 1, IIm: 2, IV: 2, V: 3 };
   const KEYS = ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'];
@@ -153,7 +153,7 @@
     const s = JSON.parse(localStorage.getItem('prog:slots') || 'null');
     if (Array.isArray(s) && s.length === BARS) slots = s.map(x => {
       const arr = Array.isArray(x) ? x : (typeof x === 'string' ? [x] : []);   // 旧形式（文字列）も読む
-      return arr.filter(n => typeof n === 'string' && window.Voicing.parse(n)).slice(0, 2);
+      return arr.filter(n => typeof n === 'string' && window.Voicing.parse(n)).map(n => n.replace(/M7$/, 'maj7')).slice(0, 2);   // 以前の保存の IM7 なども maj7 に
     });
     tonicPc = (+localStorage.getItem('prog:key') || 0) % 12;
     const b = +localStorage.getItem('prog:bpm');
@@ -211,7 +211,7 @@
 
   // ---- 度数ラベル ------------------------------------------------------------
   // コード度数は curriculum の書き方に合わせる：そのコードが本来持つ3rd・5th・7thを「3」「5」「7」と呼び、
-  // 外れた音は ♭・# を付ける（IIIm7 の上の1＝♭6、VIm の上の5＝7、IVM7 の上の3＝7、I の上の4＝4）
+  // 外れた音は ♭・# を付ける（IIIm7 の上の1＝♭6、VIm の上の5＝7、IVmaj7 の上の3＝7、I の上の4＝4）
   function chordDeg(iv, ch) {
     const has = x => ch.ivs.indexOf(x) >= 0;
     const t3 = has(4) ? 4 : has(3) ? 3 : null;
@@ -229,7 +229,7 @@
       case 8: return n5 === 8 ? '#5' : '♭6';
       case 9: return n7 === 9 ? '7' : '6';
       case 10: return n7 === 10 ? '7' : '♭7';
-      default: return n7 === 11 ? '7' : 'M7';
+      default: return n7 === 11 ? '7' : 'maj7';
     }
   }
   function labelFor(m, col) {
@@ -247,7 +247,7 @@
   const HINT = 'コードを小節にドラッグ。押してから小節を押してもいい。';
   function chipFor(name) {
     // 色分けは tier1 のダイアトニックだけ（tips/ と同じ）。7thを外して照らす
-    const triad = name.replace(/m7-5$|M7$|7$/, s => (s === 'm7-5' ? 'm-5' : ''));
+    const triad = name.replace(/m7-5$|maj7$|M7$|7$/, s => (s === 'm7-5' ? 'm-5' : ''));
     const tier = TIERS.findIndex(t => t.groups.some(g => g.includes(name))) + 1;
     const g = tier === 1 && name.indexOf('sus') < 0 ? GROUP_OF[triad] : 0;
     return 'cw-chip t' + tier + (g ? ' g' + g : '');

@@ -867,6 +867,10 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
 .reharm .rc.clash .lbl{background:var(--ng-ink)}
 .reharm .rc.on.mild{background:#d9a400;border-right-color:#d9a400}   /* IIIm7 の上の1（軽めの短9度） */
 .reharm .rc.mild .lbl{background:#d9a400;color:#2b1d00}
+.roll .rc.on.clash{background:var(--ng-ink);border-right-color:var(--ng-ink)}   /* 各回のロールも同じ色分け */
+.roll .rc.clash .lbl{background:var(--ng-ink)}
+.roll .rc.on.mild{background:#d9a400;border-right-color:#d9a400}
+.roll .rc.mild .lbl{background:#d9a400;color:#2b1d00}
 .reharm .rc.hide{background:var(--page);border-right-color:transparent}
 /* ドリルの授業の流れ：上から順に投影してスクロールで進める。文字は大きめ */
 .flow{counter-reset:step;margin:8px 0 0}
@@ -1338,6 +1342,9 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
           const on = notes.has(m + ',' + c);
           el.classList.toggle('on', on);
           el.classList.toggle('split', on && isHead(m, c));
+          const ck = on ? clashKind(m, c) : '';
+          el.classList.toggle('clash', ck === 'clash');
+          el.classList.toggle('mild', ck === 'mild');
           // 音の頭にだけ「キー度数/コード度数」（伸ばしている途中のマスには出さない）
           const lab = on && !(c > 0 && notes.has(m + ',' + (c - 1)) && !isHead(m, c)) ? labelFor(m, c) : '';
           if (el.dataset.lab !== lab) {
@@ -1348,7 +1355,7 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
         }
       }
       warnEl.textContent = warn;
-      noteEl.textContent = '音の頭の数字＝キー度数/コード度数。黄色い行＝今回使う音、濃い行＝スケール。横1マス＝8分音符、太線＝小節。';
+      noteEl.textContent = '音の頭の数字＝キー度数/コード度数。赤い音＝短9度（Tの上の4、Dの上の1）、黄色い音＝IIIm7の上の1（軽め）。黄色い行＝今回使う音、濃い行＝スケール。横1マス＝8分音符、太線＝小節。';
     }
     // コード度数は curriculum の書き方（そのコードが本来持つ3rd・5th・7thを3・5・7と呼ぶ）。prog/ と同じ
     function chordDeg(iv, ch) {
@@ -1371,13 +1378,29 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
         default: return n7 === 11 ? '7' : 'maj7';
       }
     }
-    function labelFor(m, c) {
-      const kd = KEYDEG[((m - tonicPc) % 12 + 12) % 12];
+    function chordNameAt(c) {
       const inBar = c % STEPS;
       const seg = barSegs(Math.floor(c / STEPS)).find(x => inBar >= x.start && inBar < x.start + x.len);
-      const ch = seg && seg.name ? window.Voicing.parse(seg.name) : null;
+      return seg && seg.name ? seg.name : null;
+    }
+    function labelFor(m, c) {
+      const kd = KEYDEG[((m - tonicPc) % 12 + 12) % 12];
+      const nm = chordNameAt(c), ch = nm ? window.Voicing.parse(nm) : null;
       if (!ch) return kd;
       return kd + '/' + chordDeg(((m - (tonicPc + ch.root)) % 12 + 12) % 12, ch);
+    }
+    // 授業で教える短9度：Tの上の4、Dの上の1 は赤。IIIm7 の上の1は軽め（黄色）。
+    // その音がコードの音なら色を付けない（Vsus4 の上の1など）。ダイアトニック以外のコードは判定しない
+    const FUNC = { I: 'T', Imaj7: 'T', IM7: 'T', IIIm: 'T', IIIm7: 'T', VIm: 'T', VIm7: 'T',
+      IIm: 'SD', IIm7: 'SD', IV: 'SD', IVmaj7: 'SD', IVM7: 'SD', V: 'D', V7: 'D', 'VIIm-5': 'D', 'VIIm7-5': 'D' };
+    function clashKind(m, c) {
+      const nm = chordNameAt(c), f = nm && FUNC[nm];
+      if (!f) return '';
+      const ch = window.Voicing.parse(nm), kd = ((m - tonicPc) % 12 + 12) % 12;
+      if (ch.ivs.some(iv => (ch.root + iv) % 12 === kd)) return '';
+      if ((f === 'T' && kd === 5) || (f === 'D' && kd === 0)) return 'clash';
+      if ((nm === 'IIIm7' || nm === 'IIIm') && kd === 0) return 'mild';
+      return '';
     }
 
     // ---- 打ち込み ----

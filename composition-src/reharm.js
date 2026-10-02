@@ -94,8 +94,9 @@
     try {
       const o = JSON.parse(localStorage.getItem(storeKey) || 'null');
       if (o) {
-        // 以前の保存の「IM7」なども maj7 表記に直して読む
-        if (Array.isArray(o.s) && o.s.length === BODY) slots = o.s.map(b => (Array.isArray(b) ? b : []).filter(n => typeof n === 'string' && window.Voicing.parse(n)).map(n => n.replace(/M7$/, 'maj7')).slice(0, 2));
+        // 以前の保存は、パレットにそろえて読む：「IM7」→「Imaj7」、三和音（パレットが三和音も持っていた頃）→ 4和音
+        const TO7 = { I: 'Imaj7', IIm: 'IIm7', IIIm: 'IIIm7', IV: 'IVmaj7', V: 'V7', VIm: 'VIm7', 'VIIm-5': 'VIIm7-5' };
+        if (Array.isArray(o.s) && o.s.length === BODY) slots = o.s.map(b => (Array.isArray(b) ? b : []).filter(n => typeof n === 'string' && window.Voicing.parse(n)).map(n => TO7[n] || n.replace(/M7$/, 'maj7')).slice(0, 2));
         if (typeof o.k === 'number' && o.k >= 0 && o.k < 12) tonicPc = o.k;
         if (BPMS.indexOf(o.b) >= 0) bpm = o.b;
       }
@@ -137,19 +138,18 @@
       const c = chordPcs(sg.name);
       return kd + '/' + chordDeg(((m - c.rootPc) % 12 + 12) % 12, c.ch);
     }
-    // 赤くするのは授業で教える短9度だけ：Tの上の4、Dの上の1。
-    // IIIm7 の上の1も短9度（5度とぶつかる）だが、覚えることが多すぎるので一旦無視（2026-10-02、有村さん指定）
-    function clashes(m, g) {
-      const sg = segAt(g);
-      const G = sg && GROUPS.find(x => x.names.indexOf(sg.name) >= 0);
-      if (!G) return false;
-      const kd = ((m - tonicPc) % 12 + 12) % 12;
-      return (G.label === 'T' && kd === 5) || (G.label === 'D' && kd === 0);
-    }
-    // 黄色：IIIm7 の上の1（5度と短9度になるが軽め。赤ほどは気にしなくていい）
-    function mild(m, g) {
-      const sg = segAt(g);
-      return !!sg && sg.name === 'IIIm7' && ((m - tonicPc) % 12 + 12) % 12 === 0;
+    // 授業で教える短9度：Tの上の4、Dの上の1 は赤（'clash'）。IIIm7 の上の1は軽め（'mild'、黄色）。各回のロール・prog/ と同じ判定。
+    // その音がコードの音なら色なし。IIIm7 の上の1以外の軽めの短9度は、覚えることが多すぎるので一旦無視（2026-10-02、有村さん指定）
+    const FUNC = { I: 'T', Imaj7: 'T', IM7: 'T', IIIm: 'T', IIIm7: 'T', VIm: 'T', VIm7: 'T',
+      IIm: 'SD', IIm7: 'SD', IV: 'SD', IVmaj7: 'SD', IVM7: 'SD', V: 'D', V7: 'D', 'VIIm-5': 'D', 'VIIm7-5': 'D' };
+    function clashKind(m, g) {
+      const sg = segAt(g), f = sg && FUNC[sg.name];
+      if (!f) return '';
+      const ch = window.Voicing.parse(sg.name), kd = ((m - tonicPc) % 12 + 12) % 12;
+      if (ch.ivs.some(iv => (ch.root + iv) % 12 === kd)) return '';
+      if ((f === 'T' && kd === 5) || (f === 'D' && kd === 0)) return 'clash';
+      if ((sg.name === 'IIIm7' || sg.name === 'IIIm') && kd === 0) return 'mild';
+      return '';
     }
     function playOne(name, at, dur, out) {
       const v = window.Voicing.voice([name], tonicPc)[0];
@@ -383,8 +383,9 @@
             el.classList.toggle('halfstart', cuts.has(v));
             el.classList.toggle('on', on);
             el.classList.toggle('split', on && cutAt(m, g));
-            el.classList.toggle('clash', on && clashes(m, g));
-            el.classList.toggle('mild', on && mild(m, g));
+            const ck = on ? clashKind(m, g) : '';
+            el.classList.toggle('clash', ck === 'clash');
+            el.classList.toggle('mild', ck === 'mild');
             const lab = on && isStart(m, g) ? labelFor(m, g) : '';
             if (el.dataset.lab !== lab) {
               el.dataset.lab = lab;

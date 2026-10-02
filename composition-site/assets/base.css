@@ -165,9 +165,9 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
 .rc.now{background-image:linear-gradient(rgba(31,111,196,.14),rgba(31,111,196,.14))}
 .rc.on{background:var(--acc);border-right-color:var(--acc)}
 .rc.on.split{box-shadow:inset 2px 0 0 var(--surface)}   /* 同じ高さの音の切れ目 */
-.rc.halfstart{border-left:1px dashed var(--muted)}          /* 小節の真ん中でコードが変わる */
+.rc.halfstart{border-left:1px dashed var(--muted)}          /* 小節の途中でコードが変わる */
 .roll-bar.split{display:flex;padding:0}
-.roll-bar.split span{flex:1;padding:7px 0}
+.roll-bar.split span{flex:1;padding:7px 0;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .roll-bar.split span+span{border-left:1px dashed var(--grid)}
 /* インターバル鍵盤。中身は assets/interval.js が作る */
 .iv-top{display:flex;gap:8px;align-items:center;margin:14px 0 10px}

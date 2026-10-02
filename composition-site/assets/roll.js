@@ -43,6 +43,8 @@
     const lesson = root.dataset.lesson || '0';
     // data-bars：このロールの小節数（既定4）。見本で「弱起の小節＋8小節」などにする
     const BARS = Math.max(1, +root.dataset.bars || 4), COLS = BARS * STEPS;
+    // data-high：ロールの一番上の音（MIDI、既定72＝C5）。下はその2オクターブ下まで。見本のメロが高いときに使う
+    const HIGH = +root.dataset.high || 72, LOW = HIGH - 24, ROWS = HIGH - LOW + 1;
     const progs = (root.dataset.progs || 'I-VIm-IV-V').split('|');
     let prog = progs[0].split('-');
     const open = new Set((root.dataset.degrees || '').split(',').filter(Boolean));
@@ -118,18 +120,41 @@
       const d = mk('div', 'roll-bar');
       barsEl.appendChild(d); bars.push(d);
     }
-    // 進行の1要素＝1小節。「I+IV」と書くと小節の真ん中でコードが変わる（2拍ずつ）
-    // 「NC」の小節はコードなし（弱起の小節など）
-    const barChords = b => String(prog[b % prog.length]).split('+').filter(c => c !== 'NC');
+    // 進行の1要素＝1小節。「I+IV」と書くと小節の真ん中でコードが変わる（2拍ずつ）。
+    // 「V*3+I」のように *拍数 を付けるとその長さ（Vが3拍、Iが残りの1拍）。「NC」はコードなし（弱起の小節など）
+    // 返り値：[{ name（NCならnull）, start（小節の中のマス）, len（マス数） }]
+    function barSegs(b) {
+      const parts = String(prog[b % prog.length]).split('+').map(x => {
+        const m = /^(.*?)(?:\*(\d+))?$/.exec(x);
+        return { name: m[1] === 'NC' ? null : m[1], beats: m[2] ? +m[2] : 0 };
+      });
+      const fixed = parts.reduce((t, x) => t + x.beats, 0), free = parts.filter(x => !x.beats).length;
+      const each = free ? Math.max(0, 4 - fixed) / free : 0;
+      let pos = 0;
+      return parts.map(x => {
+        const len = Math.round((x.beats || each) * STEPS / 4);
+        const seg = { name: x.name, start: pos, len: Math.min(len, STEPS - pos) };
+        pos += seg.len;
+        return seg;
+      }).filter(x => x.len > 0);
+    }
+    const barChords = b => barSegs(b).filter(x => x.name).map(x => x.name);
     function updateBars() {
       for (let b = 0; b < BARS; b++) {
-        const cs = barChords(b);
+        const segs = barSegs(b), named = segs.some(x => x.name);
         bars[b].innerHTML = '';
-        bars[b].classList.toggle('split', cs.length > 1);
-        (cs.length ? cs : ['—']).forEach(c => { const sp = document.createElement('span'); sp.textContent = c; bars[b].appendChild(sp); });
+        bars[b].classList.toggle('split', named && segs.length > 1);
+        (named ? segs : [{ name: null, len: STEPS }]).forEach(x => {
+          const sp = document.createElement('span');
+          sp.textContent = x.name || '—';
+          sp.style.flex = String(x.len);                // 拍の長さに合わせた幅
+          bars[b].appendChild(sp);
+        });
       }
+      const starts = [];
+      for (let b = 0; b < BARS; b++) barSegs(b).forEach(x => { if (x.start) starts.push(b * STEPS + x.start); });
       for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++)
-        cells[r][c].classList.toggle('halfstart', c % STEPS === STEPS / 2 && barChords(Math.floor(c / STEPS)).length > 1);
+        cells[r][c].classList.toggle('halfstart', starts.indexOf(c) >= 0);
     }
     const gut = [], cells = [], byCol = [];
     for (let c = 0; c < COLS; c++) byCol.push([]);
@@ -235,9 +260,9 @@
         const flat = [];
         for (let b = 0; b < BARS; b++) barChords(b).forEach(c => flat.push(c));
         const vs = window.Voicing.voice(flat, 0).map(v => ({ bass: v.bass + o, upper: v.upper.map(m => m + o) }));
-        voiced = [];                                  // voiced[小節] ＝ その小節のコード（1つか2つ）
+        voiced = [];                                  // voiced[小節] ＝ その小節のコード [{ start, len, v }]
         let k = 0;
-        for (let b = 0; b < BARS; b++) voiced.push(barChords(b).map(() => vs[k++]));
+        for (let b = 0; b < BARS; b++) voiced.push(barSegs(b).filter(x => x.name).map(x => ({ start: x.start, len: x.len, v: vs[k++] })));
         voicedFor = key;
       }
       return voiced;
@@ -247,11 +272,11 @@
     function scheduleStep(n, at, out) {
       const c = audio(), rel = at - c.currentTime;
       const col = ((n % COLS) + COLS) % COLS;
-      const inBar = col % STEPS, bv = voicing()[Math.floor(col / STEPS)];
-      const half = bv.length > 1 && inBar === STEPS / 2;
-      if (bv.length && (inBar === 0 || half)) {       // 小節のあたま（2コードの小節は真ん中も）：コードとベース
-        const v = half ? bv[1] : bv[0];
-        const dur = (bv.length > 1 ? STEPS / 2 : STEPS) * stepSec() * 0.96;
+      const inBar = col % STEPS;
+      const seg = voicing()[Math.floor(col / STEPS)].find(x => x.start === inBar);
+      if (seg) {                                      // コードの頭：コードとベース
+        const v = seg.v;
+        const dur = seg.len * stepSec() * 0.96;
         v.upper.forEach(m => tone(m, rel, dur, 0.075, out));
         tone(v.bass, rel, dur, 0.13, out);
         tone(v.bass + 12, rel, dur, 0.065, out);

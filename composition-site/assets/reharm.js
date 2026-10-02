@@ -401,6 +401,7 @@
       paint();
       updateNames();
       clearBtn.disabled = !slots.some(b => b.length);
+      if (typeof updateDl === 'function') updateDl();
       save();
     }
 
@@ -543,7 +544,8 @@
       return [0x4D, 0x54, 0x72, 0x6B, (len >> 24) & 255, (len >> 16) & 255, (len >> 8) & 255, len & 255].concat(bytes);
     }
     const nameMeta = s => [0xFF, 0x03, s.length].concat(Array.from(s, ch => ch.charCodeAt(0)));
-    function midiBytes() {
+    // which：'both'（コードとメロの2トラック）／'chords'／'melody'。どれも弱起の小節から始まるので、並べて読み込めばそろう
+    function midiBytes(which) {
       const us = Math.round(60000000 / bpm);
       const seq = segments(), v = voicing(seq), cev = [], mev = [];
       seq.forEach((s, k) => {
@@ -557,18 +559,48 @@
         mev.push({ t: g * STEP_T, b: [0x91, m, 96] });
         mev.push({ t: (g + noteLen(m, g)) * STEP_T - GAP, b: [0x81, m, 0] });
       }
-      const t0 = track([[0xFF, 0x51, 0x03, (us >> 16) & 255, (us >> 8) & 255, us & 255], [0xFF, 0x58, 0x04, 4, 2, 24, 8], nameMeta('Chords')], cev);
-      const t1 = track([nameMeta('Melody')], mev);
-      return new Uint8Array([0x4D, 0x54, 0x68, 0x64, 0, 0, 0, 6, 0, 1, 0, 2, (TPQ >> 8) & 255, TPQ & 255].concat(t0, t1));
+      const parts = [];
+      if (which !== 'melody') parts.push(['Chords', cev]);
+      if (which !== 'chords') parts.push(['Melody', mev]);
+      const tempo = [[0xFF, 0x51, 0x03, (us >> 16) & 255, (us >> 8) & 255, us & 255], [0xFF, 0x58, 0x04, 4, 2, 24, 8]];
+      const tracks = parts.map((pt, i) => track((i === 0 ? tempo : []).concat([nameMeta(pt[0])]), pt[1]));
+      let out = [0x4D, 0x54, 0x68, 0x64, 0, 0, 0, 6, 0, 1, 0, tracks.length, (TPQ >> 8) & 255, TPQ & 255];
+      tracks.forEach(t => { out = out.concat(t); });
+      return new Uint8Array(out);
     }
-    dlBtn.addEventListener('click', () => {
+    function download(which, suffix, done) {
       const a = document.createElement('a');
-      a.href = URL.createObjectURL(new Blob([midiBytes()], { type: 'audio/midi' }));
-      a.download = fileName + '_' + FILE_KEYS[tonicPc] + '_' + bpm + 'bpm.mid';
+      a.href = URL.createObjectURL(new Blob([midiBytes(which)], { type: 'audio/midi' }));
+      a.download = fileName + suffix + '_' + FILE_KEYS[tonicPc] + '_' + bpm + 'bpm.mid';
       a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-      say('ダウンロードした。DAWのトラックにドラッグ。');
-    });
+      done('ダウンロードした。Logicのトラックにドラッグ。');
+    }
+    dlBtn.addEventListener('click', () => download('both', '', say));
+
+    // ---- 別の節に置くダウンロード（{{reharm-dl}}）：メロだけ／ここで並べたコード進行だけ -----------------
+    const dlBoxes = document.querySelectorAll('.reharm-dl[data-for="' + storeKey + '"]');
+    const chordDlBtns = [];
+    for (let i = 0; i < dlBoxes.length; i++) {
+      const box = dlBoxes[i], row = mk('div', 'rh-btns'), msg = mk('p', 'rh-status');
+      const mel = mk('button', '', box.dataset.melody || 'メロのMIDIをダウンロード'); mel.type = 'button';
+      const chd = mk('button', '', box.dataset.chords || 'コード進行のMIDIをダウンロード'); chd.type = 'button';
+      const sayHere = t => { msg.textContent = t; };
+      mel.addEventListener('click', () => download('melody', '_melody', sayHere));
+      chd.addEventListener('click', () => download('chords', '_chords', sayHere));
+      row.appendChild(mel); row.appendChild(chd);
+      box.appendChild(row); box.appendChild(msg);
+      chordDlBtns.push({ btn: chd, msg: msg });
+    }
+    const NO_CHORDS = 'コード進行は、上の節でコードを並べるとダウンロードできる。';
+    function updateDl() {
+      const any = slots.some(b => b.length);
+      chordDlBtns.forEach(x => {
+        x.btn.disabled = !any;
+        if (!any) x.msg.textContent = NO_CHORDS;
+        else if (x.msg.textContent === NO_CHORDS) x.msg.textContent = '';
+      });
+    }
 
     say(HINT);
     render();

@@ -2327,11 +2327,26 @@ def render_flow(d, no, flow, practice_roll, chords):
     {{from-roadmap 段階N}}＝ロードマップのその段階の鍵盤と表（原稿はロードマップ側の1か所だけ）。
     {{progmini}} など他の {{…}} は render_blocks が鍵盤ウィジェットの置き場にする"""
     out = ['<div class="flow">']
+    # {{reharm-dl}} のボタンに「3で作ったコード進行」と節の番号を入れるため、リハモのある節を先に探す
+    reharm_step = next((i + 1 for i, (_, ls) in enumerate(flow) if any(l.strip().startswith("{{reharm ") for l in ls)), None)
     for title, lines in flow:
         out.append(f'<section class="step"><h2>{inline(title)}</h2>')
         buf = []
         for ln in lines + ["{{__end__}}"]:
             s = ln.strip()
+            dl = re.fullmatch(r"\{\{reharm-dl(?:\s+(.+))?\}\}", s)
+            if dl:
+                if buf:
+                    out.append(render_blocks(buf))
+                    buf = []
+                song = (dl.group(1) or "").strip()
+                made = f"{reharm_step}で作った" if reharm_step else "リハモで並べた"
+                out.append(
+                    f'<div class="reharm-dl" data-for="reharm:{no:02d}" '
+                    f'data-melody="{html.escape((song + "の" if song else "") + "メロのMIDIをダウンロード")}" '
+                    f'data-chords="{html.escape(made + "コード進行のMIDIをダウンロード")}"></div>'
+                )
+                continue
             rh = re.fullmatch(r"\{\{reharm\s+(.+)\}\}", s)
             if rh:
                 if buf:

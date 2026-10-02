@@ -137,12 +137,14 @@
       const c = chordPcs(sg.name);
       return kd + '/' + chordDeg(((m - c.rootPc) % 12 + 12) % 12, c.ch);
     }
-    // 短9度：コードの音ではなく、コードの音の半音上にある（Tの上の4、Dの上の1 など）
+    // 赤くするのは授業で教える短9度だけ：Tの上の4、Dの上の1。
+    // IIIm7 の上の1も短9度（5度とぶつかる）だが、覚えることが多すぎるので一旦無視（2026-10-02、有村さん指定）
     function clashes(m, g) {
       const sg = segAt(g);
-      if (!sg) return false;
-      const pcs = chordPcs(sg.name).pcs, pc = ((m % 12) + 12) % 12;
-      return pcs.indexOf(pc) < 0 && pcs.indexOf((pc + 11) % 12) >= 0;
+      const G = sg && GROUPS.find(x => x.names.indexOf(sg.name) >= 0);
+      if (!G) return false;
+      const kd = ((m - tonicPc) % 12 + 12) % 12;
+      return (G.label === 'T' && kd === 5) || (G.label === 'D' && kd === 0);
     }
     function playOne(name, at, dur, out) {
       const v = window.Voicing.voice([name], tonicPc)[0];
@@ -295,7 +297,7 @@
       const visible = v => L === 0 || v >= STEPS - PICK;
       lanes.push({ OFF: OFF, VBARS: VBARS, VCOLS: VCOLS, heads: heads, gut: gut, cells: cells, byCol: byCol, visible: visible });
     }
-    const legend = mk('p', 'roll-note', '音の頭の数字＝キー度数/コード度数。赤い音＝コードの音と短9度でぶつかっている（Tの上の4、Dの上の1 など）。太線＝小節、点線＝コードの切り替わり。');
+    const legend = mk('p', 'roll-note', '音の頭の数字＝キー度数/コード度数。赤い音＝短9度でぶつかっている（Tの上の4、Dの上の1）。太線＝小節、点線＝コードの切り替わり。');
     root.appendChild(legend);
 
     function renderSlots() {

@@ -373,29 +373,29 @@ Sep 27, 2026 · @Ryo Arimura
 
 **お正月**
 
-- 1.3コード（Imaj7・IVmaj7・V7 だけ）で機能（T/SD/D）を決め、2.原曲風、3.ポップス風とコードを入れ替えてだんだん複雑にする
+- 2コード（Imaj7・V7）から始めて、3コード、原曲風、ポップス風とコードを足してだんだん複雑にする
 - ロールの進行のプルダウンで切り替える（3本まとめて切り替わる）
 
 | | A（1〜4） | B（5〜8） | A'（9〜12） |
 | --- | --- | --- | --- |
-| 機能 | T·D　T　D　T | SD·T　SD·D·T　T　SD·D | T·D　T　SD·D　T |
-| 1.3コード | Imaj7·V7　Imaj7　V7　Imaj7 | IVmaj7·Imaj7　IVmaj7·V7·Imaj7　Imaj7　IVmaj7·V7 | Imaj7·V7　Imaj7　IVmaj7·V7　Imaj7 |
-| 2.原曲風 | I·V7　I　V7　I | IV·I　IV·V·I　IIIm·VIm　IIm·V | I·V7　I·VIm7　IIm7·V7　I |
-| 3.ポップス風 | I·V7　VIm7·IIIm7　IIm7·Vsus4·V7　I | IVmaj7·VIm7　IIm7·V7·VIm7　IIIm7·VIm7　IVmaj7·IIm7·V7 | I·V7　IIIm7·VIm7　IIm7·V7　I |
+| 1.2コード | Imaj7　Imaj7　Imaj7　Imaj7 | Imaj7　Imaj7　Imaj7　V7 | Imaj7　Imaj7　V7　Imaj7 |
+| 2.3コード | Imaj7　Imaj7　IVmaj7　Imaj7 | IVmaj7　Imaj7　Imaj7　V7 | Imaj7　IVmaj7　V7　Imaj7 |
+| 3.原曲風 | I·V7　I　V7　I | IV·I　IV·V·I　IIIm·VIm　IIm·V | I·V7　I·VIm7　IIm7·V7　I |
+| 4.ポップス風 | I·V7　VIm7·IIIm7　IIm7·Vsus4·V7　I | IVmaj7·VIm7　IIm7·V7·VIm7　IIIm7·VIm7　IVmaj7·IIm7·V7 | I·V7　IIIm7·VIm7　IIm7·V7　I |
 
-- 2.原曲風は楽譜のコード（A7 は IIIm に置き換え）、3.ポップス風は下の POPSハーモニーVer. のコードを簡単にしたもの
+- 3.原曲風は楽譜のコード（A7 は IIIm に置き換え）、4.ポップス風は下の POPSハーモニーVer. のコードを簡単にしたもの
 
 1〜4小節：A（Fキー）
 
-{{roll-demo key=5 prog=1.3コード:Imaj7+V7-Imaj7-V7-Imaj7|2.原曲風:I+V7-I-V7-I|3.ポップス風:I+V7-VIm7+IIIm7-IIm7*2+Vsus4*1+V7*1-I group=osho F4:0-3 G4:4-5 F4:6 G4:7 A4:8-9 C5:10-11 A4:12-15 G4:16-17 G4:18-19 F4:20-21 G4:22-23 A4:24-29}}
+{{roll-demo key=5 prog=1.2コード:Imaj7-Imaj7-Imaj7-Imaj7|2.3コード:Imaj7-Imaj7-IVmaj7-Imaj7|3.原曲風:I+V7-I-V7-I|4.ポップス風:I+V7-VIm7+IIIm7-IIm7*2+Vsus4*1+V7*1-I group=osho F4:0-3 G4:4-5 F4:6 G4:7 A4:8-9 C5:10-11 A4:12-15 G4:16-17 G4:18-19 F4:20-21 G4:22-23 A4:24-29}}
 
 5〜8小節：B
 
-{{roll-demo key=5 prog=1.3コード:IVmaj7+Imaj7-IVmaj7*1+V7*1+Imaj7*2-Imaj7-IVmaj7+V7|2.原曲風:IV+I-IV*1+V*1+I*2-IIIm+VIm-IIm+V|3.ポップス風:IVmaj7+VIm7-IIm7*2+V7*1+VIm7*1-IIIm7+VIm7-IVmaj7*2+IIm7*1+V7*1 group=osho F4:0 F4:1 D4:2 D4:3 C4:4 C4:5 C4:6-7 F4:8 F4:9 G4:10 G4:11 A4:12-15 A4:16 A4:17 G4:18-19 F4:20 F4:21 F4:22 F4:23 G4:24 G4:25 A4:26 A4:27 C5:28-31}}
+{{roll-demo key=5 prog=1.2コード:Imaj7-Imaj7-Imaj7-V7|2.3コード:IVmaj7-Imaj7-Imaj7-V7|3.原曲風:IV+I-IV*1+V*1+I*2-IIIm+VIm-IIm+V|4.ポップス風:IVmaj7+VIm7-IIm7*2+V7*1+VIm7*1-IIIm7+VIm7-IVmaj7*2+IIm7*1+V7*1 group=osho F4:0 F4:1 D4:2 D4:3 C4:4 C4:5 C4:6-7 F4:8 F4:9 G4:10 G4:11 A4:12-15 A4:16 A4:17 G4:18-19 F4:20 F4:21 F4:22 F4:23 G4:24 G4:25 A4:26 A4:27 C5:28-31}}
 
 9〜12小節：A'
 
-{{roll-demo key=5 prog=1.3コード:Imaj7+V7-Imaj7-IVmaj7+V7-Imaj7|2.原曲風:I+V7-I+VIm7-IIm7+V7-I|3.ポップス風:I+V7-IIIm7*2+VIm7*2-IIm7+V7-I group=osho F4:0-3 G4:4-5 F4:6 G4:7 A4:8-9 C5:10-11 A4:12-13 A4:14-15 G4:16-17 G4:18-19 A4:20-21 G4:22-23 F4:24-29}}
+{{roll-demo key=5 prog=1.2コード:Imaj7-Imaj7-V7-Imaj7|2.3コード:Imaj7-IVmaj7-V7-Imaj7|3.原曲風:I+V7-I+VIm7-IIm7+V7-I|4.ポップス風:I+V7-IIIm7*2+VIm7*2-IIm7+V7-I group=osho F4:0-3 G4:4-5 F4:6 G4:7 A4:8-9 C5:10-11 A4:12-13 A4:14-15 G4:16-17 G4:18-19 A4:20-21 G4:22-23 F4:24-29}}
 
 **お正月（POPSハーモニーVer.）**
 

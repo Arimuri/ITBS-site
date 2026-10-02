@@ -865,6 +865,8 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
 .reharm .rc .lbl{position:relative;z-index:2;margin-left:1px;padding:0 2px;border-radius:3px;background:var(--acc);color:#fff;
   font-size:9px;font-weight:700;line-height:1.35;white-space:nowrap;pointer-events:none}
 .reharm .rc.clash .lbl{background:var(--ng-ink)}
+.reharm .rc.on.mild{background:#d9a400;border-right-color:#d9a400}   /* IIIm7 の上の1（軽めの短9度） */
+.reharm .rc.mild .lbl{background:#d9a400;color:#2b1d00}
 .reharm .rc.hide{background:var(--page);border-right-color:transparent}
 /* ドリルの授業の流れ：上から順に投影してスクロールで進める。文字は大きめ */
 .flow{counter-reset:step;margin:8px 0 0}

@@ -146,6 +146,11 @@
       const kd = ((m - tonicPc) % 12 + 12) % 12;
       return (G.label === 'T' && kd === 5) || (G.label === 'D' && kd === 0);
     }
+    // 黄色：IIIm7 の上の1（5度と短9度になるが軽め。赤ほどは気にしなくていい）
+    function mild(m, g) {
+      const sg = segAt(g);
+      return !!sg && sg.name === 'IIIm7' && ((m - tonicPc) % 12 + 12) % 12 === 0;
+    }
     function playOne(name, at, dur, out) {
       const v = window.Voicing.voice([name], tonicPc)[0];
       tone(v.bass, at || 0, dur || 1.1, 0.19, out); tone(v.bass + 12, at || 0, dur || 1.1, 0.095, out);
@@ -297,7 +302,7 @@
       const visible = v => L === 0 || v >= STEPS - PICK;
       lanes.push({ OFF: OFF, VBARS: VBARS, VCOLS: VCOLS, heads: heads, gut: gut, cells: cells, byCol: byCol, visible: visible });
     }
-    const legend = mk('p', 'roll-note', '音の頭の数字＝キー度数/コード度数。赤い音＝短9度でぶつかっている（Tの上の4、Dの上の1）。太線＝小節、点線＝コードの切り替わり。');
+    const legend = mk('p', 'roll-note', '音の頭の数字＝キー度数/コード度数。赤い音＝短9度でぶつかっている（Tの上の4、Dの上の1）。黄色い音＝IIIm7の上の1（短9度だが軽め）。太線＝小節、点線＝コードの切り替わり。');
     root.appendChild(legend);
 
     function renderSlots() {
@@ -379,6 +384,7 @@
             el.classList.toggle('on', on);
             el.classList.toggle('split', on && cutAt(m, g));
             el.classList.toggle('clash', on && clashes(m, g));
+            el.classList.toggle('mild', on && mild(m, g));
             const lab = on && isStart(m, g) ? labelFor(m, g) : '';
             if (el.dataset.lab !== lab) {
               el.dataset.lab = lab;

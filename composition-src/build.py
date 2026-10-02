@@ -174,11 +174,11 @@ def degree_set(raw, prev_deg, prev_flat):
 # 「自由」など拾えない回だけ、この既定値を使う。授業に合わせて変えてよい。
 FALLBACK_PROGS = {
     4: "I-VIm-IV-V",
-    5: "I-IV-V-I",        # T-S-D-T の型そのもの
+    5: "I-IV-V-I",        # T-SD-D-T の型そのもの
     6: "I-VIm-IV-V",
-    7: "I-IV-V-VIm",      # 偽終止を聴かせる
-    9: "I-IV-V7-I",
-    10: "I-VIm-IIm7-V",
+    8: "I-VIm-IIm7-V",
+    9: "I-VIm-IV-V",
+    10: "I-VIm-IV-V",
     12: "I-VIm-IV-IV/V",  # 4on5 を種明かしする回
     13: "I-IV-♭VImaj7-♭VII7",
     14: "I-VIm-IV-V",
@@ -196,19 +196,19 @@ ROLL_PROG_CHOICES = [
     ("I-VIm-IV-V", 1),      # Phase 1 の代わりの候補（V入り。Vの上は1が11th、2が5th）
     ("I-IIIm-IV-V", 2),
     ("IIm7-V-I-I", 3),
-    ("I-IV-V-I", 5),        # 機能を習うドリルから
-    ("I-IV-V-VIm", 7),      # 偽終止
-    ("I-VIm-IIm7-V", 7),
-    ("IV-I-IV-V", 8),
-    ("IV-IVm7-I-I", 8),     # ここから tier表のダイアトニック外コード
-    ("I-IV-V7-I", 9),
-    ("IV-V-III7-VIm", 9),
+    ("I-IV-V-I", 5),        # 進行を組む（終止と代理）ドリルから
+    ("I-IV-V-VIm", 5),      # 偽終止
+    ("I-VIm-IIm7-V", 5),
+    ("IV-I-IV-V", 7),
+    ("I-IV-V7-I", 7),
+    ("IV-V-III7-VIm", 11),  # ここから tier表のダイアトニック外コード（Phase 4）
     ("I-VI7-IIm7-V", 11),
     ("I-#Idim7-IIm7-V", 11),
     ("IV-V-#Vdim7-VIm", 11),
     ("I-Vm7-I7-IV", 11),
     ("I-VIm-IV-IV/V", 12),  # 4on5 はドリル12で種明かしする
     ("IIm7-♭II7-I-I", 12),
+    ("IV-IVm7-I-I", 13),
     ("I-IV-♭VImaj7-♭VII7", 13),
 ]
 

@@ -8,6 +8,7 @@
   const LOW = 48, HIGH = 72, ROWS = HIGH - LOW + 1;
   const BARS = 4, STEPS = 8, COLS = BARS * STEPS;
   const MAJOR = [0, 2, 4, 5, 7, 9, 11];
+  const KEYDEG = ['1', '♭2', '2', '♭3', '3', '4', '#4', '5', '♭6', '6', '♭7', '7'];
   const KEYS = ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'];
   const BPMS = [70, 80, 90, 100, 110, 120, 130, 140], DEFAULT_BPM = 100;
   // 1周ぶんをまとめて予約すると、置いた音が次の周まで鳴らない。
@@ -190,20 +191,58 @@
           el.classList.toggle('scale', isScale);
           el.classList.toggle('open', isOpen);
           el.classList.toggle('oct', iv === 0);
-          el.classList.toggle('on', notes.has(m + ',' + c));
-          el.classList.toggle('split', notes.has(m + ',' + c) && isHead(m, c));
+          const on = notes.has(m + ',' + c);
+          el.classList.toggle('on', on);
+          el.classList.toggle('split', on && isHead(m, c));
+          // 音の頭にだけ「キー度数/コード度数」（伸ばしている途中のマスには出さない）
+          const lab = on && !(c > 0 && notes.has(m + ',' + (c - 1)) && !isHead(m, c)) ? labelFor(m, c) : '';
+          if (el.dataset.lab !== lab) {
+            el.dataset.lab = lab;
+            el.textContent = '';
+            if (lab) { const sp = document.createElement('span'); sp.className = 'lbl'; sp.textContent = lab; el.appendChild(sp); }
+          }
         }
       }
       warnEl.textContent = warn;
-      noteEl.textContent = '黄色い行＝今回使う音、濃い行＝スケール。横1マス＝8分音符、太線＝小節。';
+      noteEl.textContent = '音の頭の数字＝キー度数/コード度数。黄色い行＝今回使う音、濃い行＝スケール。横1マス＝8分音符、太線＝小節。';
+    }
+    // コード度数は curriculum の書き方（そのコードが本来持つ3rd・5th・7thを3・5・7と呼ぶ）。prog/ と同じ
+    function chordDeg(iv, ch) {
+      const has = x => ch.ivs.indexOf(x) >= 0;
+      const t3 = has(4) ? 4 : has(3) ? 3 : null;
+      const n5 = has(6) ? 6 : has(8) ? 8 : 7;
+      const n7 = has(11) ? 11 : has(10) ? 10 : has(9) ? 9 : (t3 === 4 || has(8)) ? 11 : 10;
+      switch (iv) {
+        case 0: return 'R';
+        case 1: return '♭9';
+        case 2: return '9';
+        case 3: return t3 === 3 ? '3' : '♭3';
+        case 4: return t3 === 3 ? '#3' : '3';
+        case 5: return '4';
+        case 6: return n5 === 6 ? '♭5' : '#4';
+        case 7: return '5';
+        case 8: return n5 === 8 ? '#5' : '♭6';
+        case 9: return n7 === 9 ? '7' : '6';
+        case 10: return n7 === 10 ? '7' : '♭7';
+        default: return n7 === 11 ? '7' : 'M7';
+      }
+    }
+    function labelFor(m, c) {
+      const kd = KEYDEG[((m - tonicPc) % 12 + 12) % 12];
+      const inBar = c % STEPS;
+      const seg = barSegs(Math.floor(c / STEPS)).find(x => inBar >= x.start && inBar < x.start + x.len);
+      const ch = seg && seg.name ? window.Voicing.parse(seg.name) : null;
+      if (!ch) return kd;
+      return kd + '/' + chordDeg(((m - (tonicPc + ch.root)) % 12 + 12) % 12, ch);
     }
 
     // ---- 打ち込み ----
     function apply(el) {
       const m = midiOf(+el.dataset.r), key = m + ',' + el.dataset.c;
       if (drawMode === 'draw') {
-        if (!notes.has(key)) { notes.add(key); el.classList.add('on'); tone(m, 0, 0.35, 0.2, null); }
-      } else if (notes.has(key)) { notes.delete(key); heads.delete(key); el.classList.remove('on'); }
+        if (!notes.has(key)) { notes.add(key); tone(m, 0, 0.35, 0.2, null); }
+      } else if (notes.has(key)) { notes.delete(key); heads.delete(key); }
+      paint();                                      // 前後の音のラベル（音の頭）も変わるので描き直す
       save();
     }
     cellsEl.addEventListener('pointerdown', e => {
@@ -388,6 +427,7 @@
     progSel.addEventListener('change', () => {
       prog = progSel.value.split('-');
       updateBars();
+      paint();                                      // コードが変わるとコード度数も変わる
       save();
     });
     bpmSel.addEventListener('change', () => {

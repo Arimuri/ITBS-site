@@ -14,11 +14,12 @@
   const FILE_KEYS = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
   const BPMS = [60, 70, 80, 90, 100, 110, 120], DEFAULT_BPM = 80;
   const SCHED_AHEAD = 0.12, TICK_MS = 25;
-  // ドリル4「ダイアトニックコードを3つに分ける：T/SD/D」の並び。色は tips/ のグループ分けと同じ
+  // ドリル4「ダイアトニックコードを3つに分ける：T/SD/D」の並び。色は tips/ のグループ分けと同じ。
+  // 4和音だけにそろえる（tier表・ロードマップ段階4・prog/ と同じ。三和音と混ぜると混乱するため）
   const GROUPS = [
-    { label: 'T', g: 1, names: ['I', 'IM7', 'IIIm', 'IIIm7', 'VIm', 'VIm7'] },
-    { label: 'SD', g: 2, names: ['IIm', 'IIm7', 'IV', 'IVM7'] },
-    { label: 'D', g: 3, names: ['V', 'V7', 'VIIm-5', 'VIIm7-5'] }
+    { label: 'T', g: 1, names: ['IM7', 'IIIm7', 'VIm7'] },
+    { label: 'SD', g: 2, names: ['IIm7', 'IVM7'] },
+    { label: 'D', g: 3, names: ['V7', 'VIIm7-5'] }
   ];
   const chipClass = name => {
     const G = GROUPS.find(x => x.names.indexOf(name) >= 0);
@@ -152,32 +153,38 @@
     const status = mk('p', 'rh-status');
     const HINT = 'コードを小節にドラッグ。押してから小節を押してもいい。';
     const say = t => { status.textContent = t; };
-    const panel = mk('div', 'panel rh-palette'), grid = mk('div', 'cw-grid');
+    // パレットは1本目の上と、2本目以降のコード欄の直前にも出す（下の小節まで遠くドラッグしなくていいように）。
+    // どのパレットのチップも同じ chips に入れ、選択中の表示はすべてで連動させる
     const chips = [];
-    GROUPS.forEach(G => {
-      grid.appendChild(mk('div', 'cw-tier', G.label));
-      const groupsEl = mk('div', 'cw-groups'), groupEl = mk('div', 'cw-group');
-      G.names.forEach(name => {
-        const chip = mk('button', chipClass(name), name);
-        chip.type = 'button';
-        chip.draggable = true;
-        chip.addEventListener('click', () => {
-          playOne(name);
-          picked = picked === name ? null : name;
-          chips.forEach(c => c.classList.toggle('picked', c.textContent === picked));
-          say(picked ? name + ' を選択中。小節を押すと入る。' : HINT);
+    function makePalette() {
+      const panel = mk('div', 'panel rh-palette'), grid = mk('div', 'cw-grid');
+      GROUPS.forEach(G => {
+        grid.appendChild(mk('div', 'cw-tier', G.label));
+        const groupsEl = mk('div', 'cw-groups'), groupEl = mk('div', 'cw-group');
+        G.names.forEach(name => {
+          const chip = mk('button', chipClass(name), name);
+          chip.type = 'button';
+          chip.draggable = true;
+          chip.addEventListener('click', () => {
+            playOne(name);
+            picked = picked === name ? null : name;
+            chips.forEach(c => c.classList.toggle('picked', c.textContent === picked));
+            say(picked ? name + ' を選択中。小節を押すと入る。' : HINT);
+          });
+          chip.addEventListener('dragstart', e => {
+            e.dataTransfer.setData('text/plain', JSON.stringify({ name: name }));
+            e.dataTransfer.effectAllowed = 'copy';
+          });
+          chips.push(chip);
+          groupEl.appendChild(chip);
         });
-        chip.addEventListener('dragstart', e => {
-          e.dataTransfer.setData('text/plain', JSON.stringify({ name: name }));
-          e.dataTransfer.effectAllowed = 'copy';
-        });
-        chips.push(chip);
-        groupEl.appendChild(chip);
+        groupsEl.appendChild(groupEl);
+        grid.appendChild(groupsEl);
       });
-      groupsEl.appendChild(groupEl);
-      grid.appendChild(groupsEl);
-    });
-    panel.appendChild(grid);
+      panel.appendChild(grid);
+      return panel;
+    }
+    const panel = makePalette();
 
     // ---- ボタン類 -----------------------------------------------------------------
     const btns = mk('div', 'rh-btns');
@@ -247,6 +254,7 @@
     function removeAt(bar, sub) { slots[bar].splice(sub, 1); render(); }
 
     for (let L = 0; L < LANES; L++) {
+      if (L > 0) root.appendChild(makePalette());   // 2本目以降：コード欄の直前にもパレット
       const barsEl = mk('div', 'rh-bars');
       root.appendChild(barsEl);
       for (let i = L * LANE; i < Math.min(BODY, (L + 1) * LANE); i++) {
@@ -368,7 +376,12 @@
             el.classList.toggle('on', on);
             el.classList.toggle('split', on && cutAt(m, g));
             el.classList.toggle('clash', on && clashes(m, g));
-            el.textContent = on && isStart(m, g) ? labelFor(m, g) : '';
+            const lab = on && isStart(m, g) ? labelFor(m, g) : '';
+            if (el.dataset.lab !== lab) {
+              el.dataset.lab = lab;
+              el.textContent = '';
+              if (lab) { const sp = mk('span', 'lbl', lab); el.appendChild(sp); }
+            }
           }
         }
       });

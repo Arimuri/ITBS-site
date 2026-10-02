@@ -1191,6 +1191,8 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
   function setup(root) {
     const lesson = root.dataset.lesson || '0';
     // data-bars：このロールの小節数（既定4）。見本で「弱起の小節＋8小節」などにする
+    // data-steps：1小節のマス数（既定8＝8分音符。16にすると16分音符のマスで、付点8分＋16分などが書ける）
+    const STEPS = +root.dataset.steps === 16 ? 16 : 8;
     const BARS = Math.max(1, +root.dataset.bars || 4), COLS = BARS * STEPS;
     // data-high：ロールの一番上の音（MIDI、既定72＝C5）。下はその2オクターブ下まで。見本のメロが高いときに使う
     const HIGH = +root.dataset.high || 72, LOW = HIGH - 24, ROWS = HIGH - LOW + 1;
@@ -1214,7 +1216,7 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
     const heads = new Set((root.dataset.heads || '').split(/\s+/).filter(Boolean));
     const isHead = (m, c) => c > 0 && notes.has(m + ',' + (c - 1)) && heads.has(m + ',' + c);
     let tonicPc = (+root.dataset.key || 0) % 12, bpm = DEFAULT_BPM, dragging = false, drawMode = 'draw', warn = '';   // data-key：最初のキー（0=C）
-    const stepSec = () => 60 / bpm / 2;           // 横1マス＝8分音符
+    const stepSec = () => 60 / bpm / (STEPS / 4);  // 横1マス＝8分音符（steps=16 なら16分音符）
     const cycleLen = () => COLS * stepSec();      // 4小節1周
     let bus = null, timer = null, raf = null, startAt = 0, lastCol = -1;
 
@@ -1248,8 +1250,8 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
     const gutEl = mk('div', 'roll-gutter');
     const cellsEl = mk('div', 'roll-cells');
     [mk('div', 'roll-corner'), barsEl, gutEl, cellsEl].forEach(el => grid.appendChild(el));
-    if (BARS !== 4) {                                   // CSS は4小節前提なので、それ以外は幅と列数を上書き
-      grid.style.minWidth = (BARS * 150) + 'px';
+    if (BARS !== 4 || STEPS !== 8) {                    // CSS は4小節・8分前提なので、それ以外は幅と列数を上書き
+      grid.style.minWidth = (BARS * 150 * STEPS / 8) + 'px';
       barsEl.style.gridTemplateColumns = 'repeat(' + BARS + ',1fr)';
       cellsEl.style.gridTemplateColumns = 'repeat(' + COLS + ',1fr)';
     }
@@ -1365,7 +1367,7 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
         }
       }
       warnEl.textContent = warn;
-      noteEl.textContent = '音の頭の数字＝キー度数/コード度数。赤い音＝短9度（Tの上の4、Dの上の1）、黄色い音＝IIIm7の上の1（軽め）。黄色い行＝今回使う音、濃い行＝スケール。横1マス＝8分音符、太線＝小節。';
+      noteEl.textContent = '音の頭の数字＝キー度数/コード度数。赤い音＝短9度（Tの上の4、Dの上の1）、黄色い音＝IIIm7の上の1（軽め）。黄色い行＝今回使う音、濃い行＝スケール。横1マス＝' + (STEPS === 16 ? '16分' : '8分') + '音符、太線＝小節。';
     }
     // コード度数は curriculum の書き方（そのコードが本来持つ3rd・5th・7thを3・5・7と呼ぶ）。prog/ と同じ
     function chordDeg(iv, ch) {
@@ -2341,7 +2343,8 @@ def demo_roll(spec, lesson, default_prog):
     demo_key = next((t[4:] for t in toks if t.startswith("key=")), "")
     demo_high = next((t[5:] for t in toks if t.startswith("high=")), "")
     demo_group = next((t[6:] for t in toks if t.startswith("group=")), "")
-    notes = " ".join(t for t in toks if not re.match(r"^(prog|bars|key|high|group)=", t))
+    demo_steps = next((t[6:] for t in toks if t.startswith("steps=")), "")
+    notes = " ".join(t for t in toks if not re.match(r"^(prog|bars|key|high|group|steps)=", t))
     cells, heads = demo_notes(notes)
     return (
         f'<div class="roll" data-lesson="{lesson}" data-progs="{html.escape(demo_prog)}" '
@@ -2349,6 +2352,7 @@ def demo_roll(spec, lesson, default_prog):
         + (f'data-key="{int(demo_key)}" ' if demo_key else "")
         + (f'data-high="{int(demo_high)}" ' if demo_high else "")
         + (f'data-group="{html.escape(demo_group)}" ' if demo_group else "")
+        + (f'data-steps="{int(demo_steps)}" ' if demo_steps else "")
         + f'data-degrees="" data-nosave="1" data-notes="{cells}" data-heads="{heads}"></div>'
     )
 

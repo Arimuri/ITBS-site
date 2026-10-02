@@ -110,7 +110,7 @@
     });
     progs.forEach(v => {
       const o = document.createElement('option');
-      o.value = v; o.textContent = v;
+      o.value = v; o.textContent = v.indexOf('+') >= 0 ? v.split('-').map(b => b.replace(/\+/g, ' ')).join('｜') : v;   // 2コードの小節がある進行は「IV Vsus4｜I VIm7」と見せる
       progSel.appendChild(o);
     });
     const bars = [];
@@ -200,16 +200,18 @@
     window.addEventListener('pointerup', () => { dragging = false; });
 
     // ---- 保存 ----
+    // 小節数が4以外のロールは保存先を分ける（4小節の頃の進行・メロを8小節のロールに読ませない）
+    const storeKey = 'roll:' + lesson + (BARS !== 4 ? '@' + BARS : '');
     function save() {
       if (nosave) return;
       try {
-        localStorage.setItem('roll:' + lesson, JSON.stringify({ k: tonicPc, b: bpm, p: prog.join('-'), n: Array.from(notes), h: Array.from(heads) }));
+        localStorage.setItem(storeKey, JSON.stringify({ k: tonicPc, b: bpm, p: prog.join('-'), n: Array.from(notes), h: Array.from(heads) }));
       } catch (err) {}
     }
     function load() {
       if (nosave) return;
       try {
-        const raw = localStorage.getItem('roll:' + lesson);
+        const raw = localStorage.getItem(storeKey);
         if (!raw) return;
         const o = JSON.parse(raw);
         notes.clear();                               // 保存があれば data-notes より優先

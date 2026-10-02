@@ -224,16 +224,25 @@ def roll_prog_choices(no, raw):
 
 _NUM = r"(?:VII|VI|V|IV|III|II|I)"   # 長いものから並べないと IV が I+V に割れる
 _CHORD = rf"[#♭]?{_NUM}(?:maj7|M7|m7|m|dim7|7|sus4|aug)?(?:/[#♭]?{_NUM})?"
-_RUN = re.compile(rf"{_CHORD}(?:-{_CHORD})+")
+_BAR = rf"{_CHORD}(?:\+{_CHORD})?"     # 1小節。「IV+Vsus4」は小節の真ん中で切り替え
+_RUN = re.compile(rf"{_BAR}(?:-{_BAR})+")
 
 
 def roll_prog(no, raw):
-    """伴奏進行の記述から、ピアノロール用に4和音を作る。"""
+    """伴奏進行の記述から、ピアノロール用の小節ごとのコードを作る。
+    4小節に満たなければ繰り返して4小節に、5小節以上（8小節など）はそのまま"""
     m = _RUN.search(raw or "")
     found = m.group(0).split("-") if m else []
     if not found:
         found = FALLBACK_PROGS.get(no, DEFAULT_PROG).split("-")
-    return [found[i % len(found)] for i in range(4)]
+    return [found[i % len(found)] for i in range(max(4, len(found)))]
+
+
+def prog_label(chords):
+    """「IV+Vsus4-I+VIm7」→「IV Vsus4｜I VIm7」。2コードの小節がない進行はそのまま（I-VIm-IV-V）"""
+    if "+" not in chords:
+        return chords
+    return "｜".join(b.replace("+", " ") for b in chords.split("-"))
 
 
 TOTAL_SESSIONS = 14   # 授業の回数。ドリルを割り当てていない回は「未定」と出す
@@ -1191,7 +1200,7 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
     });
     progs.forEach(v => {
       const o = document.createElement('option');
-      o.value = v; o.textContent = v;
+      o.value = v; o.textContent = v.indexOf('+') >= 0 ? v.split('-').map(b => b.replace(/\+/g, ' ')).join('｜') : v;   // 2コードの小節がある進行は「IV Vsus4｜I VIm7」と見せる
       progSel.appendChild(o);
     });
     const bars = [];
@@ -1281,16 +1290,18 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
     window.addEventListener('pointerup', () => { dragging = false; });
 
     // ---- 保存 ----
+    // 小節数が4以外のロールは保存先を分ける（4小節の頃の進行・メロを8小節のロールに読ませない）
+    const storeKey = 'roll:' + lesson + (BARS !== 4 ? '@' + BARS : '');
     function save() {
       if (nosave) return;
       try {
-        localStorage.setItem('roll:' + lesson, JSON.stringify({ k: tonicPc, b: bpm, p: prog.join('-'), n: Array.from(notes), h: Array.from(heads) }));
+        localStorage.setItem(storeKey, JSON.stringify({ k: tonicPc, b: bpm, p: prog.join('-'), n: Array.from(notes), h: Array.from(heads) }));
       } catch (err) {}
     }
     function load() {
       if (nosave) return;
       try {
-        const raw = localStorage.getItem('roll:' + lesson);
+        const raw = localStorage.getItem(storeKey);
         if (!raw) return;
         const o = JSON.parse(raw);
         notes.clear();                               // 保存があれば data-notes より優先
@@ -2227,10 +2238,12 @@ def build_lesson(d, no):
         f'<h1>ドリル{no}　{inline(ls["title"])}</h1>',
     ]
     degrees = ",".join(x for x in DEG_ALL if x in ls["deg"])
+    n_bars = len(chords.split("-"))
     practice_roll = (
         f'<div class="roll" data-lesson="{no:02d}" '
         f'data-progs="{"|".join(roll_prog_choices(no, prog))}" '
-        f'data-degrees="{degrees}"></div>'
+        + (f'data-bars="{n_bars}" ' if n_bars > 4 else "")
+        + f'data-degrees="{degrees}"></div>'
     )
     flow = ls.get("flow") or []
     # 授業の流れがあるページは右カラムを出さない（練習用ロールは流れの {{roll}} の位置に置く）
@@ -2249,7 +2262,7 @@ def build_lesson(d, no):
             '<div class="grid2">',
             sounds,
             '<div class="panel"><p class="k">伴奏</p>'
-            f'<p class="v"><code>{inline(chords)}</code></p></div>',
+            f'<p class="v"><code>{inline(prog_label(chords))}</code></p></div>',
             "</div>",
         ]
     rows = []

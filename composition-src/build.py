@@ -1194,8 +1194,17 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
     const BARS = Math.max(1, +root.dataset.bars || 4), COLS = BARS * STEPS;
     // data-high：ロールの一番上の音（MIDI、既定72＝C5）。下はその2オクターブ下まで。見本のメロが高いときに使う
     const HIGH = +root.dataset.high || 72, LOW = HIGH - 24, ROWS = HIGH - LOW + 1;
-    const progs = (root.dataset.progs || 'I-VIm-IV-V').split('|');
+    // data-progs：「|」区切りの進行。「Step 1:IVmaj7-V7-Imaj7-Imaj7」のように「名前:」を付けるとプルダウンにその名前が出る
+    const progLabels = {};
+    const progs = (root.dataset.progs || 'I-VIm-IV-V').split('|').map(v => {
+      const i = v.indexOf(':');
+      if (i < 0) return v;
+      progLabels[v.slice(i + 1)] = v.slice(0, i);
+      return v.slice(i + 1);
+    });
     let prog = progs[0].split('-');
+    // data-group：同じ名前のロールどうしは、進行のプルダウンをまとめて切り替える（同じ曲を4小節ずつ並べたとき用）
+    const group = root.dataset.group || '';
     const open = new Set((root.dataset.degrees || '').split(',').filter(Boolean));
     const notes = new Set();                      // "midi,col"
     // data-notes：最初から置いておく音（見本のメロ）。data-nosave：保存しない（開き直すと見本に戻る）
@@ -1261,7 +1270,8 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
     });
     progs.forEach(v => {
       const o = document.createElement('option');
-      o.value = v; o.textContent = v.indexOf('+') >= 0 ? v.split('-').map(b => b.replace(/\+/g, ' ')).join('｜') : v;   // 2コードの小節がある進行は「IV Vsus4｜I VIm7」と見せる
+      const shown = v.indexOf('+') >= 0 || v.indexOf('*') >= 0 ? v.split('-').map(b => b.replace(/\*\d+/g, '').replace(/\+/g, ' ')).join('｜') : v;   // 2コードの小節がある進行は「IV Vsus4｜I VIm7」と見せる
+      o.value = v; o.textContent = progLabels[v] ? progLabels[v] + '：' + shown : shown;
       progSel.appendChild(o);
     });
     const bars = [];
@@ -1591,11 +1601,21 @@ ROLL_JS = r"""/* 4小節ピアノロール（composition-src/build.py が生成�
     });
 
     // 予約は8分音符ごとなので、鳴らしたまま変えても次の小節から新しい進行になる
-    progSel.addEventListener('change', () => {
+    function applyProg() {
       prog = progSel.value.split('-');
       updateBars();
       paint();                                      // コードが変わるとコード度数も変わる
       save();
+    }
+    progSel.addEventListener('change', () => {
+      applyProg();
+      if (group) document.dispatchEvent(new CustomEvent('roll-group', { detail: { group: group, index: progSel.selectedIndex, from: root } }));
+    });
+    document.addEventListener('roll-group', e => {
+      const d = e.detail;
+      if (!group || d.group !== group || d.from === root || d.index >= progSel.options.length) return;
+      progSel.selectedIndex = d.index;
+      applyProg();
     });
     bpmSel.addEventListener('change', () => {
       bpm = +bpmSel.value;
@@ -2320,13 +2340,15 @@ def demo_roll(spec, lesson, default_prog):
     demo_bars = next((t[5:] for t in toks if t.startswith("bars=")), "")
     demo_key = next((t[4:] for t in toks if t.startswith("key=")), "")
     demo_high = next((t[5:] for t in toks if t.startswith("high=")), "")
-    notes = " ".join(t for t in toks if not re.match(r"^(prog|bars|key|high)=", t))
+    demo_group = next((t[6:] for t in toks if t.startswith("group=")), "")
+    notes = " ".join(t for t in toks if not re.match(r"^(prog|bars|key|high|group)=", t))
     cells, heads = demo_notes(notes)
     return (
         f'<div class="roll" data-lesson="{lesson}" data-progs="{html.escape(demo_prog)}" '
         + (f'data-bars="{int(demo_bars)}" ' if demo_bars else "")
         + (f'data-key="{int(demo_key)}" ' if demo_key else "")
         + (f'data-high="{int(demo_high)}" ' if demo_high else "")
+        + (f'data-group="{html.escape(demo_group)}" ' if demo_group else "")
         + f'data-degrees="" data-nosave="1" data-notes="{cells}" data-heads="{heads}"></div>'
     )
 

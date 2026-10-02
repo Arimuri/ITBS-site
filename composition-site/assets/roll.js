@@ -107,6 +107,7 @@
       barsEl.style.gridTemplateColumns = 'repeat(' + BARS + ',1fr)';
       cellsEl.style.gridTemplateColumns = 'repeat(' + COLS + ',1fr)';
     }
+    if (BARS < 4) scroll.style.maxWidth = 'calc(36px + (100% - 36px) * ' + BARS / 4 + ')';   // 1〜3小節は横に引き伸ばさず、1小節の幅を4小節のロールにそろえる
     scroll.appendChild(grid);
     const noteEl = mk('p', 'roll-note');
     const warnEl = mk('p', 'roll-warn');
